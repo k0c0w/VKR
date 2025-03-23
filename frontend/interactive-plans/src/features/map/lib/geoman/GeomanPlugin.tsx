@@ -3,6 +3,7 @@ import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 import { ControlPosition } from "leaflet";
 import { useMap } from "react-leaflet";
 import { ReactNode, useEffect } from "react";
+import React from "react";
 
 interface GeomanPluginProps {
     showGeomanControls: boolean,
@@ -34,6 +35,9 @@ export default function GeomanPlugin({ showGeomanControls, children }: GeomanPlu
 
         return map.pm.removeControls;
     }, [map.pm]);
+
+    useEffect(() => {
+    }, [map.pm])
 
     useEffect(() => {
         const currentControlsVisability = map.pm.controlsVisible();

@@ -1,6 +1,7 @@
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, MapContainerProps } from "react-leaflet";
-import { PMTileLoader } from "../lib/PMTileLoader";
+import React from 'react';
+import { CRS } from 'leaflet';
 
 const Map = ({
     center = [55.792690, 49.122388]
@@ -10,7 +11,9 @@ const Map = ({
     , children
     , ...other}:MapContainerProps) => 
     <MapContainer
+        doubleClickZoom={false}
         {...other}
+        crs={CRS.Simple}
         minZoom={minZoom}
         maxZoom={maxZoom}
         center={center}
@@ -18,7 +21,6 @@ const Map = ({
         style={{height: "100%", width: "100%"}}
         attributionControl={false}
     >
-        <PMTileLoader/>
         {children}
     </MapContainer>
 
