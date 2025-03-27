@@ -1,9 +1,9 @@
 import { MapContainerProps } from 'react-leaflet';
-import L, { LatLngExpression, Polygon } from 'leaflet';
-import Map, { GeomanPlugin }  from "../../../features/map";
-import { useEffect, useRef, useState } from "react";
-import React from "react";
+import { LatLngExpression, Polygon } from 'leaflet';
+import Map from "../ui/Map";
+import GeomanPlugin from '../lib/geoman/GeomanPlugin';
 import BuildingBasePolygon from '../lib/BuildingBasePolygon';
+import { useEffect, useRef, useState } from "react";
 
 export function EditableMapWidget ({center=[0, 0], zoom=7, ...other}: MapContainerProps) {
     const [mapState] = useState({

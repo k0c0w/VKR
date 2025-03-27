@@ -1,2 +1,3 @@
-import { EditableMapWidget } from "./ui/EditableMapWidget";
-export { EditableMapWidget };
+import Map from "./ui/Map";
+
+export default Map;
