@@ -1,7 +1,7 @@
 
 import { combineReducers } from "@reduxjs/toolkit";
-import { mapApi } from "../../features/map";
-import { createNewPlanReducer } from "../../pages/createNewPlan";
+import { mapApi } from "@features/map";
+import { createNewPlanReducer } from "@widgets/map";
 
 export const rootReducer = combineReducers({
     createNewPlanReducer,

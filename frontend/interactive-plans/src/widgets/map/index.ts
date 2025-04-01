@@ -1,6 +1,7 @@
-import Map from "./ui/Map";
+import CreateNewPlanWidget from "./ui/CreateNewPlanWidget";
 import LoadBuildingBoundariesWidget from "./ui/LoadBuildingBoundariesWidget";
+import createNewPlanReducer from "./lib/createNewPlanSlice";
 
-export default Map;
+export { LoadBuildingBoundariesWidget, CreateNewPlanWidget };
 
-export { LoadBuildingBoundariesWidget };
+export { createNewPlanReducer }

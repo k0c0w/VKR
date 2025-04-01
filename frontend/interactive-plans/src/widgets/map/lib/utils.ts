@@ -1,14 +1,82 @@
-import { LatLng, LatLngExpression, LatLngLiteral, LatLngTuple } from "leaflet";
+import { FitBoundsOptions, LatLngTuple } from "leaflet";
+import { Polygon } from "geojson";
 
-export function convertToLatLng(expr: LatLngExpression): LatLng {
-    if ((expr as LatLng).lat !== undefined){
-        return expr as LatLng;
-    } else if ((expr as LatLngLiteral).lat !== undefined){
-        const lt = expr as LatLngLiteral;
+function getClosedNonOverlappedPolygonArea(simplePolygon: number[][]): number {
+    let sum = 0;
+    let xi: number, xiplus1: number;
+    let yi: number, yiplus1: number;
 
-        return new LatLng(lt.lat, lt.lng);
-    } 
-    
-    const tuple = expr as LatLngTuple;
-    return new LatLng(tuple[0], tuple[1]);
+    for(let i = 0; i < simplePolygon.length - 1; i++) {
+        [xi, yi] = simplePolygon[i];
+        [xiplus1, yiplus1] = simplePolygon[i+1];
+
+        sum += xi * yiplus1 - xiplus1 * yi;
+    }
+
+    return 0.5 * sum;
 }
+
+// Shoelace formula
+function getMapCenterByBuilding({coordinates, type}: Polygon): LatLngTuple {
+    if (type !== "Polygon") {
+        throw new Error(`{Unsupported Polygon type: ${type}`)
+    }
+
+    let outerPolygon = coordinates[0];
+    let exteriorBoundsArea = getClosedNonOverlappedPolygonArea(outerPolygon);
+
+    for(let i = 1; i < coordinates.length; i++) {
+        let interiorBoundsArea = getClosedNonOverlappedPolygonArea(coordinates[i]);
+        exteriorBoundsArea -= interiorBoundsArea;
+    }
+
+    if (exteriorBoundsArea <= 0) {
+        exteriorBoundsArea = 1;
+    }
+
+    let centroidX = 0;
+    let centroidY = 0;
+    let coef: number;
+
+    for(let i = 0; i < outerPolygon.length - 1; i++) {
+        let [xi, yi] = outerPolygon[i];
+        let [xiplus1, yiplus1] = outerPolygon[i+1];
+        coef = xi * yiplus1 - xiplus1 * yi;
+
+        centroidX += (xi + xiplus1) * coef;
+        centroidY += (yi + yiplus1) * coef;
+    }
+
+    let divisionCoef: number = 6 * exteriorBoundsArea;
+    
+    return [centroidX / divisionCoef, centroidY / divisionCoef];
+}
+
+function findBoundingBox({coordinates}: Polygon) {
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+
+    const exteriorBounds = coordinates[0];
+    for (const [x, y] of exteriorBounds) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+    }
+
+    const topLeft: [number, number] = [minX, minY]; 
+    const bottomRight: [number, number] = [maxX, maxY];
+
+    return { topLeft, bottomRight };
+}
+
+function getFitBoundOptions(boundaries: Polygon): FitBoundsOptions {
+    const { topLeft, bottomRight } = findBoundingBox(boundaries);
+
+    return {
+        paddingTopLeft: topLeft,
+        paddingBottomRight: bottomRight,
+    };
+}
+
+export { getMapCenterByBuilding, getFitBoundOptions };

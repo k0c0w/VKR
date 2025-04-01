@@ -1,32 +1,17 @@
-import { useAppDispatch, useAppSelector } from "@shared/hooks/reduxTypedHooks";
-import { CreateNewPlanStep, setBuilding as setBuildingAction } from "../lib/createNewPlanSlice";
-import Map from "@widgets/map";
-import EditBuildingBoundaries from "./EditBuildingBoundaries";
-import EditRoomsBoundaries from "./EditRoomsBoundaries";
-import EditInfrastructure from "./EditInfrastructure";
-import {LoadBuildingBoundariesWidget} from "@widgets/map";
+import {LoadBuildingBoundariesWidget, CreateNewPlanWidget} from "@widgets/map";
 import { Building } from "@entities/map/Building";
+import { Container, Skeleton } from "@mui/material";
+import { useState } from "react";
+
 
 export default function CreateNewPlanPage() {
-    const dispatch = useAppDispatch();
-    const { currentStep, building } = useAppSelector(state => state.createNewPlanReducer);
-    
-    const setBuilding = (building: Building) => dispatch(setBuildingAction(building));
+    const [building, setBuilding] = useState<Building | undefined>();
 
-    return (<>
-        {currentStep === CreateNewPlanStep.Initializing && <LoadBuildingBoundariesWidget setBuilding={setBuilding}/>}
-        {currentStep !== CreateNewPlanStep.Initializing &&
-            <Map 
-                center={getCenterByBuilding(building)}
-            >
-                <EditBuildingBoundaries buildingAddress={{
-                    city: "",
-                    houseNumber: "",
-                    street: ""
-                }}/>
-                <EditRoomsBoundaries />
-                <EditInfrastructure />
-            </Map>            
-        }
-    </>);
+    return (<Container component="main">
+        {!building && <LoadBuildingBoundariesWidget 
+            setBuilding={setBuilding}
+            loaderBackground={<Skeleton width="100%" height={800}/>}
+        />}
+        {building && <CreateNewPlanWidget building={building} />}
+    </Container>);
 }
