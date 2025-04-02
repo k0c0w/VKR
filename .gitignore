@@ -1,0 +1,8 @@
+# Ignore everything:
+*
+# Except:
+!frontend/
+!frontend/**
+!backend/
+!backend/**
+!README.MD
