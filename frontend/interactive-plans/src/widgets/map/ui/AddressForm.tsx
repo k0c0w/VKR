@@ -11,7 +11,13 @@ export default function AddressForm({onSubmit}:AddressFormProps) {
     const {register, handleSubmit} = useForm<Address>();
 
     function onSubmitHandler(address: Address) {
-        alert(address)
+        alert(address);
+        /* TODO: добавить валидацию полей и триммить их через резолвер */
+        onSubmit({
+            city: "Kazan",
+            houseNumber: "18",
+            street: "Kremlyovskaya"
+        });
     }
 
     return <Paper>
@@ -19,7 +25,7 @@ export default function AddressForm({onSubmit}:AddressFormProps) {
             Адрес
         </Typography>
         <Form noValidate onSubmit={handleSubmit(onSubmitHandler)}>
-            <InputLabel id="demo-simple-select-label">Age</InputLabel>
+            <InputLabel id="city-select-label">Город</InputLabel>
             <Select
               {...register("city", {
                   required: true,
@@ -44,6 +50,7 @@ export default function AddressForm({onSubmit}:AddressFormProps) {
                 id="street"
                 label="Улица"
                 name="street"
+                helperText="Например, Кремлёвская"
                 autoFocus
             />
             <TextField
@@ -57,7 +64,7 @@ export default function AddressForm({onSubmit}:AddressFormProps) {
                 id="houseNumber"
                 label="Дом"
                 name="houseNumber"
-                helperText="18к1"
+                helperText="Например, 18к1"
             />
             <Button
                 type="submit"

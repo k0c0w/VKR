@@ -1,14 +1,17 @@
 import React, { useEffect, useRef, Ref } from "react";
 import { Polygon as ReactLeafletPolygon, useMap } from "react-leaflet";
-import { LatLngExpression, Polygon as LeafletPolygon, PM } from "leaflet";
+import { LatLngExpression, LatLngLiteral, Polygon as LeafletPolygon, PM } from "leaflet";
+import { Polygon as GeoJsonPolygon } from "geojson";
+import { mapGeoJsonPolygonToLeafletExpression } from "./utils";
 
 interface BuildingBasePolygonProps {
     editable?: boolean;
-    positions: LatLngExpression[];
-    ref?:  Ref<LeafletPolygon<any> | null>
+    positions: LatLngExpression[][];
+    ref?:  Ref<LeafletPolygon<any> | null>;
+    onChange?(positions: LatLngLiteral[][]): void;
 }
 
-export default function BuildingBasePolygon({positions, ref, editable=true}: BuildingBasePolygonProps) {
+export default function BuildingBasePolygon({positions, ref, editable=true, onChange}: BuildingBasePolygonProps) {
     const map = useMap();
     const polyRef = useRef<LeafletPolygon | null>(null);
 
@@ -27,14 +30,27 @@ export default function BuildingBasePolygon({positions, ref, editable=true}: Bui
        can not process ref clean up on remove in ref. That`s why subscribing on leaflet object event.
     */ 
     useEffect(() => {
-        const eventName = "remove";
-        const handler = () => setRefFunc(null);
+        const removeHandler = () => setRefFunc(null);
+        let pmEditHandler: PM.EditEventHandler | undefined;
 
         const poly = polyRef.current;
-        poly?.on(eventName, handler);
+        poly?.on("remove", removeHandler);
+
+        if (onChange) {
+            pmEditHandler = function(e) {
+                const { geometry } = e.layer.toGeoJSON<GeoJsonPolygon, any>();
+                const latLngExpr = mapGeoJsonPolygonToLeafletExpression(geometry);
+                onChange(latLngExpr);
+            };
+
+            poly?.on("pm:edit", pmEditHandler);
+        }
 
         return () => {
-            poly?.off(eventName, handler);
+            poly?.off("remove", removeHandler);
+            if (pmEditHandler) {
+                poly?.off("pm:edit", pmEditHandler);
+            }
         };
     }, [polyRef.current]);
 

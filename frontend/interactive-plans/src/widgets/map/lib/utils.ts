@@ -1,5 +1,5 @@
-import { FitBoundsOptions, LatLngTuple } from "leaflet";
-import { Polygon } from "geojson";
+import { FitBoundsOptions, LatLngLiteral, LatLngTuple } from "leaflet";
+import { Polygon as GeoJsonPolygon } from "geojson";
 
 function getClosedNonOverlappedPolygonArea(simplePolygon: number[][]): number {
     let sum = 0;
@@ -17,7 +17,8 @@ function getClosedNonOverlappedPolygonArea(simplePolygon: number[][]): number {
 }
 
 // Shoelace formula
-function getMapCenterByBuilding({coordinates, type}: Polygon): LatLngTuple {
+/** @deprecated */
+function getMapCenterByBuilding({coordinates, type}: GeoJsonPolygon): LatLngTuple {
     if (type !== "Polygon") {
         throw new Error(`{Unsupported Polygon type: ${type}`)
     }
@@ -52,7 +53,8 @@ function getMapCenterByBuilding({coordinates, type}: Polygon): LatLngTuple {
     return [centroidX / divisionCoef, centroidY / divisionCoef];
 }
 
-function findBoundingBox({coordinates}: Polygon) {
+/** @deprecated */
+function findBoundingBox({coordinates}: GeoJsonPolygon) {
     let minX = Infinity, minY = Infinity;
     let maxX = -Infinity, maxY = -Infinity;
 
@@ -70,7 +72,8 @@ function findBoundingBox({coordinates}: Polygon) {
     return { topLeft, bottomRight };
 }
 
-function getFitBoundOptions(boundaries: Polygon): FitBoundsOptions {
+/** @deprecated use Polygon.getBounds() instead */
+function getFitBoundOptions(boundaries: GeoJsonPolygon): FitBoundsOptions {
     const { topLeft, bottomRight } = findBoundingBox(boundaries);
 
     return {
@@ -79,4 +82,16 @@ function getFitBoundOptions(boundaries: Polygon): FitBoundsOptions {
     };
 }
 
-export { getMapCenterByBuilding, getFitBoundOptions };
+function mapGeoJsonPolygonToLeafletExpression(polygon: GeoJsonPolygon): LatLngLiteral[][] {
+    const latLngExpr = polygon.coordinates
+            .map(linearRing => linearRing
+                .map(coordinate => ({
+                    lat: coordinate[0],
+                    lng: coordinate[1]
+                }))
+            );
+    
+    return latLngExpr;
+}
+
+export { getFitBoundOptions, mapGeoJsonPolygonToLeafletExpression, getMapCenterByBuilding };

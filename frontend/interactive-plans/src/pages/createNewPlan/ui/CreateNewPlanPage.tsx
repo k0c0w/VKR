@@ -7,11 +7,16 @@ import { useState } from "react";
 export default function CreateNewPlanPage() {
     const [building, setBuilding] = useState<Building | undefined>();
 
-    return (<Container component="main">
+    return (<Container component="main" style={{width: 800, height: 600}}>
         {!building && <LoadBuildingBoundariesWidget 
             setBuilding={setBuilding}
             loaderBackground={<Skeleton width="100%" height={800}/>}
         />}
-        {building && <CreateNewPlanWidget building={building} />}
+        {building && <CreateNewPlanWidget 
+            style={{
+                width: 600,
+                height: 800
+            }}
+            building={building} />}
     </Container>);
 }
