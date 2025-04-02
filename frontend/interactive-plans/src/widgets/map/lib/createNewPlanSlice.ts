@@ -2,10 +2,9 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { LatLngLiteral } from "leaflet";
 
 export enum CreateNewPlanStep {
-    BuildingBoundariesSetup = 1,
-    RoomsBoundariesSetup = 2,
-    InfrastructureSetup = 3,
-    SavePlans = 4
+    BuildingBoundariesSetup = 0,
+    RoomsBoundariesSetup = 1,
+    InfrastructureSetup = 2,
 }
 
 interface CreateNewPlanState {
