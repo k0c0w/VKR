@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { LatLngLiteral } from "leaflet";
+import { Polygon } from "geojson";
 
 export enum CreateNewPlanStep {
     BuildingBoundariesSetup = 0,
@@ -8,7 +8,7 @@ export enum CreateNewPlanStep {
 }
 
 interface CreateNewPlanState {
-    buildingBounds: LatLngLiteral[][] | undefined;
+    buildingBounds: Polygon | undefined;
     currentStep: CreateNewPlanStep;
 };
 
@@ -24,7 +24,7 @@ export const createNewPlanSlice = createSlice({
         setStep(state, action: PayloadAction<CreateNewPlanStep>) {
             state.currentStep = action.payload
         },
-        setBuildingBounds(state, action: PayloadAction<LatLngLiteral[][]>) {
+        setBuildingBounds(state, action: PayloadAction<Polygon>) {
             state.buildingBounds = action.payload;
         }
     }

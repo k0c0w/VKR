@@ -13,48 +13,36 @@ interface ControlsSettings {
     rotationMode: boolean;
 }
 
-function setUpControls(pm: PM.PMMap, {
-    controlsVisable,
-    drawMode,
-    editMode,
-    dragMode,
-    removalMode,
-    cutMode,
-    rotationMode,
-}: ControlsSettings) {
-    if (controlsVisable !== pm.controlsVisible()) {
-        pm.toggleControls();
-    }
-
-    if (drawMode === false) {
+function disableAllModes(pm: PM.PMMap) {
+    if (pm.globalDrawModeEnabled()) {
         pm.disableDraw();
-    } else {
-        const {shape, options} = drawMode as {
-            shape: PM.SUPPORTED_SHAPES;
-            options?: PM.DrawModeOptions;
-        }
-        pm.enableDraw(shape, options);
+    } 
+
+    if (pm.globalEditModeEnabled()) {
+        pm.disableGlobalEditMode();
     }
 
-    if (editMode !== pm.globalEditModeEnabled()) {
-        editMode ? pm.enableGlobalEditMode() : pm.disableGlobalEditMode();
+    if (pm.globalDragModeEnabled()) {
+        pm.disableGlobalDragMode();
     }
 
-    if (dragMode !== pm.globalDragModeEnabled()) {
-        dragMode ? pm.enableGlobalDragMode() : pm.disableGlobalDragMode();
+    if (pm.globalRemovalModeEnabled()) {
+        pm.disableGlobalRemovalMode();
     }
 
-    if (removalMode !== pm.globalRemovalModeEnabled()) {
-        removalMode ? pm.enableGlobalRemovalMode() : pm.disableGlobalRemovalMode();
+    if (pm.globalCutModeEnabled()) {
+        pm.disableGlobalCutMode();
     }
 
-    if (cutMode !== pm.globalCutModeEnabled()) {
-        cutMode ? pm.enableGlobalCutMode() : pm.disableGlobalCutMode();
-    }
-
-    if (rotationMode !== pm.globalRotateModeEnabled()) {
-        rotationMode ? pm.enableGlobalRotateMode() : pm.disableGlobalRotateMode();
+    if (pm.globalRotateModeEnabled()) {
+        pm.disableGlobalRotateMode();
     }
 }
 
-export {setUpControls};
+function setControlsVisible(pm: PM.PMMap, visible: boolean) {
+    if (visible !== pm.controlsVisible()) {
+        pm.toggleControls();
+    }
+}
+
+export { disableAllModes, setControlsVisible };

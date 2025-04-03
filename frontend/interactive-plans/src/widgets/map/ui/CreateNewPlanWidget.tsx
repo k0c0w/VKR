@@ -1,10 +1,13 @@
 import { Building } from "@entities/map/Building";
-import { getMapCenterByBuilding, mapGeoJsonPolygonToLeafletExpression } from "../lib/utils";
+import { getBounds, getMapCenterByBuilding } from "../lib/utils";
 import Map from "./Map";
-import { CSSProperties } from "react";
+import { CSSProperties, useEffect } from "react";
 import EditBuildingBoundariesController from "../lib/EditBuildingBoundariesController";
 import EditInfrastructureController from "../lib/EditInfrastructureController";
 import EditRoomsBoundariesController from "../lib/EditRoomsBoundariesController";
+import { useAppDispatch } from "@shared/hooks/reduxTypedHooks";
+import { setBuildingBounds } from "../lib/createNewPlanSlice";
+import FocusOnce from "../lib/FocusOnce";
 
 interface CreateNewPlanWidgetProps {
     building: Building;
@@ -13,13 +16,19 @@ interface CreateNewPlanWidgetProps {
 
 export default function CreateNewPlanWidget({building, style}: CreateNewPlanWidgetProps) {
     const {boundaries} = building;
-    
+    const dispatch = useAppDispatch();
+
+    useEffect(() => {
+        dispatch(setBuildingBounds(boundaries));
+    }, [dispatch]);
+
     return <Map
             style={style}
-            center={getMapCenterByBuilding(building.boundaries)}
+            center={getMapCenterByBuilding(boundaries)}
         >
-            <EditBuildingBoundariesController initialBoundaries={mapGeoJsonPolygonToLeafletExpression(boundaries)}/>
-            <EditRoomsBoundariesController/>
+            <FocusOnce bounds={getBounds(boundaries)}/>
+            <EditBuildingBoundariesController initialBoundaries={boundaries}/>
+            <EditRoomsBoundariesController />
             <EditInfrastructureController/>
         </Map>
 }

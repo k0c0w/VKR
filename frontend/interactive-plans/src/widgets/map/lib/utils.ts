@@ -1,5 +1,5 @@
-import { FitBoundsOptions, LatLngLiteral, LatLngTuple } from "leaflet";
-import { Polygon as GeoJsonPolygon } from "geojson";
+import { LatLngBounds, LatLngLiteral, LatLngTuple } from "leaflet";
+import { Polygon as GeoJsonPolygon, } from "geojson";
 
 function getClosedNonOverlappedPolygonArea(simplePolygon: number[][]): number {
     let sum = 0;
@@ -53,33 +53,11 @@ function getMapCenterByBuilding({coordinates, type}: GeoJsonPolygon): LatLngTupl
     return [centroidX / divisionCoef, centroidY / divisionCoef];
 }
 
-/** @deprecated */
-function findBoundingBox({coordinates}: GeoJsonPolygon) {
-    let minX = Infinity, minY = Infinity;
-    let maxX = -Infinity, maxY = -Infinity;
+function getBounds({coordinates}: GeoJsonPolygon): LatLngBounds {
+    const exteriorRing = coordinates[0] as LatLngTuple[];
+    const latLngBounds = new LatLngBounds(exteriorRing);
 
-    const exteriorBounds = coordinates[0];
-    for (const [x, y] of exteriorBounds) {
-        if (x < minX) minX = x;
-        if (y < minY) minY = y;
-        if (x > maxX) maxX = x;
-        if (y > maxY) maxY = y;
-    }
-
-    const topLeft: [number, number] = [minX, minY]; 
-    const bottomRight: [number, number] = [maxX, maxY];
-
-    return { topLeft, bottomRight };
-}
-
-/** @deprecated use Polygon.getBounds() instead */
-function getFitBoundOptions(boundaries: GeoJsonPolygon): FitBoundsOptions {
-    const { topLeft, bottomRight } = findBoundingBox(boundaries);
-
-    return {
-        paddingTopLeft: topLeft,
-        paddingBottomRight: bottomRight,
-    };
+    return latLngBounds;
 }
 
 function mapGeoJsonPolygonToLeafletExpression(polygon: GeoJsonPolygon): LatLngLiteral[][] {
@@ -94,4 +72,15 @@ function mapGeoJsonPolygonToLeafletExpression(polygon: GeoJsonPolygon): LatLngLi
     return latLngExpr;
 }
 
-export { getFitBoundOptions, mapGeoJsonPolygonToLeafletExpression, getMapCenterByBuilding };
+const polygonType: 'Polygon' = 'Polygon';
+function mapLeafletExpressionToGeoJsonPolygon(expr: LatLngLiteral[][]): GeoJsonPolygon {
+    const coordinates = expr.map(ring => ring.map(point => [point.lat, point.lng]));
+
+    return {
+        type: polygonType,
+        coordinates
+    };
+}
+
+export { getBounds, getMapCenterByBuilding };
+export { mapLeafletExpressionToGeoJsonPolygon, mapGeoJsonPolygonToLeafletExpression };

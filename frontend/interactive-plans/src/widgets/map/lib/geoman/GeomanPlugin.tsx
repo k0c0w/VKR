@@ -31,6 +31,7 @@ export default function GeomanPlugin({ showGeomanControls, children }: GeomanPlu
             drawRectangle: true,
             removalMode: true,
         });
+        map.pm.setLang("ru");
 
         return map.pm.removeControls;
     }, [map.pm]);

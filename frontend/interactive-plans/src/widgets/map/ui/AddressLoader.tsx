@@ -19,7 +19,7 @@ export default function AddressLoader({address, setBuildingInfo}: AddressLoaderP
         } = {
             bounds: {
                 type: "Polygon",
-                coordinates: [[[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]]]
+                coordinates: [[[-1, -1], [-1, 1], [1, 1], [1, -1], [-1, -1]]]
             },
             levels: 1
         };
