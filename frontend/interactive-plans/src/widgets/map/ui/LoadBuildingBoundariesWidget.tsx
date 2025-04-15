@@ -18,7 +18,7 @@ export default function LoadBuildingWidget({setBuilding, loaderBackground}:LoadB
         {address && <>
                 <AddressLoader 
                     address={address} 
-                    setBuildingInfo={({bounds, levels}) => setBuilding({address, boundaries: bounds, levels})} 
+                    setBuilding={setBuilding} 
                 />
                 {loaderBackground}
             </>

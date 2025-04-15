@@ -1,8 +1,10 @@
 import { Address } from "@shared/types/ValueObjectsTypes";
-import { Polygon } from "geojson";
+import { Feature, Polygon } from "geojson";
+import { Level } from "./Level";
 
-export type Building = {
+export type BuildingMetaProperties = {
     address: Address;
-    levels: number;
-    boundaries: Polygon;
+    levels: Level[];
 }
+
+export interface Building extends Feature<Polygon, BuildingMetaProperties> {}

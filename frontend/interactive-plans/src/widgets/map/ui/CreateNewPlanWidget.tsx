@@ -1,34 +1,67 @@
-import { Building } from "@entities/map/Building";
-import { getBounds, getMapCenterByBuilding } from "../lib/utils";
-import Map from "./Map";
+import { getBounds } from "@shared/map/lib/leafletUtilsAdditions";
 import { CSSProperties, useEffect } from "react";
 import EditBuildingBoundariesController from "../lib/EditBuildingBoundariesController";
-import EditInfrastructureController from "../lib/EditInfrastructureController";
-import EditRoomsBoundariesController from "../lib/EditRoomsBoundariesController";
-import { useAppDispatch } from "@shared/hooks/reduxTypedHooks";
-import { setBuildingBounds } from "../lib/createNewPlanSlice";
-import FocusOnce from "../lib/FocusOnce";
+import EditItInfrastructureController from "../lib/EditItInfrastructureController";
+import EditRoomsController from "../lib/EditRoomsController";
+import { useAppSelector } from "@shared/hooks/reduxTypedHooks";
+import { CreateNewPlanStep } from "../lib/createNewPlanSlice";
+import FocusOnce from "./FocusOnce";
+import { useMap } from "react-leaflet";
+import { disableAllModes, setButtonsForStep, setControlsVisible } from "../lib/geoman/utils";
+import GeomanPlugin from "../lib/geoman/GeomanPlugin";
+import { BuildingMap } from "@shared/map";
+import LevelPickController from "../lib/LevelPickController";
+import MapObjectDescriptionPopup from "../ui/MapObjectDescriptionPopup";
 
 interface CreateNewPlanWidgetProps {
-    building: Building;
     style?: CSSProperties;
 }
 
-export default function CreateNewPlanWidget({building, style}: CreateNewPlanWidgetProps) {
-    const {boundaries} = building;
-    const dispatch = useAppDispatch();
+export default function CreateNewPlanWidget({style}: CreateNewPlanWidgetProps) {
+    const { building, currentLevelIndex } = useAppSelector(state => state.createNewPlanReducer);
+    if (!building) {
+        throw new Error("Initialize building first!")
+    }
+    const {geometry, properties} = building;
+    const mapBounds = getBounds(geometry);
+
+    const levelLabels = properties.levels.map(x => x.name);
+
+    return <BuildingMap
+            style={style}
+            center={mapBounds.getCenter()} 
+            levelLabels={levelLabels} 
+            initialLevelIndex={currentLevelIndex}
+        >
+            <GeomanPlugin showGeomanControls={true} />
+            <FocusOnce bounds={mapBounds}/>
+            <EnableButtonsAndControls />
+            
+            <LevelPickController />
+            <EditBuildingBoundariesController initialBoundaries={geometry}/>
+            <EditRoomsController />
+            <EditItInfrastructureController/>
+
+            <MapObjectDescriptionPopup />
+        </BuildingMap>
+}
+
+function EnableButtonsAndControls() {
+    const map = useMap();
+    const step = useAppSelector(state => state.createNewPlanReducer.currentStep);
 
     useEffect(() => {
-        dispatch(setBuildingBounds(boundaries));
-    }, [dispatch]);
+        disableAllModes(map.pm);
+        setButtonsForStep(map.pm, step);
+ 
+        const controlsVisible = step !== CreateNewPlanStep.BuildingBoundariesSetup;
+        setControlsVisible(map.pm, controlsVisible);
+    }, [map, step]);
 
-    return <Map
-            style={style}
-            center={getMapCenterByBuilding(boundaries)}
-        >
-            <FocusOnce bounds={getBounds(boundaries)}/>
-            <EditBuildingBoundariesController initialBoundaries={boundaries}/>
-            <EditRoomsBoundariesController />
-            <EditInfrastructureController/>
-        </Map>
+    useEffect(() => {
+        map.on("levelpicker:changelevel", (e) => console.log(e));
+
+    }, [map]);
+
+    return <></>
 }

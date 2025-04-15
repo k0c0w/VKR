@@ -1,17 +1,8 @@
-import { PM } from "leaflet";
-
-interface ControlsSettings {
-    controlsVisable: boolean;
-    drawMode: false | {
-        shape: PM.SUPPORTED_SHAPES;
-        options?: PM.DrawModeOptions;
-    };
-    editMode: boolean;
-    dragMode: boolean;
-    removalMode: boolean;
-    cutMode: boolean;
-    rotationMode: boolean;
-}
+import { Layer, PathOptions, PM } from "leaflet";
+import { CreateNewPlanStep } from "../createNewPlanSlice";
+import { isPolygonLayer, isPolylineLayer } from "@shared/map";
+import { audienceStyle, hallStyle, wallStyle } from "./styling";
+import { RoomType } from "@entities/map";
 
 function disableAllModes(pm: PM.PMMap) {
     if (pm.globalDrawModeEnabled()) {
@@ -39,10 +30,54 @@ function disableAllModes(pm: PM.PMMap) {
     }
 }
 
+function setButtons(toolbar: PM.PMMapToolbar, buttons: string[], value: boolean) {
+    for (const button of buttons) {
+        toolbar.setButtonDisabled(button, !value);
+    }
+}
+
+function setButtonsForStep(pm: PM.PMMap, step: CreateNewPlanStep) {
+    const toolbar = pm.Toolbar;
+    switch(step) {
+        case CreateNewPlanStep.BuildingBoundariesSetup:
+            setButtons(toolbar, ['drawMarker', 'drawCircleMarker', 'drawPolyline', 'drawPolygon', 'dragMode', 'removalMode', 'rotateMode'], false);
+            setButtons(toolbar, ['editMode', 'cutPolygon'], true);
+            break;
+        case CreateNewPlanStep.RoomsBoundariesSetup:
+            setButtons(toolbar, ['drawPolyline', 'drawPolygon', 'dragMode', 'removalMode', 'rotateMode', 'editMode', 'cutPolygon'], true);
+            setButtons(toolbar, ['drawCircleMarker', 'drawMarker'], false);
+            break;
+        case CreateNewPlanStep.InfrastructureSetup:
+            setButtons(toolbar, ['drawMarker', 'dragMode', 'removalMode'], true);
+            setButtons(toolbar, ['drawCircleMarker', 'drawPolyline', 'drawPolygon', 'rotateMode', 'editMode', 'cutPolygon'], false);
+            break;
+        default:
+            console.warn("Not all states of enum covered.", step);
+            break;
+    }
+}
+
 function setControlsVisible(pm: PM.PMMap, visible: boolean) {
     if (visible !== pm.controlsVisible()) {
         pm.toggleControls();
     }
 }
 
-export { disableAllModes, setControlsVisible };
+export function setDefaultStyle(layer: Layer) {
+    if (isPolygonLayer(layer)) {
+        layer.setStyle(audienceStyle);
+    } else if (isPolylineLayer(layer)) {
+        layer.setStyle(wallStyle);
+    }
+}
+
+export function getStyleByRoomType(type: RoomType): PathOptions {
+    if (type === RoomType.Hall) {
+        return hallStyle;
+    }
+
+    return audienceStyle;
+}
+
+export { disableAllModes, setControlsVisible, setButtonsForStep };
+

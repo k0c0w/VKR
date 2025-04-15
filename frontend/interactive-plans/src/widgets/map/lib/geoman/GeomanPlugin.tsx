@@ -3,6 +3,7 @@ import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 import { ControlPosition } from "leaflet";
 import { useMap } from "react-leaflet";
 import { ReactNode, useEffect } from "react";
+import { overrideDraw } from "./Draw.Overrides";
 
 interface GeomanPluginProps {
     showGeomanControls: boolean,
@@ -15,29 +16,30 @@ export default function GeomanPlugin({ showGeomanControls, children }: GeomanPlu
     const map = useMap();
 
     useEffect(() => {
+        map.pm.setLang("ru");
+        overrideDraw(map);
+
         map.pm.addControls({
             position: toolBarPosition,
             cutPolygon: false,
             rotateMode: true,
             drawCircle: false,
             drawCircleMarker: false,
-            drawMarker: false,
+            drawMarker: true,
             drawText: false,
             dragMode: true,
             editControls: true,
             editMode: true,
             drawPolygon: true,
             drawPolyline: true,
-            drawRectangle: true,
+            drawRectangle: false,
             removalMode: true,
         });
-        map.pm.setLang("ru");
 
-        return map.pm.removeControls;
-    }, [map.pm]);
-
-    useEffect(() => {
-    }, [map.pm])
+        return () => {
+            map?.pm?.removeControls();
+        } 
+    }, [map]);
 
     useEffect(() => {
         const currentControlsVisability = map.pm.controlsVisible();
@@ -46,7 +48,7 @@ export default function GeomanPlugin({ showGeomanControls, children }: GeomanPlu
             map.pm.toggleControls();
         }
         
-    }, [showGeomanControls, map.pm])
+    }, [showGeomanControls, map])
 
     return <>{children}</>;
 }

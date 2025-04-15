@@ -1,75 +1,69 @@
 import React, { useEffect, useRef, Ref } from "react";
 import { Polygon as ReactLeafletPolygon } from "react-leaflet";
-import { LatLngExpression, LatLngLiteral, Polygon as LeafletPolygon, PM } from "leaflet";
-
-function enableLayer(polygon: LeafletPolygon) {
-    polygon.pm.enable({
-        allowSelfIntersection: false,
-        allowSelfIntersectionEdit: false,
-        removeLayerBelowMinVertexCount: false,
-        allowRemoval: false,
-        allowCutting: false,
-        allowRotation: false,
-        draggable: false,
-        snappable: false,
-
-        allowEditing: true,
-    })
-}
-
-function disableLayer(polygon: LeafletPolygon) {
-    polygon.pm.disable();
-    polygon.pm.setOptions({
-        allowSelfIntersection: false,
-        allowSelfIntersectionEdit: false,
-        removeLayerBelowMinVertexCount: false,
-        allowRemoval: false,
-        allowCutting: false,
-        allowRotation: false,
-        draggable: false,
-        allowEditing: false,
-
-        snappable: true,
-        snapSegment: true,
-        snapMiddle: true,
-    })
-}
+import { LatLngExpression, Polygon as LeafletPolygon, PM } from "leaflet";
+import { TO_GEOJSON_PRECISION } from "@app/config/constants";
+import { Feature, Polygon as GeoJsonPolygon } from "geojson";
+import { basementStyle } from "./geoman/styling";
 
 interface BuildingBasePolygonProps {
-    editable?: boolean;
+    editable: boolean;
     positions: LatLngExpression[][];
-    ref?:  Ref<LeafletPolygon<any> | null>;
-    onChange?(positions: LatLngLiteral[][]): void;
+    ref?: Ref<LeafletPolygon<any> | null>;
+    onChange?(positions: Feature<GeoJsonPolygon>): void;
 }
 
-export default function BuildingBasePolygon({positions, ref, editable=true, onChange}: BuildingBasePolygonProps) {
+export default function BuildingBasePolygon({
+    positions,
+    ref,
+    editable,
+    onChange,
+}: BuildingBasePolygonProps) {
     const polyRef = useRef<LeafletPolygon | null>(null);
 
     const setRefFunc: React.Ref<LeafletPolygon> = (r) => {
-            polyRef.current = r;
-            if (ref) {
-                if (typeof ref === 'function'){
-                    ref(r);
-                } else {
-                    ref.current = r
-                }   
-            }
+        polyRef.current = r;
+        if (ref) {
+            if (typeof ref === 'function'){
+                ref(r);
+            } else {
+                ref.current = r
+            }   
+        }
     }
 
     useEffect(() => {
         const polygon = polyRef.current;
         if (polygon) {
             if (editable) {
-                enableLayer(polygon);
+                polygon.pm.enable({
+                    allowSelfIntersection: false,
+                    allowSelfIntersectionEdit: false,
+                    removeLayerBelowMinVertexCount: false,
+                    allowRemoval: false,
+                    allowCutting: false,
+                    allowRotation: false,
+                    draggable: false,
+                    snappable: false,
+                    allowEditing: true,
+                });
             } else {
-                disableLayer(polygon);
+                polygon.pm.disable();
+                polygon.pm.setOptions({
+                    draggable: false,
+                    allowEditing: false,
+                    allowSelfIntersection: false,
+                    allowSelfIntersectionEdit: false,
+                    removeLayerBelowMinVertexCount: false,
+                    allowRemoval: false,
+                    allowCutting: false,
+                    allowRotation: false,
+                    snappable: false,
+                });
             }
         }
+
     }, [editable, polyRef]);
 
-    /* since react-leaflet.Polygon is just wrapper and it never unmounts, 
-       can not process ref clean up on remove in ref. That`s why subscribing on leaflet object event.
-    */ 
     useEffect(() => {
         const removeHandler = () => setRefFunc(null);
         let pmEditHandler: PM.EditEventHandler | undefined;
@@ -77,15 +71,19 @@ export default function BuildingBasePolygon({positions, ref, editable=true, onCh
         const poly = polyRef.current;
         poly?.on("remove", removeHandler);
 
-        if (onChange) {
-            pmEditHandler = function(e) {
-                if (e.shape !== 'Polygon') {
-                    throw Error("Only 'Polygon' is supported for BuildingBase!");
+        if (onChange && editable) {
+            pmEditHandler = function (e) {
+                if (e.shape !== "Polygon") {
+                    throw new Error("Only 'Polygon' is supported for BuildingBase!");
                 }
 
                 const polygonLayer = e.layer as LeafletPolygon;
-                const latLngs = polygonLayer.getLatLngs() as LatLngLiteral[][];
-                onChange(latLngs);
+                const polygon = polygonLayer.toGeoJSON(TO_GEOJSON_PRECISION)
+                if (polygon.geometry.type !== "Polygon") {
+                    throw new Error("Unsupported polygon shape!");
+                }
+
+                onChange(polygon as Feature<GeoJsonPolygon>);
             };
 
             poly?.on("pm:edit", pmEditHandler);
@@ -97,9 +95,7 @@ export default function BuildingBasePolygon({positions, ref, editable=true, onCh
                 poly?.off("pm:edit", pmEditHandler);
             }
         };
-    }, [polyRef.current]);
+    }, [onChange, editable]);
 
-    return <ReactLeafletPolygon
-        ref={setRefFunc}
-        positions={positions} />
+    return <ReactLeafletPolygon ref={setRefFunc} positions={positions} pathOptions={basementStyle} />;
 }
