@@ -8,3 +8,7 @@ export type Address = {
     street: Street;
     houseNumber: HouseNumber;
 } 
+
+export function isCompletedAddress({city, street, houseNumber}: Address): boolean {
+    return city.length > 0 && street.length > 0 && houseNumber.length > 0;
+}

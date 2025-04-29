@@ -89,7 +89,7 @@ export default function EditRoomsController() {
     } 
     const setFeature = (featureId: guid, feature: Wall | Room | null) => dispatch(setBuildingStructureOnCurrentLevel({featureId, feature}));
     const focusOn = ({id}: Room) => dispatch(focusOnFeature({featureId:id, levelIndex: currentLevelIndex, isITInfrastructureFeature: false}));
-    const {walls:lineStrings, rooms:polygons} = splitWallsAndRooms(layers);
+    const {walls, rooms} = splitWallsAndRooms(layers);
 
     function onLayerClicked(e: L.LeafletMouseEvent) {
         const layer = castToLayerWithFeatureId(e.target as Layer);
@@ -252,7 +252,7 @@ export default function EditRoomsController() {
 
             const newPosition = toGeoJsonWithId(layer);
 
-            if (isValidFeaturePosition({feature: newPosition, bounds: building!.geometry, lineStrings, polygons })) {
+            if (isValidFeaturePosition({feature: newPosition, bounds: building!.geometry, walls, rooms })) {
                 resetStyle(layer, feature);
             } else {
                 // @ts-ignore
@@ -260,6 +260,14 @@ export default function EditRoomsController() {
             }
         }
     }
+
+    useEffect(() => {
+        if (!map.levelControl) {
+            return;
+        } else {
+            map.levelControl.setShowLevelButtons(currentStep === CreateNewPlanStep.RoomsBoundariesSetup);
+        }
+    }, [map, currentStep]);
 
     // Update validator for layers
     useEffect(() => {
@@ -380,11 +388,11 @@ export default function EditRoomsController() {
 
     // validate layers
     useEffect(() => {
-        const validationArgs: {feature: FeatureWithId<LineString | GeoJsonPolygon | Point> | null; bounds: GeoJsonPolygon; lineStrings:FeatureWithId<LineString>[]; polygons: FeatureWithId<GeoJsonPolygon>[]}
+        const validationArgs: {feature: FeatureWithId<LineString | GeoJsonPolygon | Point> | null; bounds: GeoJsonPolygon; rooms:FeatureWithId<RoomGeometry>[]; walls: FeatureWithId<WallGoometry>[]}
          = {
             bounds: building.geometry,
-            polygons,
-            lineStrings,
+            rooms,
+            walls,
             feature: null
         };     
 
@@ -396,7 +404,7 @@ export default function EditRoomsController() {
                 }
                 validationArgs.feature = feature;
 
-                if (!isValidFeaturePosition(validationArgs as {feature: FeatureWithId<LineString | GeoJsonPolygon | Point>; bounds: GeoJsonPolygon; lineStrings:FeatureWithId<LineString>[]; polygons: FeatureWithId<GeoJsonPolygon>[]})) {
+                if (!isValidFeaturePosition(validationArgs as {feature: FeatureWithId<LineString | GeoJsonPolygon | Point>; bounds: GeoJsonPolygon; walls:FeatureWithId<WallGoometry>[]; rooms: FeatureWithId<RoomGeometry>[]})) {
                     if (!isMarkerLayer(layer)) {
                         layer.setStyle(errorStyle);
                     }

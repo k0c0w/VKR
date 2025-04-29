@@ -18,10 +18,7 @@ export interface ITInfrastructureDescriptorProps {
 
 export default function ITInfrastructureDescriptor({ infrastructure, belongsTo, onMetaPropsChange, errors }: ITInfrastructureDescriptorProps) {
     const [metaProps, setMetaProps] = useState<ITInfrastructureMetaProperties>({
-        name: infrastructure.properties.name,
-        inventoryNumber: infrastructure.properties.inventoryNumber,
-        serialNumber: infrastructure.properties.serialNumber,
-        meaning: infrastructure.properties.meaning,
+        ...infrastructure.properties,
     });
 
     const handleInputChange = (field: keyof ITInfrastructureMetaProperties, value: string) => {

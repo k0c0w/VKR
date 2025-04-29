@@ -10,6 +10,9 @@ export default function CreateNewPlanPage() {
     const building = useAppSelector(state => state.createNewPlanReducer.building);
     const dispatch = useAppDispatch();
 
+    const [createButtonDisabled, setCreateButtonDisabled] = useState(false);
+    const [validating, setValidating] = useState(false);
+
     useEffect(() => {
         if (loadedBuilding) {
             dispatch(setBuilding(loadedBuilding))
@@ -18,6 +21,12 @@ export default function CreateNewPlanPage() {
         }
     }, [loadedBuilding]);
 
+    useEffect(() => {
+        if (createButtonDisabled) {
+            setCreateButtonDisabled(false);
+        }
+    }, [building]);
+
     return (<Container component="main" style={{width: 800, height: 600}}>
         {!loadedBuilding && <LoadBuildingBoundariesWidget 
             setBuilding={setLoadedBuilding}
@@ -25,7 +34,7 @@ export default function CreateNewPlanPage() {
         />}
         {building && <>
             <CreateNewPlanWidget style={{width: 600, height: 800}} />
-            <CreateNewPlanStepperWidget onComplete={() => alert("done")}/>
+            <CreateNewPlanStepperWidget backwardButtonDisabled={validating} completeButtonDisabled={createButtonDisabled || validating} onComplete={() => alert("done")}/>
         </>}
     </Container>);
 }

@@ -3,15 +3,16 @@ import { useEffect, useState } from "react"
 import { useMap } from "react-leaflet";
 import { CreateNewPlanStep, focusOnFeature, setItInfrastructureOnCurrentLevel } from "./createNewPlanSlice";
 import EnableOrDisableLayers from "./EnableOrDisableLayers";
-import { GeoJSON, Layer, Marker, PM } from "leaflet";
+import { GeoJSON, Layer, LeafletMouseEvent, Marker, PM } from "leaflet";
 import { getGeoJsonFeatureGeometryFrom, getLayerLeafletId, isMarkerLayer } from "@shared/map";
-import { FeatureWithId, isWall, ITInfrastructure, ITInfrastructureGeometry, Wall } from "@entities/map";
+import { BuildingGeometry, FeatureWithId, isWall, ITInfrastructure, ITInfrastructureGeometry, RoomGeometry, Wall, WallGoometry } from "@entities/map";
 import { TO_GEOJSON_PRECISION } from "@app/config/constants";
 import { guid } from "@shared/types/guid";
 import { generateRandomGuidWhichDoesNotExistsIn } from "@shared/utils/random";
 import { layerHasFeatureId, LayerWithFeatureId, mutateToLayerWithFeatureIdBasedOn } from "@shared/map/lib/leafletTypeExtensions";
 import { isValidFeaturePosition } from "./layerValidation";
 import { LineString, Point, Polygon as GeoJsonPolygon } from "geojson";
+import { errorItInfrastructureIcon, itInfrastructureIcon } from "./geoman/styling";
 
 const whenEnabledOptions = {
     allowCutting: false,
@@ -64,6 +65,12 @@ export default function EditItInfrastructureController() {
     const map = useMap();
     const focusOn = ({id}: ITInfrastructure) => dispatch(focusOnFeature({featureId:id, levelIndex: currentLevelIndex, isITInfrastructureFeature: true}));
 
+    function onMarkerClick(feature: ITInfrastructure) {
+        if (!(map.pm.globalRemovalModeEnabled() || map.pm.globalDragModeEnabled())) {
+            focusOn(feature);
+        }
+    }
+
     function handleCreate({shape, layer}: { shape: PM.SUPPORTED_SHAPES; layer: Layer }) {
         if (currentStep !== CreateNewPlanStep.InfrastructureSetup) {
             return;
@@ -88,11 +95,12 @@ export default function EditItInfrastructureController() {
                 meaning: "IT-Infrastructure",
                 inventoryNumber: "",
                 name: "",
+                linkedToAudienceId: "",
                 serialNumber: ""
             }
         };
 
-        layer.on("click", () => focusOn(feature));
+        layer.on("click", () => onMarkerClick(feature));
 
         setFeature(featureId, feature);
         setLayer(mutateToLayerWithFeatureIdBasedOn(layer, featureId));
@@ -117,6 +125,29 @@ export default function EditItInfrastructureController() {
         setFeature(layer.featureId, {...prevState, geometry: rawFeature.geometry});
     }
 
+    function setErrorStyleIfInvalid({layer}: {layer: Layer}) {
+        if (!isMarkerLayer(layer)) {
+            return;
+        }
+
+        const feature: FeatureWithId<Point> = {...layer.toGeoJSON(TO_GEOJSON_PRECISION), id: getLayerLeafletId(layer).toString()};
+
+        if(!isValidFeaturePosition({
+            bounds: building!.geometry,
+            walls,
+            rooms: [],
+            feature
+        })) {
+            if (layer.getIcon() !== errorItInfrastructureIcon) {
+                layer.setIcon(errorItInfrastructureIcon);
+            }
+        } else {
+            if (layer.getIcon() !== itInfrastructureIcon ) {
+                layer.setIcon(itInfrastructureIcon);
+            }
+        }
+    }
+
     function handleRemove({layer}: {
         layer: L.Layer;
         shape: PM.SUPPORTED_SHAPES;
@@ -135,6 +166,7 @@ export default function EditItInfrastructureController() {
     useEffect(() => {
         Object.values(layers).forEach(layer => {
             layer.on("pm:remove", handleRemove);
+            layer.on("pm:drag", setErrorStyleIfInvalid);
             layer.on("pm:dragend", handlePositionChange);
         });
 
@@ -142,36 +174,26 @@ export default function EditItInfrastructureController() {
             Object.values(layers).forEach(layer => {
                 layer.off("pm:remove", handleRemove);
                 layer.off("pm:dragend", handlePositionChange);
+                layer.off("pm:drag", setErrorStyleIfInvalid);
             });
         }
-    }, [layers, building, handleRemove, handlePositionChange]);
+    }, [layers, building, handleRemove, handlePositionChange, setErrorStyleIfInvalid]);
 
     // Handle layer creation
     useEffect(() => {
         if (currentStep === CreateNewPlanStep.InfrastructureSetup) {
+            //@ts-ignore
+            map.pm.Draw.Marker.setOptions({
+                markerStyle: {
+                    icon: itInfrastructureIcon,
+                    opacity: 1,
+                }
+            })
             map.on("pm:create", handleCreate);
         }
 
         return () => { map.off("pm:create", handleCreate) }
     }, [map, currentStep, handleCreate]);
-
-    // Add validation on draw start
-    useEffect(() => {
-            const setupDraw: PM.DrawStartEventHandler = function ({shape}) {
-                // @ts-ignore
-                map.pm.Draw[shape].setOptions({
-                    ...whenEnabledOptions,
-                });
-            }
-    
-            if (currentStep === CreateNewPlanStep.InfrastructureSetup) {
-                map.on("pm:drawstart", setupDraw);
-            }
-    
-            return () => {
-                map.off("pm:drawstart", setupDraw);
-            }
-    }, [map, currentStep]);
 
     // Level change handling
     useEffect(() => {
@@ -192,6 +214,7 @@ export default function EditItInfrastructureController() {
                     ...whenEnabledOptions,
                 });
 
+                newLayer.on("click", () => onMarkerClick(feature));
                 newLayer.addTo(map);
 
                 const workingLayer = mutateToLayerWithFeatureIdBasedOn(newLayer, feature.id);
@@ -207,11 +230,11 @@ export default function EditItInfrastructureController() {
 
     // validate layers
     useEffect(() => {
-        const validationArgs: {feature: FeatureWithId<Point> | null; bounds: GeoJsonPolygon; lineStrings:FeatureWithId<LineString>[]; polygons: FeatureWithId<GeoJsonPolygon>[]}
+        const validationArgs: {feature: FeatureWithId<Point> | null; bounds: GeoJsonPolygon; walls:FeatureWithId<WallGoometry>[]; rooms: FeatureWithId<RoomGeometry>[]}
          = {
             bounds: building.geometry,
-            polygons: [],
-            lineStrings: walls,
+            rooms: [],
+            walls,
             feature: null
         };     
 
@@ -223,16 +246,14 @@ export default function EditItInfrastructureController() {
                 }
                 validationArgs.feature = feature;
 
-                if (!isValidFeaturePosition(validationArgs as {feature: FeatureWithId<Point>; bounds: GeoJsonPolygon; lineStrings:FeatureWithId<LineString>[]; polygons: FeatureWithId<GeoJsonPolygon>[]})) {
-                    if (isMarkerLayer(layer)) {
-                        // todo: set error icon here
-                    }
+                if (!isValidFeaturePosition(validationArgs as {feature: FeatureWithId<Point>; bounds: BuildingGeometry; walls:FeatureWithId<WallGoometry>[]; rooms: FeatureWithId<RoomGeometry>[]})) {
+                    layer.setIcon(errorItInfrastructureIcon);
                 } else {
-                    // todo: reset error icon here
+                    layer.setIcon(itInfrastructureIcon);
                 }
             }
         });
-    }, [layers, building]);
+    }, [layers, levelFeatures, building]);
 
     return <>
         <EnableOrDisableLayers 
