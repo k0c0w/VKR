@@ -15,7 +15,9 @@ const mapApi = createApi({
             query: (address) => ({
                 url: "/map/building-boundaries",
                 params: {
-                    address: `${address.city}, ${address.street}, ${address.houseNumber}`
+                    city: address.city,
+                    street: address.street,
+                    houseNumber: address
                 }
             })
         }),
