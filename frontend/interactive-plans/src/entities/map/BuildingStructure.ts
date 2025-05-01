@@ -39,11 +39,11 @@ export function doesWallIntersetOtherWalls(wall: FeatureWithId<WallGoometry>, al
     for(const otherWall of all) {
         const skipSelf = wall.id === otherWall.id;
         if (!skipSelf && !isCorrectWallRelation(wall, otherWall)) {
-            return false;
+            return true;
         } 
     }
 
-    return true;
+    return false;
 }
 
 function isCorrectWallRelation(wall: Feature<WallGoometry>, otherWall: Feature<WallGoometry>): boolean {
@@ -55,11 +55,11 @@ export function doesRoomIntersectOtherRooms(room: FeatureWithId<RoomGeometry>, a
     for(const otherRoom of all) {
         const skipSelf = otherRoom.id === room.id;
         if (!skipSelf && !isCorrectRoomRelation(room, otherRoom)) {
-            return false;
+            return true;
         }
     }
 
-    return true;
+    return false;
 }
 
 function isCorrectRoomRelation(room: FeatureWithId<RoomGeometry>, other: FeatureWithId<RoomGeometry>): boolean {
