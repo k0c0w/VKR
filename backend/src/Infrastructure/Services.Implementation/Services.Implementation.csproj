@@ -10,4 +10,14 @@
       <ProjectReference Include="..\..\Core\Services\Services.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.Logging.Abstractions">
+        <HintPath>..\..\..\..\..\..\Users\DNS\.nuget\packages\microsoft.extensions.logging.abstractions\9.0.4\lib\net8.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.2.0" />
+    </ItemGroup>
+
 </Project>

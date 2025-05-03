@@ -2,7 +2,8 @@ namespace UseCases.RetrieveBuildingByAddress;
 
 public record struct BuildingDto
 {
-    public Dictionary<string, object> Geometry { get; init; }
+    public decimal[][][] Geometry { get; init; }
+    public uint LevelsCount { get; init; }
     
-    public int? LevelsCount { get; init; }
+    public string Address { get; init; }
 }

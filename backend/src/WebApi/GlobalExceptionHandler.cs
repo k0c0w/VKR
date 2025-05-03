@@ -17,7 +17,13 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        _logger.LogError(
+        if (exception is TaskCanceledException taskCanceledException)
+        {
+            _logger.LogInformation(taskCanceledException, "Operation {traceId} was canceled.", httpContext.TraceIdentifier);
+            return true;
+        }
+        
+        _logger.LogCritical(
             exception, "Unhandled exception occurred: {Message}", exception.Message);
 
         var problemDetails = new ProblemDetails

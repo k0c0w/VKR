@@ -1,61 +1,58 @@
-using FluentValidation;
+using Domain;
+using Domain.Errors;
 using ResultMonad;
+using Services.Implementation.OSM;
 using Services.Map;
 
 namespace UseCases.RetrieveBuildingByAddress;
 
-public struct RetrieveBuildingByAddressUseCase : IUseCase<RetrieveBuildingByAddressDto, Result<BuildingDto, Dictionary<string, object>>>
+public sealed record RetrieveBuildingByAddressUseCase 
+    : IUseCase<RetrieveBuildingByAddressDto, Result<BuildingDto, ErrorMessage>>
 {
-    private readonly IEnumerable<IValidator<RetrieveBuildingByAddressDto>> _validators;
     private readonly IMapProviderService _mapProviderService;
+    private readonly IAddressParser _addressParser;
     
     public RetrieveBuildingByAddressUseCase(
         IMapProviderService mapProviderService, 
-        IEnumerable<IValidator<RetrieveBuildingByAddressDto>> validators)
+        IAddressParser addressParser)
     {
         _mapProviderService = mapProviderService;
-        _validators = validators;
+        _addressParser = addressParser;
     }
 
-    public async Task<Result<BuildingDto, Dictionary<string, object>>> RunAsync(RetrieveBuildingByAddressDto args, CancellationToken cancellationToken)
+    public async Task<Result<BuildingDto, ErrorMessage>> RunAsync(RetrieveBuildingByAddressDto args, CancellationToken ct)
     {
-        args = args.WithTrimmedFields();
+        var address = GetAddress(args.City, args.Street, args.HouseNumber);
         
-        var validationResult = ValidateArguments(args);
-        if (validationResult.IsFailure)
-        {
-            return Result.Fail<BuildingDto, Dictionary<string, object>>(validationResult.Error);
-        }
-        
-        var buildingInfo =
-            await _mapProviderService.GetBuildingInformationAsync(args.City, args.Street, args.HouseNumber,
-                cancellationToken);
+        var buildingInfoResult = await _mapProviderService.GetBuildingInformationAsync(address, ct);
 
+        if (buildingInfoResult.IsFailure)
+        {
+            return Result.Fail<BuildingDto, ErrorMessage>(buildingInfoResult.Error);
+        }
+   
+        var buildingInfo = buildingInfoResult.Value!;
         var building = new BuildingDto
         {
-            Geometry = buildingInfo,
-            LevelsCount = 1
+            Geometry = buildingInfo.Geometry.Coordinates,
+            LevelsCount = buildingInfo.LevelsCount,
+            Address = buildingInfo.Address.ToString(),
         };
         
-        return Result.Ok<BuildingDto, Dictionary<string, object>>(building);
+        return Result.Ok<BuildingDto, ErrorMessage>(building);
     }
 
-    private ResultWithError<Dictionary<string, object>> ValidateArguments(RetrieveBuildingByAddressDto args)
+    private Address GetAddress(string city, string street, string house)
     {
-        var validation = _validators
-            .Select(x => x.Validate(args))
-            .ToArray();
+        var (streetType, streetName) = _addressParser.ParseStreet(street);
+        var (houseNumber, houseUnit) = _addressParser.ParseHouse(house);
 
-        if (validation.Any(x => !x.IsValid))
-        {
-            var errors = validation.Where(x => !x.IsValid)
-                .SelectMany(x => x.Errors)
-                .GroupBy(x => x.PropertyName)
-                .ToDictionary(x => x.Key, x => x.Select(y => y.ErrorMessage).ToArray() as object);
-
-            return ResultWithError.Fail(errors);
-        }
-        
-        return ResultWithError.Ok<Dictionary<string, object>>();
+        return new Address(
+            city: city,
+            streetName: streetName,
+            streetType: streetType,
+            houseNumber: houseNumber,
+            houseUnit: houseUnit
+        );
     }
 }
