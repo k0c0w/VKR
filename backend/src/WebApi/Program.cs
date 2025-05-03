@@ -1,4 +1,5 @@
 using WebApi;
+using WebApi.Endpoints;
 using WebApi.Endpoints.Map;
 
 var builder = WebApplication.CreateSlimBuilder(args);

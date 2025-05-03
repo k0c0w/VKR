@@ -12,14 +12,14 @@ public class RetrieveBuildingByAddressDtoValidator : AbstractValidator<RetrieveB
                 .WithMessage("Не должно быть пустым.")
             .MaximumLength(128)
                 .WithMessage("Не более 128 символов.")
-            .Must(x => char.IsUpper(x[0]))
-                .WithMessage("Должно начинаться с заглавной буквы");
+            .Must(x => x.Length > 0 && char.IsUpper(x[0]))
+                .WithMessage("Должно начинаться с заглавной буквы.");
         RuleFor(x => x.Street)
             .NotEmpty()
                 .WithMessage("Не должны быть пустым.")
             .MaximumLength(256)
                 .WithMessage("Не более 256 символов.");
-        RuleFor(x => x.HouseNumber)
+        RuleFor(x => x.House)
             .NotEmpty()
                 .WithMessage("Не должно быть пустым.")
             .MaximumLength(64)

@@ -1,7 +1,7 @@
 using Domain;
 using Domain.Errors;
 using ResultMonad;
-using Services.Implementation.OSM;
+using Services;
 using Services.Map;
 
 namespace UseCases.RetrieveBuildingByAddress;
@@ -22,7 +22,11 @@ public sealed record RetrieveBuildingByAddressUseCase
 
     public async Task<Result<BuildingDto, ErrorMessage>> RunAsync(RetrieveBuildingByAddressDto args, CancellationToken ct)
     {
-        var address = GetAddress(args.City, args.Street, args.HouseNumber);
+        var address = GetAddress(args.City, args.Street, args.House);
+        if (address is null)
+        {
+            return Result.Fail<BuildingDto, ErrorMessage>(new ErrorMessage("Не удалось распарсить адрес."));
+        }
         
         var buildingInfoResult = await _mapProviderService.GetBuildingInformationAsync(address, ct);
 
@@ -42,10 +46,13 @@ public sealed record RetrieveBuildingByAddressUseCase
         return Result.Ok<BuildingDto, ErrorMessage>(building);
     }
 
-    private Address GetAddress(string city, string street, string house)
+    private Address? GetAddress(string city, string street, string house)
     {
-        var (streetType, streetName) = _addressParser.ParseStreet(street);
-        var (houseNumber, houseUnit) = _addressParser.ParseHouse(house);
+        if (!_addressParser.TryParseStreet(street, out var streetType, out var streetName)
+            || !_addressParser.TryParseHouse(house, out var houseNumber, out var houseUnit))
+        {
+            return null;
+        }
 
         return new Address(
             city: city,

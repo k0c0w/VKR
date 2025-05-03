@@ -1,8 +1,8 @@
-namespace Services.Implementation.OSM;
+namespace Services;
 
 public interface IAddressParser
 {
-    public (string StreetType, string StreetName) ParseStreet(string street);
+    public bool TryParseStreet(string street, out string streetType, out string streetName);
 
-    public (string HouseNumber, string UnitNumber) ParseHouse(string houseNumber);
+    public bool TryParseHouse(string house, out string houseNumber, out string unitNumber);
 }

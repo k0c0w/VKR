@@ -1,3 +1,3 @@
 namespace UseCases.RetrieveBuildingByAddress;
 
-public record struct RetrieveBuildingByAddressDto(string City, string Street, string HouseNumber);
+public record struct RetrieveBuildingByAddressDto(string City, string Street, string House);

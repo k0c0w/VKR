@@ -3,7 +3,7 @@ using Domain.Errors;
 using Domain.GeoJson;
 using Moq;
 using ResultMonad;
-using Services.Implementation.OSM;
+using Services;
 using Services.Map;
 using UseCases.RetrieveBuildingByAddress;
 
@@ -14,11 +14,13 @@ public class RetrieveBuildingByAddressUseCaseTests
     [Fact]
     public async Task Run_ShouldReturnCorrectValues()
     {
-        const string expectedCity = "Казань",
-            expectedStreetType = "улица",
-            expectedStreetName = "Кремлёвская",
-            expectedHouse = "35",
-            expectedStreet = $"{expectedStreetType} {expectedStreetName}";
+        const string expectedCity = "Казань";
+        string expectedStreetType = "улица",
+            expectedStreetName = "Кремлёвская";
+        var expectedHouse = "35";
+        var expectedUnitNumber = string.Empty;
+        var expectedStreet = $"{expectedStreetType} {expectedStreetName}";
+        
         var expectedAddress = new Address(expectedCity, expectedStreet, expectedStreetType, expectedHouse);
         var expectedBuildingInfo = new BuildingInformation
         {
@@ -44,16 +46,16 @@ public class RetrieveBuildingByAddressUseCaseTests
 
         var addressParserMock = new Mock<IAddressParser>();
         addressParserMock
-            .Setup(x => x.ParseStreet(expectedStreet))
-            .Returns(() => (expectedStreetType, expectedStreetName));
-        addressParserMock.Setup(x => x.ParseHouse(expectedHouse))
-            .Returns(() => (expectedHouse, ""));
+            .Setup(x => x.TryParseStreet(expectedStreet, out expectedStreetType, out expectedStreetName))
+            .Returns(true);
+        addressParserMock.Setup(x => x.TryParseHouse(expectedHouse, out expectedHouse, out expectedUnitNumber))
+            .Returns(true);
 
         var args = new RetrieveBuildingByAddressDto
         {
             City = expectedCity,
             Street = expectedStreet,
-            HouseNumber = expectedHouse
+            House = expectedHouse
         };
         var useCase = new RetrieveBuildingByAddressUseCase(serviceMock.Object, addressParserMock.Object);
 

@@ -2,24 +2,26 @@ using System.Net;
 using Domain.Errors;
 using Microsoft.AspNetCore.Mvc;
 using ResultMonad;
+using Services.Map;
 using UseCases;
 using UseCases.RetrieveBuildingByAddress;
+using WebApi.Endpoints.Map;
 
-namespace WebApi.Endpoints.Map;
+namespace WebApi.Endpoints;
 
-internal static class HandlerRegistry
+internal static partial class HandlerRegistry
 {
     internal static void UseMapEndpoints(this WebApplication app)
     {
         app.MapGet("/map/building-boundaries", async (
-            [FromQuery] string city,
-            [FromQuery] string street,
-            [FromQuery] string house,
+            [FromQuery] string? city,
+            [FromQuery] string? street,
+            [FromQuery] string? house,
             [FromServices] RetrieveBuildingByAddressDtoValidator validator,
             [FromServices] IUseCase<RetrieveBuildingByAddressDto, Result<BuildingDto, ErrorMessage>> useCase, 
             CancellationToken ct) =>
         {
-            var args = new RetrieveBuildingByAddressDto(city.Trim(), street.Trim(), house.Trim());
+            var args = new RetrieveBuildingByAddressDto(city?.Trim() ?? "", street?.Trim() ?? "", house?.Trim() ?? "");
             var validationResult = await validator.ValidateAsync(args, ct);
             if (!validationResult.IsValid) 
             {
@@ -30,11 +32,18 @@ internal static class HandlerRegistry
 
             if (result.IsSuccess)
             {
-                return Results.Json(result.Value);
+                return Results.Json(new {status=200, data=result.Value});
             }
 
+            if (result.Error == MapProviderErrors.BuildingNotFoundError)
+            {
+                return Results.Problem(detail: result.Error.ToString(), title: "Domain error.",
+                    statusCode: (int)HttpStatusCode.NotFound);
+            }
+            
             // todo: handle status code due to error
-            return Results.Problem(detail: result.Error, title: "Domain error", statusCode:(int)HttpStatusCode.BadRequest);
+            return Results.Problem( 
+                detail: result.Error.ToString(), title: "Domain error.", statusCode:(int)HttpStatusCode.BadRequest);
         });
     } 
 }
