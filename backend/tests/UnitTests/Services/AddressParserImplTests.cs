@@ -1,6 +1,6 @@
 using Services.Implementation.OSM;
 
-namespace UnitTests.Domain.Services;
+namespace UnitTests.Services;
 
 public class AddressParserImplTests
 {

@@ -20,7 +20,8 @@ public class MapProviderServiceCacheDecorator : IMapProviderService
         _cache = cache;
     }
 
-    public async Task<Result<BuildingInformation, ErrorMessage>> GetBuildingInformationAsync(Address address, CancellationToken ct)
+    public async Task<Result<BuildingInformation, ErrorMessage>> GetBuildingInformationAsync(Address address,
+        CancellationToken ct)
     {
         var cacheKey =  $"{CachePrefix}:{address}";
         var cachedResult = await TryFindInCacheAsync(cacheKey, ct);

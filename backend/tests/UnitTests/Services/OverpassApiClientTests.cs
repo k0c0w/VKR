@@ -6,7 +6,7 @@ using Moq.Protected;
 using Services.Implementation.OSM;
 using Services.Map;
 
-namespace UnitTests
+namespace UnitTests.Services
 {
     public class OverpassApiClientTests
     {

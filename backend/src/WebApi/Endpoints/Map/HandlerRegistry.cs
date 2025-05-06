@@ -5,12 +5,11 @@ using ResultMonad;
 using Services.Map;
 using UseCases;
 using UseCases.RetrieveBuildingByAddress;
-using WebApi.Endpoints.Map;
 
-namespace WebApi.Endpoints;
+namespace WebApi.Endpoints.Map;
 
-internal static partial class HandlerRegistar
-{
+internal static class HandlerRegistry
+{ 
     internal static void UseMapEndpoints(this WebApplication app)
     {
         app.MapGet("/map/building-boundaries", async (
@@ -34,16 +33,27 @@ internal static partial class HandlerRegistar
             {
                 return Results.Json(result.Value);
             }
-
-            if (result.Error == MapProviderErrors.BuildingNotFoundError)
-            {
-                return Results.Problem(detail: result.Error.ToString(), title: "Доменная ошибка.",
-                    statusCode: (int)HttpStatusCode.NotFound);
-            }
             
-            // todo: handle status code due to error
+            var statusCode = (int)GetStatusCodeByError(result.Error);
             return Results.Problem( 
-                detail: result.Error.ToString(), title: "Доменная ошибка.", statusCode:(int)HttpStatusCode.BadRequest);
+                detail: result.Error.ToString(), 
+                title: "Доменная ошибка.", 
+                statusCode:statusCode);
         });
-    } 
+    }
+
+    private static HttpStatusCode GetStatusCodeByError(ErrorMessage error)
+    {
+        if (error == MapProviderErrors.RateLimitError)
+        {
+            return HttpStatusCode.TooManyRequests;
+        }
+
+        if (error == MapProviderErrors.BuildingNotFoundError)
+        {
+            return HttpStatusCode.NotFound;
+        }
+
+        return HttpStatusCode.BadRequest;
+    }
 }

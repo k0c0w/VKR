@@ -1,6 +1,6 @@
 using Domain;
 
-namespace UnitTests.Domain.ValueObjects;
+namespace UnitTests.ValueObjects;
 
 public class AddressTests
 {

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Domain.GeoJson;
 
 public class Polygon : Geometry<decimal[][][]>
@@ -7,24 +9,26 @@ public class Polygon : Geometry<decimal[][][]>
     {
     }
     
-    public Polygon(decimal[][][] geometry)
+    [JsonConstructor]
+    public Polygon(decimal[][][] coordinates)
     {
         Type = GeometryType.Polygon;
 
-        foreach (var ring in geometry)
+        foreach (var ring in coordinates)
         {
-            ArgumentNullException.ThrowIfNull(ring, nameof(geometry));
+            ArgumentNullException.ThrowIfNull(ring, nameof(coordinates));
 
             foreach (var point in ring)
             {
-                ArgumentNullException.ThrowIfNull(point, nameof(geometry));
+                ArgumentNullException.ThrowIfNull(point, nameof(coordinates));
                 if (point.Length != 2)
                 {
-                    throw new ArgumentException("One of points length was out of range.", nameof(geometry));
+                    throw new ArgumentException("One of points length was out of range.", nameof(coordinates));
                 }    
             }
         }
-        Coordinates = geometry;
+
+        Coordinates = (decimal[][][])coordinates.Clone();
     }
 
     public override bool Equals(object? obj)

@@ -7,7 +7,7 @@ using Services;
 using Services.Map;
 using UseCases.RetrieveBuildingByAddress;
 
-namespace UnitTests.Domain.UseCases;
+namespace UnitTests.UseCases;
 
 public class RetrieveBuildingByAddressUseCaseTests
 {
