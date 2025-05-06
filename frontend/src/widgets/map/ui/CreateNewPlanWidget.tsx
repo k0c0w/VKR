@@ -23,18 +23,20 @@ export default function CreateNewPlanWidget({style}: CreateNewPlanWidgetProps) {
         throw new Error("Initialize building first!")
     }
     const {geometry, properties} = building;
-    const mapBounds = getBounds(geometry);
+    const layer = L.geoJSON(building);
+    const bounds = layer.getBounds();            // LatLngBounds
+    const centroid = bounds.getCenter();         // LatLng
 
     const levelLabels = properties.levels.map(x => x.name);
 
     return <BuildingMap
             style={style}
-            center={mapBounds.getCenter()} 
+            center={centroid} 
             levelLabels={levelLabels} 
             initialLevelIndex={currentLevelIndex}
         >
             <GeomanPlugin showGeomanControls={true} />
-            <FocusOnce bounds={mapBounds}/>
+            <FocusOnce bounds={bounds}/>
             <EnableButtonsAndControls />
             
             <LevelPickController />

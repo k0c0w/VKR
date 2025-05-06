@@ -1,4 +1,5 @@
 using Domain.Errors;
+using FluentValidation;
 using Microsoft.Extensions.Options;
 using ResultMonad;
 using Services;
@@ -7,6 +8,8 @@ using Services.Map;
 using UseCases;
 using UseCases.RetrieveBuildingByAddress;
 using WebApi.Endpoints.Map;
+using WebApi.Endpoints.Plans;
+using WebApi.Utils;
 
 namespace WebApi;
 
@@ -32,7 +35,11 @@ internal static class ServiceRegistry
 
     private static void AddValidators(IServiceCollection services)
     {
+        ValidatorOptions.Global.DisplayNameResolver = (_, member, _) 
+            => member is not null ? PropertyNameConverter.SnakeCase(member.Name) : default;
+        
         services.AddSingleton<RetrieveBuildingByAddressDtoValidator>();
+        services.AddSingleton<GetPlanUseCaseArgsValidator>();
     }
     
     private static void AddDomainServices(IServiceCollection services, IConfiguration configuration)

@@ -62,15 +62,8 @@ export function doesRoomIntersectOtherRooms(room: FeatureWithId<RoomGeometry>, a
     return false;
 }
 
-function isCorrectRoomRelation(room: FeatureWithId<RoomGeometry>, other: FeatureWithId<RoomGeometry>): boolean {
-    const targetLine = turf.polygonToLine(room) as Feature<LineString>;
-    const levelLine = turf.polygonToLine(other)
-    const intersections = turf.lineIntersect(targetLine, levelLine);
-    const noOrValidIntersection = (intersections.features.length === 0 
-            && !turf.booleanContains(room, other) 
-            && !turf.booleanContains(other, room))
-        || allIntersectionsAreLineVertexes(intersections, targetLine.geometry.coordinates);
-    return noOrValidIntersection;
+export function isCorrectRoomRelation(room: FeatureWithId<RoomGeometry>, other: FeatureWithId<RoomGeometry>): boolean {
+    return !turf.booleanOverlap(room, other) && !turf.booleanContains(room, other) && !turf.booleanContains(other, room);
 }
 
 export function hasSelfIntersection(feature: Feature<WallGoometry | RoomGeometry>) {

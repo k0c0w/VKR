@@ -1,7 +1,6 @@
 import {createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"
 import { BASE_URL } from "@app/config/env";
-import { IBuildingBoundaries } from "../models/IBuildingBoundaries";
-import { Address } from "@shared/types/ValueObjectsTypes";
+import { IBuildingBoundariesQuery, BuildingBoundariesResponse } from "../models/BuildingBoundaries";
 import { ICreateNewPlanArgs, ICreateNePlanRsult } from "../models/CreateNewPlan";
 
 const mapApi = createApi({
@@ -11,14 +10,10 @@ const mapApi = createApi({
     }),
     tagTypes: ['plans-list'],
     endpoints: (build) => ({
-        fetchBuildingBoundaries: build.query<IBuildingBoundaries, Address>({
-            query: (address) => ({
+        fetchBuildingBoundaries: build.query<BuildingBoundariesResponse, IBuildingBoundariesQuery>({
+            query: (params) => ({
                 url: "/map/building-boundaries",
-                params: {
-                    city: address.city,
-                    street: address.street,
-                    houseNumber: address
-                }
+                params: params,
             })
         }),
         createNewPlan: build.mutation<ICreateNePlanRsult, ICreateNewPlanArgs>({

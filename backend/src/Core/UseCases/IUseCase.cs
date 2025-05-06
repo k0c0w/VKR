@@ -1,16 +1,11 @@
 namespace UseCases;
 
-public interface IUseCase
+public interface IUseCase<TResult>
 {
-    Task RunAsync(CancellationToken cancellationToken); 
+    Task<TResult> RunAsync(CancellationToken cancellationToken);
 }
 
-public interface IUseCase<in TArgs>
-{
-    Task RunAsync(TArgs args, CancellationToken cancellationToken);
-}
-
-public interface IUseCase<in TArgs, TResult>
+public interface IUseCase<in TArgs, TResult> where TArgs : notnull
 {
     Task<TResult> RunAsync(TArgs args, CancellationToken cancellationToken);
 }

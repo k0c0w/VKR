@@ -29,7 +29,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         var problemDetails = new ProblemDetails
         {
             Status = StatusCodes.Status500InternalServerError,
-            Title = "Серверная ошибка",
+            Title = "Internal server error.",
             Detail= "Не удалось обработать запрос."
         };
 

@@ -9,7 +9,7 @@ using WebApi.Endpoints.Map;
 
 namespace WebApi.Endpoints;
 
-internal static partial class HandlerRegistry
+internal static partial class HandlerRegistar
 {
     internal static void UseMapEndpoints(this WebApplication app)
     {
@@ -25,25 +25,25 @@ internal static partial class HandlerRegistry
             var validationResult = await validator.ValidateAsync(args, ct);
             if (!validationResult.IsValid) 
             {
-                return Results.ValidationProblem(validationResult.ToDictionary());
+                return Results.ValidationProblem(validationResult.ToDictionary(), title: "Ошибка валидации.");
             }
     
             var result = await useCase.RunAsync(args, ct);
 
             if (result.IsSuccess)
             {
-                return Results.Json(new {status=200, data=result.Value});
+                return Results.Json(result.Value);
             }
 
             if (result.Error == MapProviderErrors.BuildingNotFoundError)
             {
-                return Results.Problem(detail: result.Error.ToString(), title: "Domain error.",
+                return Results.Problem(detail: result.Error.ToString(), title: "Доменная ошибка.",
                     statusCode: (int)HttpStatusCode.NotFound);
             }
             
             // todo: handle status code due to error
             return Results.Problem( 
-                detail: result.Error.ToString(), title: "Domain error.", statusCode:(int)HttpStatusCode.BadRequest);
+                detail: result.Error.ToString(), title: "Доменная ошибка.", statusCode:(int)HttpStatusCode.BadRequest);
         });
     } 
 }

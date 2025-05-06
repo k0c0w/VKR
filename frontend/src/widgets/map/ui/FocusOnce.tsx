@@ -7,7 +7,7 @@ export default function FocusOnce({bounds}: {bounds: LatLngBounds}) {
 
     useEffect(() => {
         map.whenReady(() => map.fitBounds(bounds));
-    }, [map, bounds]);
+    }, [map]);
 
     return <></>
 }
