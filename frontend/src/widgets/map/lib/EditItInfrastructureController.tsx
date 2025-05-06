@@ -3,16 +3,17 @@ import { useEffect, useState } from "react"
 import { useMap } from "react-leaflet";
 import { CreateNewPlanStep, focusOnFeature, setItInfrastructureOnCurrentLevel } from "./createNewPlanSlice";
 import EnableOrDisableLayers from "./EnableOrDisableLayers";
-import { GeoJSON, Layer, LeafletMouseEvent, Marker, PM } from "leaflet";
+import { GeoJSON, Layer, Marker, PM } from "leaflet";
 import { getGeoJsonFeatureGeometryFrom, getLayerLeafletId, isMarkerLayer } from "@shared/map";
 import { BuildingGeometry, FeatureWithId, isWall, ITInfrastructure, ITInfrastructureGeometry, RoomGeometry, Wall, WallGoometry } from "@entities/map";
-import { TO_GEOJSON_PRECISION } from "@app/config/constants";
+import { GEOJSON_PRECISION } from "@app/config/constants";
 import { guid } from "@shared/types/guid";
 import { generateRandomGuidWhichDoesNotExistsIn } from "@shared/utils/random";
 import { layerHasFeatureId, LayerWithFeatureId, mutateToLayerWithFeatureIdBasedOn } from "@shared/map/lib/leafletTypeExtensions";
 import { isValidFeaturePosition } from "./layerValidation";
-import { LineString, Point, Polygon as GeoJsonPolygon } from "geojson";
+import { Point, Polygon as GeoJsonPolygon } from "geojson";
 import { errorItInfrastructureIcon, itInfrastructureIcon } from "./geoman/styling";
+import { roundCoordinates } from "@shared/map/lib/leafletUtilsAdditions";
 
 const whenEnabledOptions = {
     allowCutting: false,
@@ -47,7 +48,7 @@ export default function EditItInfrastructureController() {
     const levelFeatures = level.infrastructure;
     const walls = level.buildingStructure.filter(x => isWall(x)) as Wall[];
 
-    const [layers, setLayers] = useState<{[layerId: number]: LayerWithFeatureId}>({});
+    const [layers, setLayers] = useState<{[layerId: number]: LayerWithFeatureId}>( {});
     const setFeature = (featureId: guid, feature: ITInfrastructure | null) =>  dispatch(setItInfrastructureOnCurrentLevel({featureId,feature}));
     const setLayer = (layer: LayerWithFeatureId, options?: {delete: boolean}) => {
             setLayers(prev => {
@@ -84,7 +85,7 @@ export default function EditItInfrastructureController() {
         layer.pm.setOptions({
             ...whenEnabledOptions,
         });
-        const geometry = getGeoJsonFeatureGeometryFrom(layer);
+        const geometry = roundCoordinates(getGeoJsonFeatureGeometryFrom(layer), GEOJSON_PRECISION);
         const featureId = generateRandomGuidWhichDoesNotExistsIn(Object.keys(levelFeatures));
 
         const feature: ITInfrastructure = {
@@ -121,8 +122,9 @@ export default function EditItInfrastructureController() {
             return;
         }
 
-        const rawFeature = layer.toGeoJSON(TO_GEOJSON_PRECISION);
-        setFeature(layer.featureId, {...prevState, geometry: rawFeature.geometry});
+        const rawFeature = layer.toGeoJSON(GEOJSON_PRECISION);
+        const roundedGeometry = roundCoordinates(rawFeature.geometry, GEOJSON_PRECISION);
+        setFeature(layer.featureId, {...prevState, geometry: roundedGeometry});
     }
 
     function setErrorStyleIfInvalid({layer}: {layer: Layer}) {
@@ -130,7 +132,7 @@ export default function EditItInfrastructureController() {
             return;
         }
 
-        const feature: FeatureWithId<Point> = {...layer.toGeoJSON(TO_GEOJSON_PRECISION), id: getLayerLeafletId(layer).toString()};
+        const feature: FeatureWithId<Point> = {...layer.toGeoJSON(GEOJSON_PRECISION), id: getLayerLeafletId(layer).toString()};
 
         if(!isValidFeaturePosition({
             bounds: building!.geometry,
@@ -162,7 +164,6 @@ export default function EditItInfrastructureController() {
         setLayer(layer, { delete: true });
     }
 
-    // Update validator for layers
     useEffect(() => {
         Object.values(layers).forEach(layer => {
             layer.on("pm:remove", handleRemove);
@@ -179,7 +180,6 @@ export default function EditItInfrastructureController() {
         }
     }, [layers, building, handleRemove, handlePositionChange, setErrorStyleIfInvalid]);
 
-    // Handle layer creation
     useEffect(() => {
         if (currentStep === CreateNewPlanStep.InfrastructureSetup) {
             //@ts-ignore
@@ -195,7 +195,6 @@ export default function EditItInfrastructureController() {
         return () => { map.off("pm:create", handleCreate) }
     }, [map, currentStep, handleCreate]);
 
-    // Level change handling
     useEffect(() => {
         const thisRenderRequest = `${currentLevelIndex}:${building.properties.levels.length}`
 
@@ -228,7 +227,6 @@ export default function EditItInfrastructureController() {
 
     }, [map, currentLevelIndex, lastLevelRender, layers, building, setLastLevelRender, setLayers]);
 
-    // validate layers
     useEffect(() => {
         const validationArgs: {feature: FeatureWithId<Point> | null; bounds: GeoJsonPolygon; walls:FeatureWithId<WallGoometry>[]; rooms: FeatureWithId<RoomGeometry>[]}
          = {

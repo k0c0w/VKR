@@ -4,6 +4,8 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { findPolygonContainingPoint } from "@shared/map";
 import { guid } from "@shared/types/guid";
 import compareObjectsByFields from "@shared/utils/compareObjectsByFields";
+import { roundCoordinates } from "@shared/map/lib/leafletUtilsAdditions";
+import { GEOJSON_PRECISION } from "@app/config/constants";
 
 export enum CreateNewPlanStep {
     BuildingBoundariesSetup = 0,
@@ -47,7 +49,10 @@ export const createNewPlanSlice = createSlice({
     initialState,
     reducers: {
         resetToInitialState(state) {
-            state = initialState;
+            state.currentLevelIndex = initialState.currentLevelIndex;
+            state.building = initialState.building;
+            state.currentStep = initialState.currentStep;
+            state.selectedFeatureInfo = initialState.selectedFeatureInfo;
         },
         initNewState(state, {payload}: PayloadAction<IninitNewStatePayload>) {
             const {building, levelIndex, step} = payload;
@@ -55,19 +60,17 @@ export const createNewPlanSlice = createSlice({
             const buildingLevels = building.properties.levels;
 
             if (levelIndex >= buildingLevels.length || levelIndex < 0) {
-                throw new Error("Invalid lvelIndex set")
+                throw new Error("Invalid levelIndex set")
             }
 
             if (building.properties.levels.length === 0) {
                 throw new Error("Building must have at least 1 level.")
             }
 
-            state = {
-                currentLevelIndex: levelIndex,
-                building: building,
-                currentStep: step,
-                selectedFeatureInfo: undefined
-            }
+            state.currentLevelIndex = levelIndex;
+            state.building = building;
+            state.currentStep = step;
+            state.selectedFeatureInfo = undefined;
         },
         setStep(state, {payload}: PayloadAction<CreateNewPlanStep>) {
             state.currentStep = payload
@@ -131,22 +134,25 @@ export const createNewPlanSlice = createSlice({
                 state.currentLevelIndex = levels.length - 1;
             }
         },
-        setBuilding(state, {payload}: PayloadAction<Building>) {
-            state.building = payload;
+        editBuilding(state, {payload}: PayloadAction<Partial<Building>>) {
+            if (state.building) {
+                state.building = {
+                    ...state.building,
+                    ...payload
+                };
+            }
         },
         setBuildingStructureOnCurrentLevel(state, {payload}: PayloadAction<{featureId: guid, feature: Room | Wall | null}>) {
             const {featureId, feature} = payload;
             const level = state.building?.properties.levels[state.currentLevelIndex];
 
-            
             const levelFeatures = level!.buildingStructure;
             const featureIndex = levelFeatures.findIndex(x => x.id === featureId);
 
             if (feature === null && featureIndex !== -1) {
-                // todo: delete bindings of it infrastructure
-
                 levelFeatures.splice(featureIndex, 1);
             } else if (feature !== null) {
+                feature.geometry = roundCoordinates(feature.geometry, GEOJSON_PRECISION);
                 if (featureIndex === -1) {
                     levelFeatures.push(feature);
                 } else {
@@ -158,15 +164,13 @@ export const createNewPlanSlice = createSlice({
             const {featureId, feature} = payload;
             const level = state.building?.properties.levels[state.currentLevelIndex];
 
-            
             const levelFeatures = level!.infrastructure;
             const featureIndex = levelFeatures.findIndex(x => x.id === featureId);
 
             if (feature === null && featureIndex !== -1) {
-                // todo: delete bindings of it infrastructure
-
                 levelFeatures.splice(featureIndex, 1);
             } else if (feature !== null) {
+                feature.geometry = roundCoordinates(feature.geometry, GEOJSON_PRECISION);
                 if (featureIndex === -1) {
                     levelFeatures.push(feature);
                 } else {
@@ -174,7 +178,7 @@ export const createNewPlanSlice = createSlice({
                 }
             }
         },
-        updateMetaProperties(state, {payload}: PayloadAction<{levelIndex: number; featureId: guid; props: RoomMetaProperties | ITInfrastructureMetaProperties}>){
+        updateMetaProperties(state, {payload}: PayloadAction<{levelIndex: number; featureId: guid; props: RoomMetaProperties | ITInfrastructureMetaProperties}>) {
             const {levelIndex, featureId, props} = payload;
             const {building} = state;
             if (!building) {
@@ -195,7 +199,7 @@ export const createNewPlanSlice = createSlice({
 
             feature.properties = props;
         },
-        focusOnFeature(state, {payload}: PayloadAction<{featureId: guid; levelIndex: number; isITInfrastructureFeature: boolean;} | undefined>){
+        focusOnFeature(state, {payload}: PayloadAction<{featureId: guid; levelIndex: number; isITInfrastructureFeature: boolean;} | undefined>) {
             if (payload && state.building) {
                 const {featureId, levelIndex, isITInfrastructureFeature:searchInInfrastructure} = payload;
                 const levels = state.building.properties.levels;
@@ -231,7 +235,6 @@ export const createNewPlanSlice = createSlice({
                 }
 
                 if (compareObjectsByFields(state.selectedFeatureInfo, newSelectedFeatureInfo)) {
-                    // to prevent rerendering
                     return;
                 } else {
                     state.selectedFeatureInfo = newSelectedFeatureInfo;
@@ -249,11 +252,11 @@ export default createNewPlanSlice.reducer;
 export const { setStep } = createNewPlanSlice.actions;
 
 /* Building inside things */
-export const { setBuilding, setBuildingStructureOnCurrentLevel, setItInfrastructureOnCurrentLevel, updateMetaProperties } = createNewPlanSlice.actions;
+export const { editBuilding, setBuildingStructureOnCurrentLevel, setItInfrastructureOnCurrentLevel, updateMetaProperties } = createNewPlanSlice.actions;
 
 /* Level Handling */
 export const {addLevelAndSwitchOnIt, removeCurrentLevel, setCurrentLevelIndex, editCurrentLevel} = createNewPlanSlice.actions;
 
 export const { focusOnFeature } = createNewPlanSlice.actions;
 
-export const { resetToInitialState } = createNewPlanSlice.actions;
+export const { resetToInitialState, initNewState } = createNewPlanSlice.actions;

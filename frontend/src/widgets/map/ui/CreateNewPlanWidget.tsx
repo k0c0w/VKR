@@ -1,4 +1,3 @@
-import { getBounds } from "@shared/map/lib/leafletUtilsAdditions";
 import { CSSProperties, useEffect } from "react";
 import EditBuildingBoundariesController from "../lib/EditBuildingBoundariesController";
 import EditItInfrastructureController from "../lib/EditItInfrastructureController";
@@ -24,8 +23,8 @@ export default function CreateNewPlanWidget({style}: CreateNewPlanWidgetProps) {
     }
     const {geometry, properties} = building;
     const layer = L.geoJSON(building);
-    const bounds = layer.getBounds();            // LatLngBounds
-    const centroid = bounds.getCenter();         // LatLng
+    const bounds = layer.getBounds();  
+    const centroid = bounds.getCenter();      
 
     const levelLabels = properties.levels.map(x => x.name);
 

@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector } from "@shared/hooks/reduxTypedHooks"
-import { CreateNewPlanStep, setBuilding } from "./createNewPlanSlice";
+import { CreateNewPlanStep, editBuilding } from "./createNewPlanSlice";
 import BuildingBasePolygon from "./BuildingBasePolygon";
 import { useEffect, useRef } from "react";
 import { Polygon as LeafletPolygon } from "leaflet";
@@ -8,8 +8,9 @@ import { useMap } from "react-leaflet";
 import {disableAllModes, setControlsVisible} from "./geoman/utils";
 import { mapGeoJsonPolygonToLeafletExpression } from "@shared/map/lib/leafletUtilsAdditions";
 import { Building } from "@entities/map";
+import { roundCoordinates } from "@shared/map/lib/leafletUtilsAdditions";
+import { GEOJSON_PRECISION } from "@app/config/constants";
 
-/* TODO: добавить возможность вырезать полости из полигона */
 export default function EditBuildingBoundariesController({initialBoundaries}: {initialBoundaries: GeoJsonPolygon}) {
     const dispatch = useAppDispatch();
     const ref = useRef<LeafletPolygon| null>(null);
@@ -17,11 +18,12 @@ export default function EditBuildingBoundariesController({initialBoundaries}: {i
     const map = useMap();
 
     function handleShapeChange(buildingBounds: Building) {
-        dispatch(setBuilding(buildingBounds));
+        const roundedGeometry = roundCoordinates(buildingBounds.geometry, GEOJSON_PRECISION);
+        dispatch(editBuilding({ geometry: roundedGeometry }));
     }
 
     useEffect(() => {
-        if (currentStep === CreateNewPlanStep.BuildingBoundariesSetup) {
+        if (map && currentStep === CreateNewPlanStep.BuildingBoundariesSetup) {
             const pm = map.pm;
 
             setControlsVisible(pm, false);

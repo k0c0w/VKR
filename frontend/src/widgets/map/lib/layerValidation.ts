@@ -19,6 +19,7 @@ function isInsideBounds(feature: Feature<WallGoometry | ITInfrastructureGeometry
 
 export function isValidFeaturePosition({feature, bounds, walls, rooms}:{feature: FeatureWithId<WallGoometry | RoomGeometry | ITInfrastructureGeometry>; bounds: BuildingGeometry; walls:FeatureWithId<WallGoometry>[]; rooms: FeatureWithId<RoomGeometry>[]}): boolean {
     if (!isInsideBounds(feature, bounds)) {
+        console.log("Вне границ помщениея", feature, bounds);
         return false;
     }
     

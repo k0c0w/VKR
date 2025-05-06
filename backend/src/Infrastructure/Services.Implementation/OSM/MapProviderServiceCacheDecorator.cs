@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Domain;
 using Domain.Errors;
 using ResultMonad;
@@ -8,6 +9,8 @@ namespace Services.Implementation.OSM;
 
 public class MapProviderServiceCacheDecorator : IMapProviderService
 {
+    private const string CachePrefix = "overpass_api";
+    private static readonly string NotFoundError = MapProviderErrors.BuildingNotFoundError.ToString();
     private readonly IMapProviderService _original;
     private readonly IFusionCache _cache;
 
@@ -19,23 +22,60 @@ public class MapProviderServiceCacheDecorator : IMapProviderService
 
     public async Task<Result<BuildingInformation, ErrorMessage>> GetBuildingInformationAsync(Address address, CancellationToken ct)
     {
-        var cacheKey = address.ToString();
-        var cachedBuildingInformation = await _cache.GetOrDefaultAsync<BuildingInformation?>(cacheKey, token: ct);
-
-        if (cachedBuildingInformation is not null)
+        var cacheKey =  $"{CachePrefix}:{address}";
+        var cachedResult = await TryFindInCacheAsync(cacheKey, ct);
+        if (cachedResult.HasValue)
         {
-            return Result.Ok<BuildingInformation, ErrorMessage>(cachedBuildingInformation);
+            return cachedResult.Value;
         }
 
         var buildingInformationResult = await _original.GetBuildingInformationAsync(address, ct);
+        
         if (buildingInformationResult.IsSuccess)
         {
-            await _cache.SetAsync(cacheKey, buildingInformationResult.Value!, options =>
-            {
-                options.Duration = TimeSpan.FromDays(1);
-            }, token: ct);
+            await CacheForDayAsync(cacheKey, buildingInformationResult.Value!, ct);
+        }
+        else if (buildingInformationResult.Error == MapProviderErrors.BuildingNotFoundError)
+        {
+            await CacheForDayAsync(cacheKey,NotFoundError, ct);
         }
         
         return buildingInformationResult;
     }
+
+    private async ValueTask<Result<BuildingInformation, ErrorMessage>?> TryFindInCacheAsync(string key, CancellationToken ct)
+    {
+        var cachedBuildingInformationSerialized = await _cache.GetOrDefaultAsync<string?>(key, token: ct);
+        if (cachedBuildingInformationSerialized is null)
+        {
+            return null;
+        }
+        
+        if (cachedBuildingInformationSerialized == NotFoundError)
+        {
+            return Result.Fail<BuildingInformation, ErrorMessage>(MapProviderErrors.BuildingNotFoundError);
+        }
+
+        try
+        {
+            var cachedBuildingInformation =
+                JsonSerializer.Deserialize<BuildingInformation>(cachedBuildingInformationSerialized);
+            if (cachedBuildingInformation is not null)
+            {
+                return Result.Ok<BuildingInformation, ErrorMessage>(cachedBuildingInformation);
+            }
+        }
+        catch (JsonException)
+        {
+            await _cache.RemoveAsync(key, token: ct);
+        }
+
+        return null;
+    }
+    
+    private ValueTask CacheForDayAsync<TValue>(string key, TValue value, CancellationToken ct)
+        => _cache.SetAsync(key, value, options =>
+        {
+            options.Duration = TimeSpan.FromDays(1);
+        }, token: ct);
 }

@@ -2,7 +2,7 @@ import { isLineString, isPolygon } from "@shared/types/geoJsonTypeGuards";
 import { Polygon, LineString, Feature, FeatureCollection, Point, Position } from "geojson";
 import { FeatureWithId } from "./common";
 import * as turf from "@turf/turf"
-import { GEOJSON_VERTEX_COMPARISION_TOLERANCE } from "@app/config/constants";
+import { GEOJSON_PRECISION } from "@app/config/constants";
 import { BuildingGeometry } from "./Building";
 
 export enum RoomType {
@@ -74,8 +74,8 @@ function allIntersectionsAreLineVertexes(intersections:  FeatureCollection<Point
     for (const {geometry} of intersections.features) {
         const [intersetionLng, intersectionLat] = geometry.coordinates;
         const intersectionIsVertexOnLine = currentFeatureVertecies
-            .some(([vertexLng, vertexLat]) => Math.abs(vertexLng - intersetionLng) < GEOJSON_VERTEX_COMPARISION_TOLERANCE 
-                && Math.abs(vertexLat - intersectionLat) < GEOJSON_VERTEX_COMPARISION_TOLERANCE);
+            .some(([vertexLng, vertexLat]) => Math.abs(vertexLng - intersetionLng) < GEOJSON_PRECISION 
+                && Math.abs(vertexLat - intersectionLat) < GEOJSON_PRECISION);
         if (!intersectionIsVertexOnLine) {
             return false;
         }

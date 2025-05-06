@@ -15,15 +15,13 @@ const BuildingMap = ({
     disableGeoman = false
     , center = [55.792690, 49.122388]
     , zoom = 19
-    , minZoom = 16
-    , maxZoom = 22
     , children
     , ...other}:MapProps) => 
     <MapContainer
         doubleClickZoom={false}
         {...other}
-        minZoom={minZoom}
-        maxZoom={maxZoom}
+        minZoom={17}
+        maxZoom={23}
         center={center}
         zoom={zoom}
         style={{height: "100%", width: "100%"}}

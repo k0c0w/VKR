@@ -3,7 +3,7 @@ import { Building } from "@entities/map/Building";
 import { CircularProgress, Container, Skeleton } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@shared/hooks/reduxTypedHooks";
-import { resetToInitialState, setBuilding } from "@widgets/map/lib/createNewPlanSlice";
+import { CreateNewPlanStep, initNewState, resetToInitialState, } from "@widgets/map/lib/createNewPlanSlice";
 import CreateNewPlanSubPage from "./CreateNewPlanSubPage";
 import { mapApi } from "@features/map";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/dist/query/react";
@@ -37,7 +37,11 @@ export default function CreateNewPlanPage() {
 
     useEffect(() => {
         if (loadedBuilding) {
-            dispatch(setBuilding(loadedBuilding))
+            dispatch(initNewState({
+                building: loadedBuilding,
+                step: CreateNewPlanStep.BuildingBoundariesSetup,
+                levelIndex: 0,
+            }))
         } else {
             dispatch(resetToInitialState())
         }

@@ -17,6 +17,8 @@ import { getStyleByRoomType, setDefaultStyle } from "./geoman/utils";
 import { isValidFeaturePosition } from "./layerValidation";
 import { LineString, Polygon as GeoJsonPolygon, Point } from "geojson";
 import { resetStyle, splitWallsAndRooms } from "./helpers";
+import { roundCoordinates } from "@shared/map/lib/leafletUtilsAdditions";
+import { GEOJSON_PRECISION } from "@app/config/constants";
 
 const DEFAULT_ROOM_TYPE = RoomType.Audience;
 
@@ -73,7 +75,7 @@ export default function EditRoomsController() {
     const levelFeatures = building!.properties.levels[currentLevelIndex].buildingStructure;
     const map = useMap();
 
-    const [layers, setLayers] = useState<{[layerId: number]: LayerWithFeatureId}>({});
+    const [layers, setLayers] = useState<{[layerId: number]: LayerWithFeatureId}>( {});
     const setLayer = (layer: LayerWithFeatureId, options?: {delete: boolean}) => {
         setLayers(prev => {
             const updatedLayers = {...prev};
@@ -111,7 +113,7 @@ export default function EditRoomsController() {
             return;
         }
 
-        const geometry = getGeoJsonFeatureGeometryFrom(layer);
+        const geometry = roundCoordinates(getGeoJsonFeatureGeometryFrom(layer), GEOJSON_PRECISION);
         
         const updatedFeature = {...oldFeature};
         if (isRoom(oldFeature) && geometry.type === "Polygon") {
@@ -134,7 +136,7 @@ export default function EditRoomsController() {
             ...whenEnabledOptions,
         });
         setDefaultStyle(layer);
-        const geometry = getGeoJsonFeatureGeometryFrom(layer);
+        const geometry = roundCoordinates(getGeoJsonFeatureGeometryFrom(layer), GEOJSON_PRECISION);
 
         const featureId = generateRandomGuidWhichDoesNotExistsIn(Object.keys(levelFeatures));
         const workingLayer = mutateToLayerWithFeatureIdBasedOn(layer, featureId);
@@ -162,7 +164,6 @@ export default function EditRoomsController() {
                         type: DEFAULT_ROOM_TYPE,
                     }
                 }
-
                 break;
 
             default:
@@ -178,7 +179,6 @@ export default function EditRoomsController() {
         }
     }
 
-    // Validates of state after rotation, updates slice state or resets layer
     function handleRotateEnd(e: {
          layer: L.Layer;
          helpLayer: L.Layer;
@@ -269,7 +269,6 @@ export default function EditRoomsController() {
         }
     }, [map, currentStep]);
 
-    // Update validator for layers
     useEffect(() => {
         Object.values(layers).forEach(layer => {
             layer.on("pm:remove", handleRemove);
@@ -300,8 +299,6 @@ export default function EditRoomsController() {
         }
     }, [layers, handleRemove, handleLayerVerticesChange, handleRotateEnd, handleRotateEnd, setErrorStyleOrResetStyleForExistingLayer]);
 
-    // Add validation on draw start
-    // Set styles
     useEffect(() => {
         const setupDraw: PM.DrawStartEventHandler = function ({shape, workingLayer}) {
             // @ts-ignore
@@ -321,7 +318,6 @@ export default function EditRoomsController() {
         }
     }, [map, currentStep]);
 
-    // Handle layer creation
     useEffect(() => {
         if (currentStep === CreateNewPlanStep.RoomsBoundariesSetup) {
             map.on("pm:create", handleCreate);
@@ -330,7 +326,6 @@ export default function EditRoomsController() {
         return () => { map.off("pm:create", handleCreate) }
     }, [map, currentStep, handleCreate]);
 
-    // Level change handling
     useEffect(() => {
         const thisRenderRequest = `${currentLevelIndex}:${building.properties.levels.length}`
 
@@ -378,7 +373,6 @@ export default function EditRoomsController() {
 
     }, [map, currentLevelIndex, lastLevelRender, layers, building, setLastLevelRender, setLayers]);
 
-    // hook into clicked event to show popup
     useEffect(() => {
         Object.values(layers).forEach(layer => {
             layer.off("click");
@@ -386,7 +380,6 @@ export default function EditRoomsController() {
         }
     )}, [layers, levelFeatures, onLayerClicked]);
 
-    // validate layers
     useEffect(() => {
         const validationArgs: {feature: FeatureWithId<LineString | GeoJsonPolygon | Point> | null; bounds: GeoJsonPolygon; rooms:FeatureWithId<RoomGeometry>[]; walls: FeatureWithId<WallGoometry>[]}
          = {
@@ -423,4 +416,3 @@ export default function EditRoomsController() {
         />
     </>
 }
-

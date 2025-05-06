@@ -17,10 +17,10 @@ function getDefaultBuilding(address: Address): Building {
         type: "Feature",
         geometry: {
             type: "Polygon",
-            coordinates: [[[-50, -50], [50, -50], [50, 50], [-50, 50], [-50, -50]]]
+            coordinates: [[[49.1040367, 55.7946956], [49.1028492, 55.7942629], [49.1021096, 55.7949044], [49.1032970, 55.7953371], [49.1040367, 55.7946956]]]
         },
         properties: {
-            levels: [],
+            levels: [{number: 1, name: "1 этаж", buildingStructure: [], infrastructure: []}],
             address
         }
     };
@@ -28,7 +28,7 @@ function getDefaultBuilding(address: Address): Building {
 
 export default function LoadBuildingWidget({setBuilding}:LoadBuildingWidgetProps) {
     const [address, setAddress] = useState<Address | undefined>();
-    const [fetchAddress, {data, isSuccess, isFetching, isLoading, isError}] = mapApi.useLazyFetchBuildingBoundariesQuery();
+    const [fetchAddress, {data, isSuccess, isFetching, isLoading, isError, error}] = mapApi.useLazyFetchBuildingBoundariesQuery();
     const [fatalError, setFatalError] = useState<string|null>(null);
     const [fromErrors, setFormErrors] = useState<{city?: string[]; street?: string[]; house?: string[]}>({});
 
@@ -73,22 +73,22 @@ export default function LoadBuildingWidget({setBuilding}:LoadBuildingWidgetProps
 
             setBuilding(building);
         } else if (isError) {
-            if (data && isBuildingValidationErrorResponse(data)) {
-                const {errors} = data;
+            if (error && isBuildingValidationErrorResponse(error)) {
+                const {errors} = error.data;
                 setFormErrors({
                     city: errors.City,
                     house: errors.House,
                     street: errors.Street
                 });
-            } else if (data && isBuildingDomainErrorResponse(data)) {
-                setFatalError(data?.detail ?? "Произошла непредвиденная ошибка.");
-            } else if (data && isBuildingNotFoundErrorResponse(data)) {
-                setFatalError(data?.detail ?? "Указанный адрес не найден.");
+            } else if (error && isBuildingDomainErrorResponse(error)) {
+                setFatalError(error.data?.detail ?? "Произошла непредвиденная ошибка.");
+            } else if (error && isBuildingNotFoundErrorResponse(error)) {
+                setFatalError("Здание по указанному адресу не найдено.");
             } else {
                 setFatalError("Произошла непредвиденная ошибка.");
             }
         }
-    }, [data, isSuccess, isError]);
+    }, [data, error, isSuccess, isError]);
 
     useEffect(() => {
         if (isFetching || isLoading) {

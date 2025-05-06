@@ -40,8 +40,8 @@ function setButtonsForStep(pm: PM.PMMap, step: CreateNewPlanStep) {
     const toolbar = pm.Toolbar;
     switch(step) {
         case CreateNewPlanStep.BuildingBoundariesSetup:
-            setButtons(toolbar, ['drawMarker', 'drawCircleMarker', 'drawPolyline', 'drawPolygon', 'dragMode', 'removalMode', 'rotateMode'], false);
-            setButtons(toolbar, ['editMode', 'cutPolygon'], true);
+            setButtons(toolbar, ['drawMarker', 'drawCircleMarker', 'drawPolyline', 'drawPolygon', 'dragMode', 'removalMode'], false);
+            setButtons(toolbar, ['editMode', 'cutPolygon', 'rotateMode'], true);
             break;
         case CreateNewPlanStep.RoomsBoundariesSetup:
             setButtons(toolbar, ['drawPolyline', 'drawPolygon', 'dragMode', 'removalMode', 'rotateMode', 'editMode', 'cutPolygon'], true);

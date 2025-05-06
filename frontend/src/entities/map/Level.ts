@@ -13,7 +13,6 @@ export type Level = {
 export type LevelBuildingStructure = (Wall | Room)[];
 
 
-
 export function levelHasValidState({buildingStructure, infrastructure}: Level, buildingBounds: BuildingGeometry): boolean {
     
     const rooms: Room[] = [];

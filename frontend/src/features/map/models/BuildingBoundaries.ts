@@ -1,4 +1,6 @@
-import { IProblemDetails, isProblemDetatils, isValidationProblemDetails, IValidationProblemDetails } from "@shared/types/ProblemDetails";
+import { SerializedError } from "@reduxjs/toolkit";
+import { FetchBaseQueryError } from "@reduxjs/toolkit/dist/query/react";
+import { isProblemDetatils, isValidationProblemDetails, IValidationProblemDetails } from "@shared/types/ProblemDetails";
 import { Position } from "geojson";
 
 export interface IBuildingBoundariesQuery {
@@ -7,48 +9,77 @@ export interface IBuildingBoundariesQuery {
     house: string;
 }
 
-export type BuildingBoundariesResponse = BuildingBoundariesSuccess | BuildingBoundariesError;
-
-type BuildingBoundariesSuccess = {
+export interface IBuildingBoundariesResponse {
     levelsCount: number;
     address: string;
     geometry: Position[][];
 }
 
-type BuildingBoundariesValidationProblemDetails = IValidationProblemDetails & {errors: {City?:string[]; Street?:string[]; House?:string[];}}
+interface BuildingBoundariesValidationProblemDetails extends IValidationProblemDetails {
+    errors: {
+        City?: string[];
+        Street?: string[];
+        House?: string[];
+    };
+}
 
-type BuildingBoundariesError = IProblemDetails | BuildingBoundariesValidationProblemDetails;
+interface DomainProblemDetails {
+    status: number;
+    title: "Доменная ошибка.";
+    detail?: string;
+}
 
-
-export function isSuccessResponse(response: BuildingBoundariesResponse): response is BuildingBoundariesSuccess {
-    return response !== undefined && !isProblemDetatils(response) 
-        && response.levelsCount !== undefined && response.geometry != undefined && response.address !== undefined;
+export function isSuccessResponse(response: unknown): response is IBuildingBoundariesResponse {
+    return (
+        typeof response === "object" &&
+        response !== null &&
+        "levelsCount" in response &&
+        typeof (response as any).levelsCount === "number" &&
+        "address" in response &&
+        typeof (response as any).address === "string" &&
+        "geometry" in response &&
+        Array.isArray((response as any).geometry) &&
+        (response as any).geometry.every((poly: any) => Array.isArray(poly) && poly.every((pos: any) => Array.isArray(pos)))
+    );
 }
 
 export function isValidationErrorResponse(
-    response: BuildingBoundariesResponse
-): response is BuildingBoundariesValidationProblemDetails {
-
-    return isValidationProblemDetails(response) 
-        && (response.errors.City?.length != undefined || response.errors.Street?.length != undefined || response.errors.House?.length != undefined);
+    response: FetchBaseQueryError | SerializedError
+): response is FetchBaseQueryError & { data: BuildingBoundariesValidationProblemDetails } {
+    return (
+        isFetchBaseQueryError(response) &&
+        isValidationProblemDetails(response.data) &&
+        "errors" in response.data &&
+        typeof response.data.errors === "object" &&
+        response.data.errors !== null &&
+        (Array.isArray(response.data.errors.City) ||
+         Array.isArray(response.data.errors.Street) ||
+         Array.isArray(response.data.errors.House))
+    );
 }
 
 export function isDomainErrorResponse(
-    response: BuildingBoundariesResponse
-): response is {
-    status: 400;
-    title: "Доменная ошибка.";
-    detail?: string;
-} {
-    return response !== undefined && isProblemDetatils(response) && response.status === 400 && response.title === "Доменная ошибка.";
+    response: FetchBaseQueryError | SerializedError
+): response is FetchBaseQueryError & { data: DomainProblemDetails & { status: 400 } } {
+    return (
+        isFetchBaseQueryError(response) &&
+        isProblemDetatils(response.data) &&
+        response.data.status === 400 &&
+        response.data.title === "Доменная ошибка."
+    );
 }
 
 export function isNotFoundErrorResponse(
-    response: BuildingBoundariesResponse
-): response is {
-    status: 404;
-    title: "Domain error.";
-    detail?: string;
-} {
-    return response !== undefined && isProblemDetatils(response) && response.title === "Доменная ошибка." && response.status === 404;
+    response: FetchBaseQueryError | SerializedError
+): response is FetchBaseQueryError & { data: DomainProblemDetails & { status: 404 } } {
+    return (
+        isFetchBaseQueryError(response) &&
+        isProblemDetatils(response.data) &&
+        response.data.status === 404 &&
+        response.data.title === "Доменная ошибка."
+    );
+}
+
+function isFetchBaseQueryError(response: FetchBaseQueryError | SerializedError): response is FetchBaseQueryError {
+    return "status" in response && "data" in response;
 }

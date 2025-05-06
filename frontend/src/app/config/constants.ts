@@ -1,2 +1,4 @@
-export const TO_GEOJSON_PRECISION = 15;
-export const GEOJSON_VERTEX_COMPARISION_TOLERANCE: number = 1e-12;
+/**
+ *  ~0.11 meters accuracy
+ *  */
+export const GEOJSON_PRECISION = 6;

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, Ref } from "react";
 import { Polygon as ReactLeafletPolygon } from "react-leaflet";
 import { LatLngExpression, Polygon as LeafletPolygon, PM } from "leaflet";
-import { TO_GEOJSON_PRECISION } from "@app/config/constants";
+import { GEOJSON_PRECISION } from "@app/config/constants";
 import { Feature, Polygon as GeoJsonPolygon } from "geojson";
 import { basementStyle } from "./geoman/styling";
 
@@ -41,7 +41,7 @@ export default function BuildingBasePolygon({
                     removeLayerBelowMinVertexCount: false,
                     allowRemoval: false,
                     allowCutting: false,
-                    allowRotation: false,
+                    allowRotation: true,
                     draggable: false,
                     snappable: false,
                     allowEditing: true,
@@ -78,7 +78,7 @@ export default function BuildingBasePolygon({
                 }
 
                 const polygonLayer = e.layer as LeafletPolygon;
-                const polygon = polygonLayer.toGeoJSON(TO_GEOJSON_PRECISION)
+                const polygon = polygonLayer.toGeoJSON(GEOJSON_PRECISION)
                 if (polygon.geometry.type !== "Polygon") {
                     throw new Error("Unsupported polygon shape!");
                 }
