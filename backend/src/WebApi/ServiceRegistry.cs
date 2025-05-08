@@ -1,6 +1,7 @@
 using Domain.Errors;
 using FluentValidation;
 using Microsoft.Extensions.Options;
+using Migrations;
 using ResultMonad;
 using Services;
 using Services.Implementation.OSM;
@@ -23,8 +24,9 @@ internal static class ServiceRegistry
         builder.Services.AddHttpClient();
         builder.Services.AddLogging(cfg => cfg.AddConsole());
         
-        builder.Services.AddFusionCache()
-            .WithSystemTextJsonSerializer();
+        AddCache(builder.Services);
+        
+        AddDatabase(builder.Services, builder.Configuration);
         
         AddDomainServices(builder.Services, builder.Configuration);
         AddUseCases(builder.Services);
@@ -33,6 +35,20 @@ internal static class ServiceRegistry
         return builder.Build();
     }
 
+    private static void AddCache(IServiceCollection services)
+    {
+        services.AddFusionCache()
+            .WithSystemTextJsonSerializer();
+    }
+    
+    private static void AddDatabase(IServiceCollection services, IConfiguration configuration)
+    {
+        var appDbConnectionString = configuration.GetConnectionString("Default");
+        ArgumentException.ThrowIfNullOrEmpty(appDbConnectionString, nameof(appDbConnectionString));
+
+        services.AddMigrator(appDbConnectionString);
+    }
+    
     private static void AddValidators(IServiceCollection services)
     {
         ValidatorOptions.Global.DisplayNameResolver = (_, member, _) 

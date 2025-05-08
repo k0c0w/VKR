@@ -5,7 +5,8 @@ using System.Net.Http.Json;
 using System.Web;
 using Domain;
 using Domain.Errors;
-using Domain.GeoJson;
+using Domain.ValueObjects;
+using GeoJSON.Net.Geometry;
 using ResultMonad;
 using Services.Implementation.OSM.Models;
 using Services.Map;
@@ -80,16 +81,15 @@ public class OverpassApiClient : IMapProviderService
 
             var geometry = new[]
             {
-                targetWay.Geometry
-                    .Select(latLng => new LatLng { Lat = latLng.Lat, Lng = latLng.Lng })
-                    .ToArray()
+                new LineString(targetWay.Geometry
+                    .Select(latLng => new Position(latitude:latLng.Lat, longitude:latLng.Lng)))
             };
 
             return Result.Ok<BuildingInformation, ErrorMessage>(new BuildingInformation
             {
                 Address = address,
                 LevelsCount = targetWay.Tags.LevelCount.HasValue ? (uint)targetWay.Tags.LevelCount.Value : 1,
-                Geometry = new BuildingGeometry(geometry),
+                Geometry = new Polygon(geometry),
             });
         }
         catch (HttpRequestException ex)

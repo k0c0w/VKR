@@ -1,10 +1,12 @@
-namespace Domain;
+using GeoJSON.Net.Geometry;
+
+namespace Domain.ValueObjects;
 
 public sealed record BuildingInformation
 {
-    public Address Address { get; init; }
+    public required Address Address { get; init; }
     
-    public BuildingGeometry Geometry { get; init; }
-    
-    public uint LevelsCount { get; init; }
+    public required Polygon Geometry { get; init; }
+
+    public uint LevelsCount { get; init; } = 1;
 }

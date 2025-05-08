@@ -1,6 +1,7 @@
 using Domain;
 using Domain.Errors;
-using Domain.GeoJson;
+using Domain.ValueObjects;
+using GeoJSON.Net.Geometry;
 using Moq;
 using ResultMonad;
 using Services;
@@ -26,14 +27,14 @@ public class RetrieveBuildingByAddressUseCaseTests
         {
             Address = expectedAddress,
             LevelsCount = 17,
-            Geometry = new BuildingGeometry([
+            Geometry = new Polygon([new LineString(
                 [
-                    new LatLng { Lat = 1, Lng = 2 },
-                    new LatLng { Lat = 1, Lng = 3 },
-                    new LatLng { Lat = 1, Lng = 4 },
-                    new LatLng { Lat = 1, Lng = 2 },
+                    new Position(latitude: 1, longitude: 2),
+                    new Position(latitude: 1, longitude: 3),
+                    new Position(latitude: 1, longitude: 4),
+                    new Position(latitude: 1, longitude: 2),
                 ]
-            ])
+            )])
         };
         var expectedBuildingInfoResult = Result.Ok<BuildingInformation, ErrorMessage>(expectedBuildingInfo);
 

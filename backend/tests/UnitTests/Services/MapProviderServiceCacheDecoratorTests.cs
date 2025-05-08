@@ -1,9 +1,10 @@
-using System.Text.Json;
 using Domain;
 using Domain.Errors;
-using Domain.GeoJson;
+using Domain.ValueObjects;
+using GeoJSON.Net.Geometry;
 using Microsoft.Extensions.Caching.Distributed;
 using Moq;
+using Newtonsoft.Json;
 using ResultMonad;
 using Services.Implementation.OSM;
 using Services.Map;
@@ -17,6 +18,19 @@ namespace UnitTests.Services;
 
 public class MapProviderServiceCacheDecoratorTests
 {
+    private static Polygon StandartGeometry { get; }
+
+    static MapProviderServiceCacheDecoratorTests()
+    {
+        StandartGeometry = new Polygon([new LineString([
+            new Position(latitude: 1, longitude: 1), 
+            new Position(latitude: 1, longitude: -1), 
+            new Position(latitude: -1, longitude: -1), 
+            new Position(latitude: -1, longitude: 1), 
+            new Position(latitude: 1, longitude: 1)]
+        )]);
+    }
+    
     [Fact]
     public async Task GetBuildingInformationAsync_ReturnsValueFromCache()
     {
@@ -26,14 +40,14 @@ public class MapProviderServiceCacheDecoratorTests
         var service = new MapProviderServiceCacheDecorator(mockOriginalService.Object, mockCache.Object);
 
         var expectedAddress = new Address("Казань", "улица", "Кремлёвская", "35");
-        var expectedGeometry = new BuildingGeometry([[new LatLng{ Lat = 1, Lng = 1 }]]);
+        var expectedGeometry = StandartGeometry;
         var buildingInfo = new BuildingInformation()
         {
             Address = expectedAddress,
             Geometry = expectedGeometry,
             LevelsCount = 1
         };
-        var serialized = JsonSerializer.Serialize(buildingInfo);
+        var serialized = JsonConvert.SerializeObject(buildingInfo);
         var ct = CancellationToken.None;
         
         var successResult = Result.Ok<BuildingInformation, ErrorMessage>(buildingInfo);
@@ -150,8 +164,8 @@ public class MapProviderServiceCacheDecoratorTests
         var service = new MapProviderServiceCacheDecorator(mockOriginalService.Object, cacheStub);
 
         var expectedAddress = new Address("Казань", "улица", "Кремлёвская", "35");
-        var expectedGeometry = new BuildingGeometry([[new LatLng{ Lat = 1, Lng = 1 }]]);
-        var buildingInfo = new BuildingInformation()
+        var expectedGeometry = StandartGeometry;
+        var buildingInfo = new BuildingInformation
         {
             Address = expectedAddress,
             Geometry = expectedGeometry,
@@ -227,7 +241,7 @@ public class MapProviderServiceCacheDecoratorTests
             GetOrDefaultCallCount++;
             if (Cache.TryGetValue(key, out var value) && value is TValue typedValue)
             {
-                return ValueTask.FromResult(typedValue);
+                return ValueTask.FromResult(typedValue)!;
             }
             return ValueTask.FromResult(defaultValue);
         }
@@ -254,7 +268,7 @@ public class MapProviderServiceCacheDecoratorTests
             CancellationToken token = new CancellationToken())
         {
             SetCallCount++;
-            Cache[key] = value;
+            Cache[key] = value!;
             return ValueTask.CompletedTask;
         }
 
@@ -362,14 +376,14 @@ public class MapProviderServiceCacheDecoratorTests
             throw new NotImplementedException();
         }
 
-        public string CacheName { get; }
-        public string InstanceId { get; }
-        public FusionCacheEntryOptions DefaultEntryOptions { get; }
-        public bool HasDistributedCache { get; }
-        public IDistributedCache? DistributedCache { get; }
-        public bool HasBackplane { get; }
-        public IFusionCacheBackplane? Backplane { get; }
-        public FusionCacheEventsHub Events { get; }
+        public string CacheName { get; } = "";
+        public string InstanceId { get; } = "";
+        public FusionCacheEntryOptions DefaultEntryOptions { get; } = default!;
+        public bool HasDistributedCache { get; } = false;
+        public IDistributedCache? DistributedCache { get; } = default!;
+        public bool HasBackplane { get; } = false;
+        public IFusionCacheBackplane? Backplane { get; } = null;
+        public FusionCacheEventsHub Events { get; } = default!;
 
         public void Dispose()
         {

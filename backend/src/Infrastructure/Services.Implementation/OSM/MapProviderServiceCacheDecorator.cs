@@ -1,6 +1,7 @@
-using System.Text.Json;
 using Domain;
 using Domain.Errors;
+using Domain.ValueObjects;
+using Newtonsoft.Json;
 using ResultMonad;
 using Services.Map;
 using ZiggyCreatures.Caching.Fusion;
@@ -60,7 +61,7 @@ public class MapProviderServiceCacheDecorator : IMapProviderService
         try
         {
             var cachedBuildingInformation =
-                JsonSerializer.Deserialize<BuildingInformation>(cachedBuildingInformationSerialized);
+                JsonConvert.DeserializeObject<BuildingInformation>(cachedBuildingInformationSerialized);
             if (cachedBuildingInformation is not null)
             {
                 return Result.Ok<BuildingInformation, ErrorMessage>(cachedBuildingInformation);

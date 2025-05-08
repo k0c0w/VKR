@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using Domain;
+using GeoJSON.Net.Geometry;
 using Moq;
 using Moq.Protected;
 using Services.Implementation.OSM;
@@ -92,14 +93,14 @@ namespace UnitTests.Services
             // Arrange
             var expectedAddress = new Address(city: "Казань", streetName: "Кремлёвская", streetType: "улица", houseNumber: "35");
             const uint expectedLevelsCount = 17;
-            decimal[][][] expectedCoordinates =
+            LineString[] expectedCoordinates =
             [
-                [
-                    [49.1217258m, 55.7921943m],
-                    [49.1223946m, 55.7919225m],
-                    [49.1225962m, 55.7920764m],
-                    [49.1217258m, 55.7921943m]
-                ]
+                new ([
+                    new Position(latitude:55.7921943, longitude: 49.1217258),
+                    new Position(latitude:55.7919225, longitude: 49.1223946),
+                    new Position(latitude:55.7920764, longitude: 49.1225962),
+                    new Position(latitude:55.7921943, longitude: 49.1217258),
+                ])
             ];
 
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
@@ -178,7 +179,6 @@ namespace UnitTests.Services
             Assert.NotNull(information);
             Assert.Equal(expectedAddress, information.Address);
             Assert.Equal(expectedLevelsCount, information.LevelsCount);
-            Assert.Equal(expectedCoordinates.Length, information.Geometry.Coordinates.Length);
             Helpers.AssertGeometryEquality(expectedCoordinates, information.Geometry.Coordinates);
 
             handlerMock.Protected().Verify(
@@ -195,14 +195,14 @@ namespace UnitTests.Services
             // Arrange
             var expectedAddress = new Address(city: "Казань", streetName: "Кремлёвская", streetType: "улица", houseNumber: "35");
             const uint expectedLevelsCount = 1;
-            decimal[][][] expectedCoordinates =
+            LineString[] expectedCoordinates =
             [
-                [
-                    [49.1217258m, 55.7921943m],
-                    [49.1223946m, 55.7919225m],
-                    [49.1225962m, 55.7920764m],
-                    [49.1217258m, 55.7921943m]
-                ]
+                new LineString([
+                    new Position(latitude:55.7921943, longitude:49.1217258),
+                    new Position(latitude:55.7919225, longitude:49.1223946),
+                    new Position(latitude:55.7920764, longitude:49.1225962),
+                    new Position(latitude:55.7921943, longitude:49.1217258),
+                ])
             ];
 
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
@@ -270,7 +270,6 @@ namespace UnitTests.Services
             Assert.NotNull(information);
             Assert.Equal(expectedAddress, information.Address);
             Assert.Equal(expectedLevelsCount, information.LevelsCount);
-            Assert.Equal(expectedCoordinates.Length, information.Geometry.Coordinates.Length);
             Helpers.AssertGeometryEquality(expectedCoordinates, information.Geometry.Coordinates);
 
             handlerMock.Protected().Verify(
