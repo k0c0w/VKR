@@ -9,21 +9,22 @@ public class Init : Migration
     {
         const string sql = """
             CREATE TABLE buildings (
-                id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                id UUID PRIMARY KEY,
                 address TEXT NOT NULL,
-                geometry JSONB NOT NULL
+                geometry JSONB NOT NULL,
+                CONSTRAINT uk_buildings UNIQUE (address)
             );
 
             CREATE TABLE buildings_levels (
-                building_id INTEGER NOT NULL REFERENCES buildings(id) ON DELETE CASCADE,
+                building_id UUID NOT NULL REFERENCES buildings(id) ON DELETE CASCADE,
                 number INTEGER NOT NULL,
                 name TEXT NOT NULL,
                 CONSTRAINT pk_buildings_levels PRIMARY KEY (building_id, number)
             );
 
-            CREATE TABLE rooms (
+            CREATE TABLE buildings_rooms (
                 id UUID PRIMARY KEY,
-                building_id INTEGER NOT NULL,
+                building_id UUID NOT NULL,
                 level INTEGER NOT NULL,
                 type SMALLINT NOT NULL,
                 architectural_id TEXT NOT NULL,
@@ -34,9 +35,9 @@ public class Init : Migration
                     REFERENCES buildings_levels(building_id, number) ON DELETE CASCADE
             );
 
-            CREATE TABLE walls (
+            CREATE TABLE buildings_walls (
                 id UUID PRIMARY KEY,
-                building_id INTEGER NOT NULL,
+                building_id UUID NOT NULL,
                 level INTEGER NOT NULL,
                 geometry JSONB NOT NULL,
                 CONSTRAINT fk_walls_buildings_levels FOREIGN KEY (building_id, level)
@@ -48,7 +49,7 @@ public class Init : Migration
                 inventory_number TEXT NOT NULL,
                 serial_number TEXT NOT NULL,
                 name TEXT NOT NULL,
-                room_id UUID REFERENCES rooms(id) ON DELETE SET NULL
+                room_id UUID REFERENCES buildings_rooms(id) ON DELETE SET NULL
             );
         """;
 
@@ -59,8 +60,8 @@ public class Init : Migration
     {
         const string sql = """
             DROP TABLE it_equipment;
-            DROP TABLE walls;
-            DROP TABLE rooms;
+            DROP TABLE buildings_walls;
+            DROP TABLE buildings_rooms;
             DROP TABLE buildings_levels;
             DROP TABLE buildings;
         """;

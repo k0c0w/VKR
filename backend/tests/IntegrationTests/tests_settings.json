@@ -1,0 +1,6 @@
+{
+  "TestDatabase": {
+    "DatabaseName": "test_db",
+    "MasterConnectionString": "Host=localhost;Username=postgres;Password=test_password;Port=15432;"
+  }
+}

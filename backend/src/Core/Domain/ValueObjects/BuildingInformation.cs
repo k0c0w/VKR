@@ -8,5 +8,19 @@ public sealed record BuildingInformation
     
     public required Polygon Geometry { get; init; }
 
-    public uint LevelsCount { get; init; } = 1;
+    private uint _levelsCount = 1;
+
+    public uint LevelsCount
+    {
+        get => _levelsCount;
+        init
+        {
+            if (value <= 0)
+            {
+                throw new ArgumentException("Building must contain at least 1 level.");
+            }
+
+            _levelsCount = value;
+        }
+    }
 }

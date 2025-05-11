@@ -1,6 +1,6 @@
 namespace Domain.ValueObjects;
 
-public enum RoomType : ushort
+public enum RoomType : short
 {
     Audience = 1,
     Hall = 2,

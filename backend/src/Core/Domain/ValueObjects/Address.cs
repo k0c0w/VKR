@@ -1,4 +1,6 @@
-namespace Domain;
+using OutParsing;
+
+namespace Domain.ValueObjects;
 
 public sealed record Address
 {
@@ -36,6 +38,16 @@ public sealed record Address
 
     public override string ToString()
     {
-        return $"г. {City}, {StreetType} {StreetName}, {HouseNumber}{HouseUnit}";
+        return $"г. {City}, {StreetType} {StreetName}, {HouseNumber} {HouseUnit}";
+    }
+
+    public static Address FromString(string addressToStringResult)
+    {
+        OutParser.Parse(addressToStringResult, "г. {city}, {streetType} {streetName}, {houseNumber} {houseUnit}",
+            out string city, out string streetType,
+            out string streetName, out string houseNumber,
+            out string? houseUnit);
+        
+        return new Address(city, streetName, streetType, houseNumber, houseUnit);
     }
 }

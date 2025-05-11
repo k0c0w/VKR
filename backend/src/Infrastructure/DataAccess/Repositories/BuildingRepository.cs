@@ -1,0 +1,384 @@
+using System.Collections.Frozen;
+using DataAccess.Models;
+using Domain.Aggregates;
+using Domain.Entities;
+using Domain.Repositories;
+using Domain.ValueObjects;
+using GeoJSON.Net.Geometry;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Npgsql;
+
+namespace DataAccess.Repositories;
+
+internal sealed class BuildingRepository(
+    NpgsqlDataSource dataSource,
+    ILogger<IBuildingRepository> logger)
+    : EntitiesWithJsonbRepositoryBase(dataSource, new JsonSerializer()), IBuildingRepository
+{
+    private static int cachedCapacity = 4;
+
+    public async Task AddAsync(Building building, CancellationToken ct)
+    {
+        var insertBuildingCommand = GetInsertBuildingCommand(building);
+        var insertLevelsCommand = GetInsertLevelsCommand(building.Id, building.Levels);
+        var insertWallsCommand = GetInsertWallsCommand(building.Levels.SelectMany(x => x.Walls));
+        var insertRoomsCommand = GetInsertRoomsCommand(building.Levels.SelectMany(x => x.Rooms));
+
+        await using var conn = await GetOpenedConnectionAsync(ct);
+        await using var commandsBatch = conn.CreateBatch();
+        commandsBatch.BatchCommands.Add(insertBuildingCommand);
+        commandsBatch.BatchCommands.Add(insertLevelsCommand);
+        commandsBatch.BatchCommands.Add(insertWallsCommand);
+        commandsBatch.BatchCommands.Add(insertRoomsCommand);
+
+        await commandsBatch.ExecuteNonQueryAsync(ct);
+    }
+
+    public async Task<BuildingInformation[]> GetAllBuildingInformationAsync(CancellationToken ct)
+    {
+        const string sql = """
+                               SELECT 
+                                        b.address
+                                      , bl.levels_count
+                                      , b.geometry
+                                 FROM buildings b
+                                 JOIN (SELECT
+                                                buildings_levels.building_id as building_id
+                                              , count(buildings_levels.number) as levels_count
+                                         FROM buildings_levels
+                                        GROUP BY buildings_levels.building_id
+                                       ) bl ON bl.building_id = b.id;
+                           """;
+
+        var buildingInfos = new List<BuildingInformation>(cachedCapacity);
+
+        await using var conn = await GetOpenedConnectionAsync(ct);
+        await using var command = new NpgsqlCommand(sql, conn);
+        await using var reader = await command.ExecuteReaderAsync(ct);
+
+        while (await reader.ReadAsync(ct))
+        {
+            var addressString = reader.GetString(0);
+            var levelsCount = reader.GetInt32(1);
+            var geometry = reader.GetFieldValue<Polygon>(2);
+
+            buildingInfos.Add(new BuildingInformation
+            {
+                Address = Address.FromString(addressString),
+                Geometry = geometry,
+                LevelsCount = (uint)levelsCount
+            });
+        }
+
+        cachedCapacity = buildingInfos.Count;
+
+        return buildingInfos.ToArray();
+    }
+
+    public async Task<Building> GetBuildingAsync(IBuildingRepository.BuildingFilter filter, CancellationToken ct)
+    {
+        const string buildingInfoSqlFormat = """
+                                                 SELECT   b.id        
+                                                        , b.address
+                                                        , b.geometry
+                                                   FROM buildings b
+                                                  WHERE b.{0} = @filter
+                                                  LIMIT 1;
+                                             """;
+        var buildingInfoSql = string.Format(buildingInfoSqlFormat, filter.Id.HasValue ? "id" : "address");
+        var buildingFilterParam = new NpgsqlParameter("filter",
+            filter.Id.HasValue
+                ? filter.Id.Value
+                : filter.Address?.ToString() ?? throw new ArgumentException("Provide any building filter."));
+
+        await using var conn = await GetOpenedConnectionAsync(ct);
+
+        Guid buildingId;
+        Address buildingAddress;
+        Polygon buildingBasementGeometry;
+        await using (var buildingInfoCommand = new NpgsqlCommand(buildingInfoSql, conn))
+        {
+            buildingInfoCommand.Parameters.Add(buildingFilterParam);
+            await using var buildingReader = await buildingInfoCommand.ExecuteReaderAsync(ct);
+            
+            if (!await buildingReader.ReadAsync(ct))
+            {
+                // todo: building was not found
+            }
+
+            buildingId = buildingReader.GetGuid(0);
+            var buildingAddressString = buildingReader.GetString(1);
+            buildingAddress = Address.FromString(buildingAddressString);
+            buildingBasementGeometry = buildingReader.GetFieldValue<Polygon>(2);
+        }
+
+        var wallsAndRooms = await FetchWallsAndRoomsAsync(conn, buildingId, ct);
+
+        var fetchLevelsTask = FetchBuildingLevelsAsync(conn, buildingId, ct);
+
+        var buildingWallsByLevels = wallsAndRooms.Item1
+            .GroupBy(x => x.BelongsToLevel.LevelNumber)
+            .ToFrozenDictionary(key => key.Key, val => val);
+        var buildingRoomsByLevels = wallsAndRooms.Item2
+            .GroupBy(x => x.BelongsToLevel.LevelNumber)
+            .ToFrozenDictionary(key => key.Key, val => val);
+
+        var allBuildingLevels = await fetchLevelsTask;
+
+        var levels = new Level[allBuildingLevels.Count];
+
+        for(var i = 0; i < allBuildingLevels.Count; i++)
+        {
+            var levelInfo = allBuildingLevels[i];
+            IEnumerable<Room> levelRooms = buildingRoomsByLevels.TryGetValue(levelInfo.Number, out var rooms) ? rooms : [];
+            IEnumerable<Wall> levelWalls = buildingWallsByLevels.TryGetValue(levelInfo.Number, out var walls) ? walls : [];
+
+            levels[i] = Level.CreateExistingLevel(buildingId, levelInfo.Number, levelInfo.Name, levelRooms, levelWalls);
+        }
+
+        var buildingInfo = new BuildingInformation
+        {
+            Address = buildingAddress,
+            Geometry = buildingBasementGeometry,
+            LevelsCount = (uint)levels.Length
+        };
+        
+        return Building.CreateExistingBuildingInstance(buildingId, buildingInfo, levels);
+    }
+
+    private async Task<List<LevelInfo>> FetchBuildingLevelsAsync(NpgsqlConnection connection, Guid buildingId,
+        CancellationToken ct)
+    {
+        const string levelsSql = $"""
+                                    SELECT 
+                                             bl.number
+                                           , bl.name
+                                      FROM buildings_levels bl
+                                     WHERE bl.building_id = @{nameof(buildingId)};
+                                 """;
+        await using var command = new NpgsqlCommand(levelsSql, connection);
+        command.Parameters.AddWithValue(nameof(buildingId), buildingId);
+
+        var levels = new List<LevelInfo>();
+        await using var reader = await command.ExecuteReaderAsync(ct);
+
+        while (await reader.ReadAsync(ct))
+        {
+            var number = reader.GetInt32(0);
+            var name = reader.GetString(1);
+            
+            levels.Add(new LevelInfo(number, name));
+        }
+
+        return levels;
+    }
+
+    private async Task<Tuple<IEnumerable<Wall>, IEnumerable<Room>>> FetchWallsAndRoomsAsync(NpgsqlConnection connection,
+        Guid buildingId, CancellationToken ct)
+    {
+        const string roomsOrWallsSql = $"""
+                                           SELECT 
+                                                      B'0'::BIT AS is_wall_feature_type
+                                                    , r.level AS level
+                                                
+                                                    , r.id AS room_id
+                                                    , r.type AS room_type
+                                                    , r.architectural_id AS room_architectural_id
+                                                    , r.geometry AS room_geometry
+                                                    , r.name AS room_name
+                                                
+                                                    , NULL AS wall_id
+                                                    , NULL AS wall_geometry
+                                             FROM buildings_levels bl
+                                            RIGHT JOIN buildings_rooms r ON r.building_id = bl.building_id AND r.level = bl.number
+                                            WHERE bl.building_id = @{nameof(buildingId)}
+                                       
+                                            UNION ALL
+                                       
+                                           SELECT 
+                                                      B'1'::BIT AS is_wall_feature_type
+                                                    , w.level AS level
+                                                
+                                                    , NULL AS room_id
+                                                    , NULL AS room_type
+                                                    , NULL AS room_architectural_id
+                                                    , NULL AS room_geometry
+                                                    , NULL AS room_name
+                                                      
+                                                    , w.id AS wall_id
+                                                    , w.geometry AS wall_geometry
+                                             FROM buildings_levels bl
+                                             LEFT JOIN buildings_walls w ON w.building_id = bl.building_id AND w.level = bl.number
+                                            WHERE bl.building_id = @{nameof(buildingId)};
+                                       """;
+
+        await using var command = new NpgsqlCommand(roomsOrWallsSql, connection);
+        command.Parameters.AddWithValue(nameof(buildingId), buildingId);
+
+        await using var reader = await command.ExecuteReaderAsync(ct);
+
+        var levelIdentityCache = new Dictionary<int, LevelIdentity>();
+        var walls = new List<Wall>();
+        var rooms = new List<Room>();
+
+        while (await reader.ReadAsync(ct))
+        {
+            var isWall = reader.GetBoolean(0);
+            var levelNumber = reader.GetInt32(1);
+            if (!levelIdentityCache.TryGetValue(levelNumber, out var levelId))
+            {
+                levelId = new LevelIdentity(buildingId, levelNumber);
+                levelIdentityCache.Add(levelNumber, levelId);
+            }
+
+            if (isWall)
+            {
+                var id = reader.GetGuid(7);
+                var geometry = reader.GetFieldValue<LineString>(8);
+
+                walls.Add(Wall.CreateExistingWallInstance(id, levelId, geometry));
+            }
+            else
+            {
+                var id = reader.GetGuid(2);
+                var type = (RoomType)reader.GetInt16(3);
+                var archId = reader.GetString(4);
+                var geometry = reader.GetFieldValue<Polygon>(5);
+                var name = reader.GetString(6);
+
+                var description = new RoomDescription
+                {
+                    Geometry = geometry,
+                    Type = type,
+                    ArchitectualId = archId,
+                    Name = name
+                };
+                
+                rooms.Add(Room.CreateExistingButEmptyRoom(id, levelId, description));
+            }
+        }
+
+        return Tuple.Create(walls as IEnumerable<Wall>, rooms as IEnumerable<Room>);
+    }
+
+    private NpgsqlBatchCommand GetInsertBuildingCommand(Building building)
+    {
+        const string insertBuildingSql = """
+                                              INSERT INTO buildings (id, address, geometry)
+                                              VALUES (@id, @address, @geometry ::jsonb);
+                                         """;
+
+        var insertBuildingCommand = new NpgsqlBatchCommand(insertBuildingSql)
+        {
+            Parameters =
+            {
+                new NpgsqlParameter("id", building.Id),
+                new NpgsqlParameter("address", building.Address.ToString()),
+                new NpgsqlParameter("geometry", Serialize(building.BasementGeometry))
+            }
+        };
+
+        return insertBuildingCommand;
+    }
+
+    private static NpgsqlBatchCommand GetInsertLevelsCommand(Guid buildingId, IReadOnlyCollection<Level> levels)
+    {
+        const string insertSqlLevelsStart = """
+                                                   INSERT INTO buildings_levels (building_id, number, name)
+                                                   VALUES
+                                               """;
+
+        var levelValuesSql = new string[levels.Count];
+        var levelValuesParams = new NpgsqlParameter[levels.Count * 3];
+        foreach (var (index, level) in levels.Index())
+        {
+            var buildingIdParam = $"level_building_id_{index}";
+            var numberParam = $"level_number_{index}";
+            var nameParam = $"level_name_{index}";
+            var offset = 3 * index;
+
+            levelValuesSql[index] = $"(@{buildingIdParam},@{numberParam},@{nameParam})";
+            levelValuesParams[offset] = new NpgsqlParameter(buildingIdParam, buildingId);
+            levelValuesParams[offset + 1] = new NpgsqlParameter(numberParam, level.Number);
+            levelValuesParams[offset + 2] = new NpgsqlParameter(nameParam, level.Name);
+        }
+
+        var insertLevelsCommand =
+            new NpgsqlBatchCommand($"{insertSqlLevelsStart} {string.Join(',', levelValuesSql)};");
+        insertLevelsCommand.Parameters.AddRange(levelValuesParams);
+
+        return insertLevelsCommand;
+    }
+
+    private NpgsqlBatchCommand GetInsertWallsCommand(IEnumerable<Wall> walls)
+    {
+        const string insertSqlWallsStart = """
+                                                 INSERT INTO buildings_walls (id, building_id, level, geometry)
+                                                 VALUES
+                                              """;
+
+        var wallValuesSql = new List<string>();
+        var wallValuesParams = new List<NpgsqlParameter>();
+        foreach (var (index, wall) in walls.Index())
+        {
+            var idParam = $"wall_id_{index}";
+            var buildingIdParam = $"wall_building_id_{index}";
+            var levelParam = $"wall_level_{index}";
+            var geometryParam = $"wall_geometry_{index}";
+
+            wallValuesSql.Add($"(@{idParam},@{buildingIdParam},@{levelParam},@{geometryParam} ::jsonb)");
+            wallValuesParams.Add(new NpgsqlParameter(idParam, wall.Id));
+            wallValuesParams.Add(new NpgsqlParameter(buildingIdParam, wall.BelongsToLevel.BuildingId));
+            wallValuesParams.Add(new NpgsqlParameter(levelParam, wall.BelongsToLevel.LevelNumber));
+            wallValuesParams.Add(new NpgsqlParameter(geometryParam, Serialize(wall.Geometry)));
+        }
+
+        var insertWallCommand = new NpgsqlBatchCommand($"{insertSqlWallsStart} {string.Join(',', wallValuesSql)};");
+        foreach (var valueParam in wallValuesParams)
+        {
+            insertWallCommand.Parameters.Add(valueParam);
+        }
+
+        return insertWallCommand;
+    }
+
+    private NpgsqlBatchCommand GetInsertRoomsCommand(IEnumerable<Room> rooms)
+    {
+        const string insertSqlRoomsStart = """
+                                                 INSERT INTO buildings_rooms (id, building_id, level, type, architectural_id, geometry, name)
+                                                 VALUES
+                                              """;
+
+        var roomValuesSql = new List<string>();
+        var roomValuesParams = new List<NpgsqlParameter>();
+        foreach (var (index, room) in rooms.Index())
+        {
+            var idParam = $"room_id_{index}";
+            var buildingIdParam = $"room_building_id_{index}";
+            var levelParam = $"room_level_{index}";
+            var typeParam = $"room_type_{index}";
+            var archIdParam = $"room_architectural_id_{index}";
+            var geometryParam = $"room_geometry_{index}";
+            var nameParam = $"room_name_{index}";
+
+            roomValuesSql.Add(
+                $"(@{idParam},@{buildingIdParam},@{levelParam},@{typeParam},@{archIdParam},@{geometryParam} ::jsonb,@{nameParam})");
+            roomValuesParams.Add(new NpgsqlParameter(idParam, room.Id));
+            roomValuesParams.Add(new NpgsqlParameter(buildingIdParam, room.BelongsToLevel.BuildingId));
+            roomValuesParams.Add(new NpgsqlParameter(levelParam, room.BelongsToLevel.LevelNumber));
+            roomValuesParams.Add(new NpgsqlParameter(typeParam, (short)room.Type));
+            roomValuesParams.Add(new NpgsqlParameter(archIdParam, room.ArchitectualId));
+            roomValuesParams.Add(new NpgsqlParameter(geometryParam, Serialize(room.Geometry)));
+            roomValuesParams.Add(new NpgsqlParameter(nameParam, room.Name ?? ""));
+        }
+
+        var insertRoomsCommand = new NpgsqlBatchCommand($"{insertSqlRoomsStart} {string.Join(',', roomValuesSql)};");
+        foreach (var valueParam in roomValuesParams)
+        {
+            insertRoomsCommand.Parameters.Add(valueParam);
+        }
+
+        return insertRoomsCommand;
+    }
+}

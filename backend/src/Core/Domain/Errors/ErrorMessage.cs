@@ -40,4 +40,6 @@ public readonly struct ErrorMessage : IEquatable<ErrorMessage>
     public static implicit operator string(ErrorMessage err) => err.ToString();
 
     public static readonly ErrorMessage EntityNotfoundError = new("Сущность не найдена.");
+    
+    public static readonly ErrorMessage EntityIsAlreadyExists = new("Сущность уже существует.");
 }

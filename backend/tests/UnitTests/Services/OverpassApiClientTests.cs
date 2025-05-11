@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text;
-using Domain;
+using Domain.ValueObjects;
 using GeoJSON.Net.Geometry;
 using Moq;
 using Moq.Protected;
