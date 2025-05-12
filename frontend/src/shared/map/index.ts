@@ -1,4 +1,5 @@
 import BringMapToHomeControl from "./ui/BringMapToHomeControl";
+import BuildingBasePolygon from "./ui/BuildingBasePolygon";
 import BuildingMap from "./ui/BuildingMap";
 import ITInfrastructureDescriptor, { ITInfrastructureDescriptorProps } from "./ui/ITInfrastructureDescriptor";
 import LevelPickControl from "./ui/LevelPickControl";
@@ -20,3 +21,5 @@ export function isITInfrastructureDescriptorProps(
 export type {ITInfrastructureDescriptorProps, RoomDescriptorProps};
 export { ITInfrastructureDescriptor, RoomDescriptor };
 export { LevelPickControl, BringMapToHomeControl };
+export { BuildingBasePolygon };
+

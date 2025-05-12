@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@shared/hooks/reduxTypedHooks"
 import { CreateNewPlanStep, editBuilding } from "./createNewPlanSlice";
-import BuildingBasePolygon from "./BuildingBasePolygon";
+import BuildingBasePolygon from "../../../shared/map/ui/BuildingBasePolygon";
 import { useEffect, useRef } from "react";
 import { Polygon as LeafletPolygon } from "leaflet";
 import { Polygon as GeoJsonPolygon } from "geojson";

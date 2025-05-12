@@ -6,11 +6,12 @@ import { useAppSelector } from "@shared/hooks/reduxTypedHooks";
 import { CreateNewPlanStep } from "../lib/createNewPlanSlice";
 import FocusOnce from "./FocusOnce";
 import { useMap } from "react-leaflet";
-import { disableAllModes, setButtonsForStep, setControlsVisible } from "../lib/geoman/utils";
+import { disableAllModes, setControlsVisible } from "../lib/geoman/utils";
 import GeomanPlugin from "../lib/geoman/GeomanPlugin";
 import { BuildingMap } from "@shared/map";
 import LevelPickController from "../lib/LevelPickController";
 import MapObjectDescriptionPopup from "../ui/MapObjectDescriptionPopup";
+import { PM } from "leaflet";
 
 interface CreateNewPlanWidgetProps {
     style?: CSSProperties;
@@ -47,6 +48,21 @@ export default function CreateNewPlanWidget({style}: CreateNewPlanWidgetProps) {
         </BuildingMap>
 }
 
+function setButtonsForStep(pm: PM.PMMap, step: CreateNewPlanStep) {
+    pm.removeControls();
+    pm.addControls({
+      position: 'topleft',
+      drawMarker:      step === CreateNewPlanStep.InfrastructureSetup,
+      drawPolyline:    step === CreateNewPlanStep.RoomsBoundariesSetup,
+      drawPolygon:     step === CreateNewPlanStep.RoomsBoundariesSetup,
+      dragMode:        step !== CreateNewPlanStep.BuildingBoundariesSetup,
+      removalMode:     step !== CreateNewPlanStep.BuildingBoundariesSetup,
+      editMode:        step !== CreateNewPlanStep.BuildingBoundariesSetup,
+      cutPolygon:      step !== CreateNewPlanStep.InfrastructureSetup,
+      rotateMode:      step !== CreateNewPlanStep.InfrastructureSetup,
+    });
+}
+
 function EnableButtonsAndControls() {
     const map = useMap();
     const step = useAppSelector(state => state.createNewPlanReducer.currentStep);
@@ -58,11 +74,6 @@ function EnableButtonsAndControls() {
         const controlsVisible = step !== CreateNewPlanStep.BuildingBoundariesSetup;
         setControlsVisible(map.pm, controlsVisible);
     }, [map, step]);
-
-    useEffect(() => {
-        map.on("levelpicker:changelevel", (e) => console.log(e));
-
-    }, [map]);
 
     return <></>
 }

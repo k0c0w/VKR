@@ -12,7 +12,7 @@ import { generateRandomGuidWhichDoesNotExistsIn } from "@shared/utils/random";
 import { layerHasFeatureId, LayerWithFeatureId, mutateToLayerWithFeatureIdBasedOn } from "@shared/map/lib/leafletTypeExtensions";
 import { isValidFeaturePosition } from "./layerValidation";
 import { Point, Polygon as GeoJsonPolygon } from "geojson";
-import { errorItInfrastructureIcon, itInfrastructureIcon } from "./geoman/styling";
+import { errorItInfrastructureIcon, itInfrastructureIcon } from "./styling/styling";
 import { roundCoordinates } from "@shared/map/lib/leafletUtilsAdditions";
 
 const whenEnabledOptions = {
@@ -182,18 +182,33 @@ export default function EditItInfrastructureController() {
 
     useEffect(() => {
         if (currentStep === CreateNewPlanStep.InfrastructureSetup) {
-            //@ts-ignore
-            map.pm.Draw.Marker.setOptions({
-                markerStyle: {
-                    icon: itInfrastructureIcon,
-                    opacity: 1,
-                }
-            })
             map.on("pm:create", handleCreate);
         }
 
         return () => { map.off("pm:create", handleCreate) }
     }, [map, currentStep, handleCreate]);
+
+    useEffect(() => {
+        const setupDraw: PM.DrawStartEventHandler = function ({shape, workingLayer}) {
+            console.log(shape);
+            //@ts-ignore
+            map.pm.Draw.Marker.setOptions({
+                ...whenEnabledOptions,
+                markerStyle: {
+                    icon: itInfrastructureIcon,
+                    opacity: 1,
+                }
+            })
+        }
+
+        if (currentStep === CreateNewPlanStep.InfrastructureSetup) {
+            map.on("pm:drawstart", setupDraw);
+        }
+
+        return () => {
+            map.off("pm:drawstart", setupDraw);
+        }
+    }, [map, currentStep]);
 
     useEffect(() => {
         const thisRenderRequest = `${currentLevelIndex}:${building.properties.levels.length}`

@@ -4,7 +4,7 @@ import { LayerWithFeatureId } from "@shared/map/lib/leafletTypeExtensions";
 import { isLineString, isPolygon } from "@shared/types/geoJsonTypeGuards";
 import { LineString, Polygon as GeoJsonPolygon } from "geojson";
 import { Layer } from "leaflet";
-import { audienceStyle, hallStyle, wallStyle } from "./geoman/styling";
+import { audienceStyle, hallStyle, wallStyle } from "./styling/styling";
 
         
 export function splitWallsAndRooms(layers: {[layerId: number]: LayerWithFeatureId}) {

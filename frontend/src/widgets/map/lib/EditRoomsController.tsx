@@ -12,7 +12,7 @@ import { generateRandomGuidWhichDoesNotExistsIn } from "@shared/utils/random";
 import { isPoint } from "@shared/types/geoJsonTypeGuards";
 import L from "leaflet";
 import { castToLayerWithFeatureId, layerHasFeatureId, LayerWithFeatureId, mutateToLayerWithFeatureIdBasedOn } from "@shared/map/lib/leafletTypeExtensions";
-import { errorStyle, wallStyle } from "./geoman/styling";
+import { errorStyle, wallStyle } from "./styling/styling";
 import { getStyleByRoomType, setDefaultStyle } from "./geoman/utils";
 import { isValidFeaturePosition } from "./layerValidation";
 import { LineString, Polygon as GeoJsonPolygon, Point } from "geojson";

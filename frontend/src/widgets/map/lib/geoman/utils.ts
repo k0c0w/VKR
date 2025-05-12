@@ -1,7 +1,7 @@
 import { Layer, PathOptions, PM } from "leaflet";
 import { CreateNewPlanStep } from "../createNewPlanSlice";
 import { isPolygonLayer, isPolylineLayer } from "@shared/map";
-import { audienceStyle, hallStyle, wallStyle } from "./styling";
+import { audienceStyle, hallStyle, wallStyle } from "../styling/styling";
 import { RoomType } from "@entities/map";
 
 function disableAllModes(pm: PM.PMMap) {
@@ -30,33 +30,6 @@ function disableAllModes(pm: PM.PMMap) {
     }
 }
 
-function setButtons(toolbar: PM.PMMapToolbar, buttons: string[], value: boolean) {
-    for (const button of buttons) {
-        toolbar.setButtonDisabled(button, !value);
-    }
-}
-
-function setButtonsForStep(pm: PM.PMMap, step: CreateNewPlanStep) {
-    const toolbar = pm.Toolbar;
-    switch(step) {
-        case CreateNewPlanStep.BuildingBoundariesSetup:
-            setButtons(toolbar, ['drawMarker', 'drawCircleMarker', 'drawPolyline', 'drawPolygon', 'dragMode', 'removalMode'], false);
-            setButtons(toolbar, ['editMode', 'cutPolygon', 'rotateMode'], true);
-            break;
-        case CreateNewPlanStep.RoomsBoundariesSetup:
-            setButtons(toolbar, ['drawPolyline', 'drawPolygon', 'dragMode', 'removalMode', 'rotateMode', 'editMode', 'cutPolygon'], true);
-            setButtons(toolbar, ['drawCircleMarker', 'drawMarker'], false);
-            break;
-        case CreateNewPlanStep.InfrastructureSetup:
-            setButtons(toolbar, ['drawMarker', 'dragMode', 'removalMode'], true);
-            setButtons(toolbar, ['drawCircleMarker', 'drawPolyline', 'drawPolygon', 'rotateMode', 'editMode', 'cutPolygon'], false);
-            break;
-        default:
-            console.warn("Not all states of enum covered.", step);
-            break;
-    }
-}
-
 function setControlsVisible(pm: PM.PMMap, visible: boolean) {
     if (visible !== pm.controlsVisible()) {
         pm.toggleControls();
@@ -79,5 +52,5 @@ export function getStyleByRoomType(type: RoomType): PathOptions {
     return audienceStyle;
 }
 
-export { disableAllModes, setControlsVisible, setButtonsForStep };
+export { disableAllModes, setControlsVisible };
 
