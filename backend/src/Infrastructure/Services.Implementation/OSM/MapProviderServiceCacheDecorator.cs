@@ -1,4 +1,3 @@
-using Domain;
 using Domain.Errors;
 using Domain.ValueObjects;
 using Newtonsoft.Json;
@@ -24,7 +23,7 @@ public class MapProviderServiceCacheDecorator : IMapProviderService
     public async Task<Result<BuildingInformation, ErrorMessage>> GetBuildingInformationAsync(Address address,
         CancellationToken ct)
     {
-        var cacheKey =  $"{CachePrefix}:{address}";
+        var cacheKey = $"{CachePrefix}:{address}";
         var cachedResult = await TryFindInCacheAsync(cacheKey, ct);
         if (cachedResult.HasValue)
         {
@@ -32,27 +31,28 @@ public class MapProviderServiceCacheDecorator : IMapProviderService
         }
 
         var buildingInformationResult = await _original.GetBuildingInformationAsync(address, ct);
-        
+
         if (buildingInformationResult.IsSuccess)
         {
             await CacheForDayAsync(cacheKey, buildingInformationResult.Value!, ct);
         }
         else if (buildingInformationResult.Error == MapProviderErrors.BuildingNotFoundError)
         {
-            await CacheForDayAsync(cacheKey,NotFoundError, ct);
+            await CacheForDayAsync(cacheKey, NotFoundError, ct);
         }
-        
+
         return buildingInformationResult;
     }
 
-    private async ValueTask<Result<BuildingInformation, ErrorMessage>?> TryFindInCacheAsync(string key, CancellationToken ct)
+    private async ValueTask<Result<BuildingInformation, ErrorMessage>?> TryFindInCacheAsync(string key,
+        CancellationToken ct)
     {
         var cachedBuildingInformationSerialized = await _cache.GetOrDefaultAsync<string?>(key, token: ct);
         if (cachedBuildingInformationSerialized is null)
         {
             return null;
         }
-        
+
         if (cachedBuildingInformationSerialized == NotFoundError)
         {
             return Result.Fail<BuildingInformation, ErrorMessage>(MapProviderErrors.BuildingNotFoundError);
@@ -74,10 +74,7 @@ public class MapProviderServiceCacheDecorator : IMapProviderService
 
         return null;
     }
-    
+
     private ValueTask CacheForDayAsync<TValue>(string key, TValue value, CancellationToken ct)
-        => _cache.SetAsync(key, value, options =>
-        {
-            options.Duration = TimeSpan.FromDays(1);
-        }, token: ct);
+        => _cache.SetAsync(key, value, options => { options.Duration = TimeSpan.FromDays(1); }, token: ct);
 }

@@ -1,6 +1,7 @@
 using DataAccess;
 using Domain.Errors;
 using FluentValidation;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Options;
 using Migrations;
 using ResultMonad;
@@ -12,8 +13,8 @@ using UseCases.Plans;
 using UseCases.Plans.Models;
 using UseCases.RetrieveBuildingByAddress;
 using WebApi.Common.Validation;
-using WebApi.Endpoints.Plans;
 using WebApi.Utils;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace WebApi;
 
@@ -27,7 +28,7 @@ internal static class ServiceRegistry
         builder.Services.AddHttpClient();
         builder.Services.AddLogging(cfg => cfg.AddConsole());
         
-        AddCache(builder.Services);
+        AddCache(builder.Services, builder.Configuration);
         
         AddDatabase(builder.Services, builder.Configuration);
         
@@ -38,10 +39,21 @@ internal static class ServiceRegistry
         return builder.Build();
     }
 
-    private static void AddCache(IServiceCollection services)
+    private static void AddCache(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddFusionCache()
-            .WithSystemTextJsonSerializer();
+        var cacheBuilder = services.AddFusionCache();
+        cacheBuilder.WithNewtonsoftJsonSerializer();
+        
+        var redisConnectionString = configuration.GetConnectionString("Redis");
+        if (redisConnectionString is not null)
+        {
+            cacheBuilder.WithDistributedCache(_ =>
+            {
+                var options = new RedisCacheOptions { Configuration = redisConnectionString };
+
+                return new RedisCache(options);
+            });
+        }
     }
     
     private static void AddDatabase(IServiceCollection services, IConfiguration configuration)
