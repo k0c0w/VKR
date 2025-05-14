@@ -11,7 +11,8 @@ public class AddressTests
     {
         const string city = "Казань";
         var address = new Address(city, streetName, streetType, houseNumber, houseUnit);
-        var expectedAddressString = $"г. {city}, {streetType} {streetName}, {houseNumber}{houseUnit??string.Empty}";
+        var unit = string.IsNullOrEmpty(houseUnit) ? string.Empty : $" {houseUnit}";
+        var expectedAddressString = $"г. {city}, {streetType} {streetName}, {houseNumber}{unit}";
 
         var actualString = address.ToString();
         

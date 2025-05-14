@@ -1,11 +1,11 @@
+using Common.Dto;
 using FluentValidation;
-using UseCases.RetrieveBuildingByAddress;
 
-namespace WebApi.Endpoints.Map;
+namespace WebApi.Common.Validation;
 
-public class RetrieveBuildingByAddressDtoValidator : AbstractValidator<RetrieveBuildingByAddressDto>
+public sealed class AddressDtoValidator : AbstractValidator<AddressDto>
 {
-    public RetrieveBuildingByAddressDtoValidator()
+    public AddressDtoValidator()
     {
         RuleFor(x => x.City)
             .NotEmpty()

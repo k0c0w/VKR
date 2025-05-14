@@ -1,3 +1,5 @@
+using Common.Dto;
+
 namespace UseCases.RetrieveBuildingByAddress;   
 
-public record struct RetrieveBuildingByAddressDto(string City, string Street, string House);
+public record struct RetrieveBuildingByAddressArgs(AddressDto Address);

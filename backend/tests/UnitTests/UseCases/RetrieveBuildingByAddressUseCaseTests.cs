@@ -1,4 +1,3 @@
-using Domain;
 using Domain.Errors;
 using Domain.ValueObjects;
 using GeoJSON.Net.Geometry;
@@ -6,59 +5,52 @@ using Moq;
 using ResultMonad;
 using Services;
 using Services.Map;
+using UnitTests.UseCases.Fixtures;
 using UseCases.RetrieveBuildingByAddress;
 
 namespace UnitTests.UseCases;
 
 public class RetrieveBuildingByAddressUseCaseTests
 {
+    private readonly AddressTestFixture _addressFixture;
+
+    public RetrieveBuildingByAddressUseCaseTests()
+    {
+        _addressFixture = new AddressTestFixture();
+    }
+
     [Fact]
     public async Task Run_ShouldReturnCorrectValues()
     {
-        const string expectedCity = "Казань";
-        string expectedStreetType = "улица",
-            expectedStreetName = "Кремлёвская";
-        var expectedHouse = "35";
-        var expectedUnitNumber = string.Empty;
-        var expectedStreet = $"{expectedStreetType} {expectedStreetName}";
-        
-        var expectedAddress = new Address(expectedCity, expectedStreet, expectedStreetType, expectedHouse);
-        var expectedBuildingInfo = new BuildingInformation
-        {
-            Address = expectedAddress,
-            LevelsCount = 17,
-            Geometry = new Polygon([new LineString(
-                [
-                    new Position(latitude: 1, longitude: 2),
-                    new Position(latitude: 1, longitude: 3),
-                    new Position(latitude: 1, longitude: 4),
-                    new Position(latitude: 1, longitude: 2),
-                ]
-            )])
-        };
-        var expectedBuildingInfoResult = Result.Ok<BuildingInformation, ErrorMessage>(expectedBuildingInfo);
-
-        var serviceMock = new Mock<IMapProviderService>();
-        serviceMock.Setup(x => x.GetBuildingInformationAsync(
-                It.IsAny<Address>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedBuildingInfoResult)
-            .Verifiable();
-
+        // Arrange
         var addressParserMock = new Mock<IAddressParser>();
-        addressParserMock
-            .Setup(x => x.TryParseStreet(expectedStreet, out expectedStreetType, out expectedStreetName))
-            .Returns(true);
-        addressParserMock.Setup(x => x.TryParseHouse(expectedHouse, out expectedHouse, out expectedUnitNumber))
-            .Returns(true);
-
-        var args = new RetrieveBuildingByAddressDto
+        var mapProviderServiceMock = new Mock<IMapProviderService>();
+        
+        var address = _addressFixture.AddressFaker.Generate();
+        var addressDto = _addressFixture.CreateAddressDto(address);
+        var buildingInfo = new BuildingInformation
         {
-            City = expectedCity,
-            Street = expectedStreet,
-            House = expectedHouse
+            Address = address,
+            Geometry = new Polygon(new List<LineString>
+            {
+                new(new List<Position>
+                {
+                    new(1, 2),
+                    new(1, 3),
+                    new(2, 3),
+                    new(1, 2)
+                })
+            }),
+            LevelsCount = 17
         };
-        var useCase = new RetrieveBuildingByAddressUseCase(serviceMock.Object, addressParserMock.Object);
+
+        _addressFixture.SetupAddressParsing(addressParserMock, address);
+        mapProviderServiceMock
+            .Setup(x => x.GetBuildingInformationAsync(It.Is<Address>(a => a == address), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok<BuildingInformation, ErrorMessage>(buildingInfo));
+
+        var args = new RetrieveBuildingByAddressArgs { Address = addressDto };
+        var useCase = new RetrieveBuildingByAddressUseCase(mapProviderServiceMock.Object, addressParserMock.Object);
 
         // Act
         var result = await useCase.RunAsync(args, CancellationToken.None);
@@ -66,8 +58,12 @@ public class RetrieveBuildingByAddressUseCaseTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(expectedAddress.ToString(), value.Address);
-        Assert.Equal(expectedBuildingInfo.LevelsCount, value.LevelsCount);
-        Helpers.AssertGeometryEquality(expectedBuildingInfo.Geometry.Coordinates, value.Geometry);
+        Assert.Equal(address.ToString(), value.Address);
+        Assert.Equal(buildingInfo.LevelsCount, value.LevelsCount);
+        Assert.Equal(buildingInfo.Geometry.Coordinates, value.Geometry);
+
+        addressParserMock.Verify(x => x.TryParseStreet(addressDto.Street, out It.Ref<string>.IsAny, out It.Ref<string>.IsAny), Times.Once());
+        addressParserMock.Verify(x => x.TryParseHouse(addressDto.House, out It.Ref<string>.IsAny, out It.Ref<string>.IsAny), Times.Once());
+        mapProviderServiceMock.Verify(x => x.GetBuildingInformationAsync(It.Is<Address>(a => a == address), It.IsAny<CancellationToken>()), Times.Once());
     }
 }

@@ -38,7 +38,9 @@ public sealed record Address
 
     public override string ToString()
     {
-        return $"г. {City}, {StreetType} {StreetName}, {HouseNumber} {HouseUnit}";
+        return string.IsNullOrEmpty(HouseUnit) ?
+            $"г. {City}, {StreetType} {StreetName}, {HouseNumber}"
+            : $"г. {City}, {StreetType} {StreetName}, {HouseNumber} {HouseUnit}";
     }
 
     public static Address FromString(string addressToStringResult)

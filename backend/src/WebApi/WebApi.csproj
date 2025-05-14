@@ -26,6 +26,7 @@
       <ProjectReference Include="..\Core\Domain\Domain.csproj" />
       <ProjectReference Include="..\Core\Services\Services.csproj" />
       <ProjectReference Include="..\Core\UseCases\UseCases.csproj" />
+      <ProjectReference Include="..\Infrastructure\DataAccess\DataAccess.csproj" />
       <ProjectReference Include="..\Infrastructure\Migrations\Migrations.csproj" />
       <ProjectReference Include="..\Infrastructure\Services.Implementation\Services.Implementation.csproj" />
     </ItemGroup>

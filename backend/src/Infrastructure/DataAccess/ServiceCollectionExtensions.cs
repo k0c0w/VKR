@@ -22,7 +22,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUnitOfWork, SystemTransactionUnitOfWork>();
         services.AddScoped<IBuildingRepository, BuildingRepository>();
         
-        
         return services;
     }
 }

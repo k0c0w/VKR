@@ -1,15 +1,41 @@
 using Domain.Errors;
+using Domain.Repositories;
+using Domain.ValueObjects;
 using ResultMonad;
+using Services;
+using UseCases.Plans.Models;
 
 namespace UseCases.Plans;
 
-public class GetPlanUseCase : IUseCase<GetPlanUseCaseArgs, Result<PlanDto, ErrorMessage>>
+public class GetPlanUseCase(
+    IAddressParser addressParser,
+    IBuildingRepository buildingRepository)
+    : IUseCase<GetPlanUseCaseArgs, Result<BuildingPlan, ErrorMessage>>
 {
-    public Task<Result<PlanDto, ErrorMessage>> RunAsync(GetPlanUseCaseArgs args, CancellationToken cancellationToken)
+    public async Task<Result<BuildingPlan, ErrorMessage>> RunAsync(GetPlanUseCaseArgs args, CancellationToken ct)
     {
-        return Task.FromResult(Result.Ok<PlanDto, ErrorMessage>(new PlanDto()
+        var addressDto = args.BuildingAddress;
+        if (!addressParser.TryParseStreet(addressDto.Street, out var streetType, out var streetName))
         {
-            Id = "1"
-        }));
+            return Result.Fail<BuildingPlan, ErrorMessage>(new ErrorMessage("Не удалось распарсить улицу."));
+        } 
+        if (!addressParser.TryParseHouse(addressDto.House, out var houseNumber, out var houseUnit))
+        {
+            return Result.Fail<BuildingPlan, ErrorMessage>(new ErrorMessage("Не удалось распарсить дом."));
+        }
+
+        var relatedBuildingAddress = new Address(addressDto.City, streetName, streetType, houseNumber, houseUnit);
+        var searchFilter = IBuildingRepository.BuildingFilter.AddressFilter(relatedBuildingAddress);
+        
+        var buildingGetResult = await buildingRepository.GetBuildingAsync(searchFilter, ct);
+
+        if (buildingGetResult.IsFailure)
+        {
+            return Result.Fail<BuildingPlan, ErrorMessage>(buildingGetResult.Error);
+        }
+
+        var planRepresentingBuilding = BuildingPlan.FromBuilding( buildingGetResult.Value!);
+
+        return Result.Ok<BuildingPlan, ErrorMessage>(planRepresentingBuilding);
     }
 }

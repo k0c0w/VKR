@@ -1,3 +1,4 @@
+using DataAccess;
 using Domain.Errors;
 using FluentValidation;
 using Microsoft.Extensions.Options;
@@ -7,8 +8,10 @@ using Services;
 using Services.Implementation.OSM;
 using Services.Map;
 using UseCases;
+using UseCases.Plans;
+using UseCases.Plans.Models;
 using UseCases.RetrieveBuildingByAddress;
-using WebApi.Endpoints.Map;
+using WebApi.Common.Validation;
 using WebApi.Endpoints.Plans;
 using WebApi.Utils;
 
@@ -49,6 +52,8 @@ internal static class ServiceRegistry
         var migrationConnectionString = configuration.GetConnectionString("Migrations");
         ArgumentException.ThrowIfNullOrEmpty(migrationConnectionString, nameof(migrationConnectionString));
         services.AddMigrator(migrationConnectionString);
+
+        services.AddDataAccess(appDbConnectionString);
     }
     
     private static void AddValidators(IServiceCollection services)
@@ -56,8 +61,8 @@ internal static class ServiceRegistry
         ValidatorOptions.Global.DisplayNameResolver = (_, member, _) 
             => member is not null ? PropertyNameConverter.SnakeCase(member.Name) : default;
         
-        services.AddSingleton<RetrieveBuildingByAddressDtoValidator>();
-        services.AddSingleton<GetPlanUseCaseArgsValidator>();
+        services.AddSingleton<AddressDtoValidator>();
+        services.AddSingleton<AddressDtoValidator>();
     }
     
     private static void AddDomainServices(IServiceCollection services, IConfiguration configuration)
@@ -77,6 +82,8 @@ internal static class ServiceRegistry
 
     private static void AddUseCases(IServiceCollection services)
     {
-        services.AddScoped<IUseCase<RetrieveBuildingByAddressDto, Result<BuildingDto, ErrorMessage>>, RetrieveBuildingByAddressUseCase>();
+        services.AddScoped<IUseCase<RetrieveBuildingByAddressArgs, Result<BuildingDto, ErrorMessage>>, RetrieveBuildingByAddressUseCase>();
+        services.AddScoped<IUseCase<GetPlanUseCaseArgs, Result<BuildingPlan, ErrorMessage>>, GetPlanUseCase>();
+        services.AddScoped<IUseCase<Result<BuildingPlanShortcut[], ErrorMessage>>, GetAvailablePlansListUseCase>();
     }
 }

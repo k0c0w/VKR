@@ -1,6 +1,7 @@
 using FluentMigrator.Runner;
 using WebApi;
 using WebApi.Endpoints.Map;
+using WebApi.Endpoints.Plans;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
@@ -23,6 +24,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 app.UseMapEndpoints();
+app.UsePlansEndpoints();
 
 if (InProcessMigrationsAreOn())
 {
