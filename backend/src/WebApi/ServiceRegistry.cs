@@ -46,7 +46,9 @@ internal static class ServiceRegistry
         var appDbConnectionString = configuration.GetConnectionString("Default");
         ArgumentException.ThrowIfNullOrEmpty(appDbConnectionString, nameof(appDbConnectionString));
 
-        services.AddMigrator(appDbConnectionString);
+        var migrationConnectionString = configuration.GetConnectionString("Migrations");
+        ArgumentException.ThrowIfNullOrEmpty(migrationConnectionString, nameof(migrationConnectionString));
+        services.AddMigrator(migrationConnectionString);
     }
     
     private static void AddValidators(IServiceCollection services)

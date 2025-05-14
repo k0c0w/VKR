@@ -3,9 +3,11 @@ using Domain.Repositories;
 using IntegrationTests.DatabaseTests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
 using Domain.Entities;
+using Domain.Errors;
 
 namespace IntegrationTests.DatabaseTests;
 
+[Collection(nameof(DatabaseTestsCollection))]
 public class IBuildingRepositoryTests : DbTestsBase
 {
     [Fact]
@@ -18,9 +20,16 @@ public class IBuildingRepositoryTests : DbTestsBase
         var addressFilter = IBuildingRepository.BuildingFilter.AddressFilter(building.Address);
 
         // Act
-        await repository.AddAsync(building, CancellationToken.None);
-        var foundById = await repository.GetBuildingAsync(idFilter, CancellationToken.None);
-        var foundByAddress = await repository.GetBuildingAsync(addressFilter, CancellationToken.None);
+        var addResult = await repository.AddAsync(building, CancellationToken.None);
+        Assert.True(addResult.IsSuccess, "Adding building failed.");
+
+        var foundByIdResult = await repository.GetBuildingAsync(idFilter, CancellationToken.None);
+        Assert.True(foundByIdResult.IsSuccess, "Retrieving building by ID failed.");
+        var foundById = foundByIdResult.Value;
+
+        var foundByAddressResult = await repository.GetBuildingAsync(addressFilter, CancellationToken.None);
+        Assert.True(foundByAddressResult.IsSuccess, "Retrieving building by address failed.");
+        var foundByAddress = foundByAddressResult.Value;
 
         // Assert
         AssertBuilding(building, foundById);
@@ -36,9 +45,15 @@ public class IBuildingRepositoryTests : DbTestsBase
         var building2 = BuildingFixture.CreateTestBuilding();
 
         // Act
-        await repository.AddAsync(building1, CancellationToken.None);
-        await repository.AddAsync(building2, CancellationToken.None);
-        var allInfos = await repository.GetAllBuildingInformationAsync(CancellationToken.None);
+        var addResult1 = await repository.AddAsync(building1, CancellationToken.None);
+        Assert.True(addResult1.IsSuccess, "Adding first building failed.");
+
+        var addResult2 = await repository.AddAsync(building2, CancellationToken.None);
+        Assert.True(addResult2.IsSuccess, "Adding second building failed.");
+
+        var allInfosResult = await repository.GetAllBuildingInformationAsync(CancellationToken.None);
+        Assert.True(allInfosResult.IsSuccess, "Retrieving all building information failed.");
+        var allInfos = allInfosResult.Value;
 
         // Assert
         Assert.True(allInfos.Length >= 2);
@@ -54,8 +69,24 @@ public class IBuildingRepositoryTests : DbTestsBase
         Assert.Equal(building2.BasementGeometry, info2.Geometry);
         Assert.Equal(building2.LevelsCount, info2.LevelsCount);
     }
-    
-        private static void AssertBuilding(Building expected, Building actual)
+
+    [Fact]
+    public async Task GetNonExistentBuilding_ShouldReturnFailure()
+    {
+        // Arrange
+        var repository = ServiceProvider.GetRequiredService<IBuildingRepository>();
+        var nonExistentId = Guid.NewGuid();
+        var filter = IBuildingRepository.BuildingFilter.IdFilter(nonExistentId);
+
+        // Act
+        var result = await repository.GetBuildingAsync(filter, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessage.EntityNotfoundError, result.Error);
+    }
+
+    private static void AssertBuilding(Building expected, Building actual)
     {
         Assert.NotNull(actual);
         Assert.Equal(expected.Id, actual.Id);

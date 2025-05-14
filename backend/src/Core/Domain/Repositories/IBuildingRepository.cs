@@ -1,14 +1,16 @@
 using Domain.Aggregates;
+using Domain.Errors;
 using Domain.Repositories.Common;
 using Domain.ValueObjects;
+using ResultMonad;
 
 namespace Domain.Repositories;
 
 public interface IBuildingRepository : IHaveAdd<Building>
 {
-    Task<BuildingInformation[]> GetAllBuildingInformationAsync(CancellationToken ct);
+    Task<Result<BuildingInformation[], ErrorMessage>> GetAllBuildingInformationAsync(CancellationToken ct);
 
-    Task<Building> GetBuildingAsync(BuildingFilter filter, CancellationToken ct);
+    Task<Result<Building, ErrorMessage>> GetBuildingAsync(BuildingFilter filter, CancellationToken ct);
 
     public sealed record BuildingFilter
     {
