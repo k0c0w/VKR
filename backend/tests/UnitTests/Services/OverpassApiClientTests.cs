@@ -179,7 +179,7 @@ namespace UnitTests.Services
             Assert.NotNull(information);
             Assert.Equal(expectedAddress, information.Address);
             Assert.Equal(expectedLevelsCount, information.LevelsCount);
-            Helpers.AssertGeometryEquality(expectedCoordinates, information.Geometry.Coordinates);
+            Helpers.AssertGeometryEquality(expectedCoordinates.Unpack(), information.Geometry.Coordinates.Unpack());
 
             handlerMock.Protected().Verify(
                 "SendAsync",
@@ -270,7 +270,7 @@ namespace UnitTests.Services
             Assert.NotNull(information);
             Assert.Equal(expectedAddress, information.Address);
             Assert.Equal(expectedLevelsCount, information.LevelsCount);
-            Helpers.AssertGeometryEquality(expectedCoordinates, information.Geometry.Coordinates);
+            Helpers.AssertGeometryEquality(expectedCoordinates.Unpack(), information.Geometry.Coordinates.Unpack());
 
             handlerMock.Protected().Verify(
                 "SendAsync",

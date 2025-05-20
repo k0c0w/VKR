@@ -1,7 +1,5 @@
 using FluentMigrator.Runner;
 using WebApi;
-using WebApi.Endpoints.Map;
-using WebApi.Endpoints.Plans;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
@@ -22,14 +20,15 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseExceptionHandler();
-app.UseMapEndpoints();
-app.UsePlansEndpoints();
-
-if (InProcessMigrationsAreOn())
+if (InProcessMigrationsAreOn(app.Configuration))
 {
     TryMigrateOrExit(app.Services);
 }
+
+app.UseExceptionHandler();
+
+app.UseRouting();
+app.MapControllers();
 
 app.Run();
 
@@ -54,4 +53,4 @@ void TryMigrateOrExit(IServiceProvider serviceProvider)
     }
 }
 
-bool InProcessMigrationsAreOn() => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("INPROCESS_MIGRATIONS_ON"));
+bool InProcessMigrationsAreOn(IConfiguration configuration) => !string.IsNullOrEmpty(configuration["INPROCESS_MIGRATIONS_ON"]);

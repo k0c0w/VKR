@@ -1,86 +1,57 @@
 using System.Text.Json.Serialization;
+using Common.Dto;
 using Domain.Aggregates;
-using Domain.Entities;
-using GeoJSON.Net.Geometry;
 using Newtonsoft.Json;
 
 namespace UseCases.Plans.Models;
 
-public sealed record BuildingPlan
+public sealed class BuildingPlan
 {
-    [JsonProperty("building_id")]
-    [JsonPropertyName("building_id")]
-    public required Guid BuildingId { get; init; }
+    [JsonPropertyName("id")]
+    [JsonProperty("id")]
+    public string? Id { get; private init; }
     
-    [JsonProperty("basement_geometry")]
-    [JsonPropertyName("basement_geometry")]
-    public required Polygon BasementGeometry { get; init; }
+    [JsonPropertyName("address")]
+    [JsonProperty("address")]
+    public AddressDto Address { get; private init; }
 
-    [JsonProperty("levels")]
     [JsonPropertyName("levels")]
-    public required IEnumerable<BuildingPlanLevel> Levels { get; init; }
-    private BuildingPlan()
+    [JsonProperty("levels")]
+    public BuildingPlanLevel[] Levels { get; private init; }
+
+    [JsonPropertyName("basement_geometry")]
+    [JsonProperty("basement_geometry")]
+    public GeometryDto<double[][][]> BasementGeometry { get; private init; }
+
+    [System.Text.Json.Serialization.JsonConstructor]
+    [Newtonsoft.Json.JsonConstructor]
+    private BuildingPlan(string? id, AddressDto address, IEnumerable<BuildingPlanLevel>? levels, GeometryDto<double[][][]> basementGeometry)
     {
+        Id = id;
+        Address = address;
+        Levels = levels != null ? levels.ToArray() : [];
+        BasementGeometry = basementGeometry;
     }
 
-    public static BuildingPlan FromBuilding(Building building)
+    internal BuildingPlan(Building building)
     {
-        return new BuildingPlan
+        Id = building.Id.ToString();
+        Address = new AddressDto
         {
-            BuildingId = building.Id,
-            BasementGeometry = building.BasementGeometry,
-            Levels = building.Levels.Select(BuildingPlanLevel.FromLevel),
+            City = building.Address.City,
+            Street = building.Address.GetStreet(),
+            House = building.Address.GetHouse()
         };
-    }
-
-    public sealed record BuildingPlanLevel
-    {
-        [JsonProperty("number")]
-        [JsonPropertyName("number")]
-        public required int Number { get; init; }
+        BasementGeometry = new GeometryDto<double[][][]>
+        {
+            Coordinates = building.BasementGeometry.Coordinates
+                .Select(ring => ring.Coordinates
+                    .Select(pos => new[] { pos.Longitude, pos.Latitude })
+                    .ToArray())
+                .ToArray(),
+            Type = building.BasementGeometry.Type.ToString()
+        };
         
-        [JsonProperty("name")]
-        [JsonPropertyName(("name"))]
-        public required string Name { get; init; }
-
-        [JsonProperty("structure")]
-        [JsonPropertyName("structure")]
-        public required IEnumerable<IGeometryObject> Structure { get; init; } = [];
-
-        [JsonProperty("it_equipments")]
-        [JsonPropertyName("it_equipments")]
-        public required IEnumerable<BuildingPlanItEquipment> ItEquipments { get; init; } = [];
-        
-        private BuildingPlanLevel()
-        {
-        }
-
-        public static BuildingPlanLevel FromLevel(Level level)
-        {
-            var structure = level.Walls
-                .Select(w => w.Geometry)
-                .Cast<IGeometryObject>()
-                .Concat(level.Rooms.Select(r => r.Geometry));
-            
-            return new BuildingPlanLevel
-            {
-                Name = level.Name,
-                Number = level.Number,
-                Structure = structure,
-                ItEquipments = level.Rooms.SelectMany(x => x.ItEquipments)
-                    .Select(BuildingPlanItEquipment.FromItEquipment)
-            };
-        }
+        Levels = building.Levels.Select(l => new BuildingPlanLevel(l)).ToArray();
     }
-
-    public sealed record BuildingPlanItEquipment
-    {
-        public static BuildingPlanItEquipment FromItEquipment(ItEquipment itEquipment)
-        {
-            return new BuildingPlanItEquipment()
-            {
-
-            };
-        }
-    }
-};
+}

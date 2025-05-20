@@ -8,7 +8,7 @@ namespace Domain.Repositories;
 
 public interface IBuildingRepository : IHaveAdd<Building>
 {
-    Task<Result<BuildingInformation[], ErrorMessage>> GetAllBuildingInformationAsync(CancellationToken ct);
+    Task<Result<(Guid BuildingId, Address Address)[], ErrorMessage>> GetAllBuildingInformationAsync(CancellationToken ct);
 
     Task<Result<Building, ErrorMessage>> GetBuildingAsync(BuildingFilter filter, CancellationToken ct);
 

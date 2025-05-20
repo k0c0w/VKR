@@ -5,7 +5,7 @@ using Moq;
 using ResultMonad;
 using Services;
 using Services.Map;
-using UnitTests.UseCases.Fixtures;
+using UnitTests.Fixtures;
 using UseCases.RetrieveBuildingByAddress;
 
 namespace UnitTests.UseCases;
@@ -28,7 +28,7 @@ public class RetrieveBuildingByAddressUseCaseTests
         
         var address = _addressFixture.AddressFaker.Generate();
         var addressDto = _addressFixture.CreateAddressDto(address);
-        var buildingInfo = new BuildingInformation
+        var buildingInfo = new BuildingBasementInformation
         {
             Address = address,
             Geometry = new Polygon(new List<LineString>
@@ -47,20 +47,20 @@ public class RetrieveBuildingByAddressUseCaseTests
         _addressFixture.SetupAddressParsing(addressParserMock, address);
         mapProviderServiceMock
             .Setup(x => x.GetBuildingInformationAsync(It.Is<Address>(a => a == address), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok<BuildingInformation, ErrorMessage>(buildingInfo));
+            .ReturnsAsync(Result.Ok<BuildingBasementInformation, ErrorMessage>(buildingInfo));
 
         var args = new RetrieveBuildingByAddressArgs { Address = addressDto };
         var useCase = new RetrieveBuildingByAddressUseCase(mapProviderServiceMock.Object, addressParserMock.Object);
 
         // Act
         var result = await useCase.RunAsync(args, CancellationToken.None);
-        var value = result.Value;
 
         // Assert
         Assert.True(result.IsSuccess);
+        var value = result.Value;
         Assert.Equal(address.ToString(), value.Address);
         Assert.Equal(buildingInfo.LevelsCount, value.LevelsCount);
-        Assert.Equal(buildingInfo.Geometry.Coordinates, value.Geometry);
+        Helpers.AssertGeometryEquality(buildingInfo.Geometry.Coordinates.Unpack(), value.Geometry.Unpack());
 
         addressParserMock.Verify(x => x.TryParseStreet(addressDto.Street, out It.Ref<string>.IsAny, out It.Ref<string>.IsAny), Times.Once());
         addressParserMock.Verify(x => x.TryParseHouse(addressDto.House, out It.Ref<string>.IsAny, out It.Ref<string>.IsAny), Times.Once());

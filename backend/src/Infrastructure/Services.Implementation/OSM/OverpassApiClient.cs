@@ -38,7 +38,7 @@ public class OverpassApiClient : IMapProviderService
         Logger = logger;
     }
     
-    public async Task<Result<BuildingInformation, ErrorMessage>> GetBuildingInformationAsync(Address address,
+    public async Task<Result<BuildingBasementInformation, ErrorMessage>> GetBuildingInformationAsync(Address address,
         CancellationToken ct)
     {
         var uriBuilder = new UriBuilder($"{OverpassApiHost}{InterpreterEndpoint}")
@@ -63,20 +63,20 @@ public class OverpassApiClient : IMapProviderService
                     "Expected Content-Type 'application/json', but received {contentType} in {methodName}.",
                     contentType, nameof(GetBuildingInformationAsync));
 
-                return Result.Fail<BuildingInformation, ErrorMessage>(MapProviderErrors.GlobalError);
+                return Result.Fail<BuildingBasementInformation, ErrorMessage>(MapProviderErrors.GlobalError);
             }
 
             var payload = await response.Content.ReadFromJsonAsync<OverpassApiResponseJsonModel>(ct);
             if (payload is null)
             {
-                return Result.Fail<BuildingInformation, ErrorMessage>(MapProviderErrors.BuildingNotFoundError);
+                return Result.Fail<BuildingBasementInformation, ErrorMessage>(MapProviderErrors.BuildingNotFoundError);
             }
 
             // todo: assume only one way for building
             var targetWay = payload.Elements.FirstOrDefault(x => x.Type == "way");
             if (targetWay is null)
             {
-                return Result.Fail<BuildingInformation, ErrorMessage>(MapProviderErrors.BuildingNotFoundError);
+                return Result.Fail<BuildingBasementInformation, ErrorMessage>(MapProviderErrors.BuildingNotFoundError);
             }
 
             var geometry = new[]
@@ -85,7 +85,7 @@ public class OverpassApiClient : IMapProviderService
                     .Select(latLng => new Position(latitude:latLng.Lat, longitude:latLng.Lng)))
             };
 
-            return Result.Ok<BuildingInformation, ErrorMessage>(new BuildingInformation
+            return Result.Ok<BuildingBasementInformation, ErrorMessage>(new BuildingBasementInformation
             {
                 Address = address,
                 LevelsCount = targetWay.Tags.LevelCount.HasValue ? (uint)targetWay.Tags.LevelCount.Value : 1,
@@ -99,7 +99,7 @@ public class OverpassApiClient : IMapProviderService
             var error = ex.StatusCode == HttpStatusCode.TooManyRequests
                 ? MapProviderErrors.RateLimitError
                 : MapProviderErrors.GlobalError;
-            return Result.Fail<BuildingInformation, ErrorMessage>(error);
+            return Result.Fail<BuildingBasementInformation, ErrorMessage>(error);
         }
         finally
         {

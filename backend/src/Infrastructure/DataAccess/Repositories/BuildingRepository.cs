@@ -21,10 +21,10 @@ internal sealed class BuildingRepository(
 
     public async Task<ResultWithError<ErrorMessage>> AddAsync(Building building, CancellationToken ct)
     {
-        var insertBuildingCommand = GetInsertBuildingCommand(building);
-        var insertLevelsCommand = GetInsertLevelsCommand(building.Id, building.Levels);
-        var insertWallsCommand = GetInsertWallsCommand(building.Levels.SelectMany(x => x.Walls));
-        var insertRoomsCommand = GetInsertRoomsCommand(building.Levels.SelectMany(x => x.Rooms));
+        var insertBuildingCommand = InsertBuildingCommand(building);
+        var insertLevelsCommand = InsertLevelsCommand(building.Id, building.Levels);
+        var insertWallsCommand = InsertWallsCommandOrDefault(building.Levels.SelectMany(x => x.Walls).ToArray());
+        var insertRoomsCommand = InsertRoomsCommandOrDefault(building.Levels.SelectMany(x => x.Rooms).ToArray());
 
         var openConResult = await GetOpenedConnectionAsync(ct);
         if (openConResult.IsFailure)
@@ -36,8 +36,14 @@ internal sealed class BuildingRepository(
         await using var commandsBatch = conn.CreateBatch();
         commandsBatch.BatchCommands.Add(insertBuildingCommand);
         commandsBatch.BatchCommands.Add(insertLevelsCommand);
-        commandsBatch.BatchCommands.Add(insertWallsCommand);
-        commandsBatch.BatchCommands.Add(insertRoomsCommand);
+        if (insertRoomsCommand is not null)
+        {
+            commandsBatch.BatchCommands.Add(insertRoomsCommand);
+        }
+        if (insertWallsCommand is not null)
+        {
+            commandsBatch.BatchCommands.Add(insertWallsCommand);
+        }
 
         try
         {
@@ -51,13 +57,12 @@ internal sealed class BuildingRepository(
         }
     }
 
-    public async Task<Result<BuildingInformation[], ErrorMessage>> GetAllBuildingInformationAsync(CancellationToken ct)
+    public async Task<Result<(Guid BuildingId, Address Address)[], ErrorMessage>> GetAllBuildingInformationAsync(CancellationToken ct)
     {
         const string sql = """
                                SELECT 
-                                        b.address
-                                      , bl.levels_count
-                                      , b.geometry
+                                        b.id
+                                      , b.address
                                  FROM buildings b
                                  JOIN (SELECT
                                                 buildings_levels.building_id as building_id
@@ -67,11 +72,11 @@ internal sealed class BuildingRepository(
                                        ) bl ON bl.building_id = b.id;
                            """;
 
-        var buildingInfos = new List<BuildingInformation>(cachedCapacity);
+        var buildingInfos = new List<(Guid BuildingId, Address Address)>(cachedCapacity);
         var openConResult = await GetOpenedConnectionAsync(ct);
         if (openConResult.IsFailure)
         {
-            return Result.Fail<BuildingInformation[], ErrorMessage>(openConResult.Error);
+            return Result.Fail<(Guid BuildingId, Address Address)[], ErrorMessage>(openConResult.Error);
         }
 
         await using var conn = openConResult.Value!;
@@ -83,26 +88,20 @@ internal sealed class BuildingRepository(
 
             while (await reader.ReadAsync(ct))
             {
-                var addressString = reader.GetString(0);
-                var levelsCount = reader.GetInt32(1);
-                var geometry = reader.GetFieldValue<Polygon>(2);
+                var buildingId = reader.GetGuid(0);
+                var addressString = reader.GetString(1);
 
-                buildingInfos.Add(new BuildingInformation
-                {
-                    Address = Address.FromString(addressString),
-                    Geometry = geometry,
-                    LevelsCount = (uint)levelsCount
-                });
+                buildingInfos.Add((buildingId, Address.FromString(addressString)));
             }
 
             cachedCapacity = buildingInfos.Count;
 
-            return Result.Ok<BuildingInformation[], ErrorMessage>(buildingInfos.ToArray());
+            return Result.Ok<(Guid BuildingId, Address Address)[], ErrorMessage>(buildingInfos.ToArray());
         }
         catch (NpgsqlException ex)
         {
             LogError(ex, nameof(GetAllBuildingInformationAsync));
-            return Result.Fail<BuildingInformation[], ErrorMessage>(ErrorMessage.RepositorySpecificErrors.AddError);
+            return Result.Fail<(Guid BuildingId, Address Address)[], ErrorMessage>(ErrorMessage.RepositorySpecificErrors.AddError);
         }
     }
 
@@ -178,15 +177,12 @@ internal sealed class BuildingRepository(
                 levels[i] = Level.CreateExistingLevel(buildingId, levelInfo.Number, levelInfo.Name, levelRooms,
                     levelWalls);
             }
-
-            var buildingInfo = new BuildingInformation
-            {
-                Address = buildingAddress,
-                Geometry = buildingBasementGeometry,
-                LevelsCount = (uint)levels.Length
-            };
-
-            return Result.Ok<Building, ErrorMessage>(Building.CreateExistingBuildingInstance(buildingId, buildingInfo, levels));
+            
+            return Result.Ok<Building, ErrorMessage>(Building.CreateExistingBuildingInstance(
+                buildingId,
+                buildingAddress,
+                buildingBasementGeometry, 
+                levels));
         }
         catch (NpgsqlException ex)
         {
@@ -258,7 +254,7 @@ internal sealed class BuildingRepository(
                                                      , w.id AS wall_id
                                                      , w.geometry AS wall_geometry
                                               FROM buildings_levels bl
-                                              LEFT JOIN buildings_walls w ON w.building_id = bl.building_id AND w.level = bl.number
+                                              RIGHT JOIN buildings_walls w ON w.building_id = bl.building_id AND w.level = bl.number
                                              WHERE bl.building_id = @{nameof(buildingId)};
                                         """;
 
@@ -311,7 +307,7 @@ internal sealed class BuildingRepository(
         return Tuple.Create(walls as IEnumerable<Wall>, rooms as IEnumerable<Room>);
     }
 
-    private NpgsqlBatchCommand GetInsertBuildingCommand(Building building)
+    private NpgsqlBatchCommand InsertBuildingCommand(Building building)
     {
         const string insertBuildingSql = """
                                               INSERT INTO buildings (id, address, geometry)
@@ -331,7 +327,7 @@ internal sealed class BuildingRepository(
         return insertBuildingCommand;
     }
 
-    private static NpgsqlBatchCommand GetInsertLevelsCommand(Guid buildingId, IReadOnlyCollection<Level> levels)
+    private static NpgsqlBatchCommand InsertLevelsCommand(Guid buildingId, IReadOnlyCollection<Level> levels)
     {
         const string insertSqlLevelsStart = """
                                                 INSERT INTO buildings_levels (building_id, number, name)
@@ -360,8 +356,13 @@ internal sealed class BuildingRepository(
         return insertLevelsCommand;
     }
 
-    private NpgsqlBatchCommand GetInsertWallsCommand(IEnumerable<Wall> walls)
+    private NpgsqlBatchCommand? InsertWallsCommandOrDefault(Wall[] walls)
     {
+        if (walls.Length == 0)
+        {
+            return default;
+        }
+        
         const string insertSqlWallsStart = """
                                               INSERT INTO buildings_walls (id, building_id, level, geometry)
                                               VALUES
@@ -392,8 +393,13 @@ internal sealed class BuildingRepository(
         return insertWallCommand;
     }
 
-    private NpgsqlBatchCommand GetInsertRoomsCommand(IEnumerable<Room> rooms)
+    private NpgsqlBatchCommand? InsertRoomsCommandOrDefault(Room[] rooms)
     {
+        if (rooms.Length == 0)
+        {
+            return default;
+        }
+        
         const string insertSqlRoomsStart = """
                                               INSERT INTO buildings_rooms (id, building_id, level, type, architectural_id, geometry, name)
                                               VALUES

@@ -60,14 +60,12 @@ public class IBuildingRepositoryTests : DbTestsBase
         var info1 = allInfos.FirstOrDefault(i => i.Address == building1.Address);
         Assert.NotNull(info1);
         Assert.Equal(building1.Address, info1.Address);
-        Assert.Equal(building1.BasementGeometry, info1.Geometry);
-        Assert.Equal(building1.LevelsCount, info1.LevelsCount);
+        Assert.Equal(building1.Id, info1.BuildingId);
 
         var info2 = allInfos.FirstOrDefault(i => i.Address == building2.Address);
         Assert.NotNull(info2);
         Assert.Equal(building2.Address, info2.Address);
-        Assert.Equal(building2.BasementGeometry, info2.Geometry);
-        Assert.Equal(building2.LevelsCount, info2.LevelsCount);
+        Assert.Equal(building2.Id, info2.BuildingId);
     }
 
     [Fact]
@@ -90,7 +88,7 @@ public class IBuildingRepositoryTests : DbTestsBase
     {
         Assert.NotNull(actual);
         Assert.Equal(expected.Id, actual.Id);
-        Assert.Equal(expected.Address, actual.Address);
+        Assert.Equal(expected.Address.ToString(), actual.Address.ToString());
         Assert.Equal(expected.BasementGeometry, actual.BasementGeometry);
         Assert.Equal(expected.LevelsCount, actual.LevelsCount);
 

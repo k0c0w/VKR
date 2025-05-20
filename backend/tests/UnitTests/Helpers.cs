@@ -4,7 +4,7 @@ namespace UnitTests;
 
 internal static class Helpers
 {
-    public static void AssertGeometryEquality(IReadOnlyCollection<LineString> expected, IReadOnlyCollection<LineString> actual)
+    public static void AssertGeometryEquality(double[][][] expected, double[][][] actual)
     {
         var a = expected.ToArray();
         var b = actual.ToArray();
@@ -13,12 +13,23 @@ internal static class Helpers
         {
             var expectedLineString = a[i];
             var actualLineString = b[i];
-            Assert.Equal(expectedLineString.Coordinates.Count, actualLineString.Coordinates.Count);
-            for (var j = 0; j < expectedLineString.Coordinates.Count; j++)
+            Assert.Equal(expectedLineString.Length, actualLineString.Length);
+            for (var j = 0; j < expectedLineString.Length; j++)
             {
-                Assert.Equal(expectedLineString.Coordinates[i].Latitude, actualLineString.Coordinates[i].Latitude, precision: 7);
-                Assert.Equal(expectedLineString.Coordinates[j].Longitude, actualLineString.Coordinates[j].Longitude, precision: 7);
+                var coordinates = expectedLineString[i];
+                var actualCoordinates = actualLineString[i];
+                Assert.True(coordinates.Length == actualCoordinates.Length);
+                for (var pos = 0; pos < coordinates.Length; pos++)
+                {
+                    Assert.Equal(coordinates[pos], actualCoordinates[pos], precision: 7);
+                }
             }
         }
     }
+
+    public static double[][][] Unpack(this IEnumerable<LineString> coordinates)
+        => coordinates.Select(x => x.Coordinates
+                .Select(y => new [] { y.Longitude, y.Latitude })
+                .ToArray())
+            .ToArray();
 }

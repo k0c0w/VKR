@@ -41,7 +41,7 @@ public class MapProviderServiceCacheDecoratorTests
 
         var expectedAddress = new Address("Казань", "улица", "Кремлёвская", "35");
         var expectedGeometry = StandartGeometry;
-        var buildingInfo = new BuildingInformation()
+        var buildingInfo = new BuildingBasementInformation()
         {
             Address = expectedAddress,
             Geometry = expectedGeometry,
@@ -50,7 +50,7 @@ public class MapProviderServiceCacheDecoratorTests
         var serialized = JsonConvert.SerializeObject(buildingInfo);
         var ct = CancellationToken.None;
         
-        var successResult = Result.Ok<BuildingInformation, ErrorMessage>(buildingInfo);
+        var successResult = Result.Ok<BuildingBasementInformation, ErrorMessage>(buildingInfo);
         mockOriginalService
             .Setup(s => s.GetBuildingInformationAsync(expectedAddress, ct))
             .ReturnsAsync(successResult);
@@ -59,7 +59,7 @@ public class MapProviderServiceCacheDecoratorTests
                 It.IsAny<FusionCacheEntryOptions>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(serialized);
         mockCache.Setup(c => c.SetAsync(
-                It.IsAny<string>(), It.IsAny<BuildingInformation>(),
+                It.IsAny<string>(), It.IsAny<BuildingBasementInformation>(),
                 It.IsAny<FusionCacheEntryOptions?>(),
                     It.IsAny<IEnumerable<string>?>(),
                 ct))
@@ -67,12 +67,15 @@ public class MapProviderServiceCacheDecoratorTests
 
         // Act
         var result = await service.GetBuildingInformationAsync(expectedAddress, ct);
-
+        var resultValue = result.Value!;
+        
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(buildingInfo, result.Value);
+        Assert.Equal(buildingInfo.Address, resultValue.Address);
+        Assert.Equal(buildingInfo.Geometry, resultValue.Geometry);
+        Assert.Equal(buildingInfo.LevelsCount, resultValue.LevelsCount);
         mockCache.Verify(c => c.SetAsync(
-            It.IsAny<string>(), It.IsAny<BuildingInformation>(),
+            It.IsAny<string>(), It.IsAny<BuildingBasementInformation>(),
             It.IsAny<FusionCacheEntryOptions?>(),
             It.IsAny<IEnumerable<string>?>(),
             ct), Times.Never);
@@ -94,7 +97,7 @@ public class MapProviderServiceCacheDecoratorTests
         var ct = CancellationToken.None;
         var notFoundError = MapProviderErrors.BuildingNotFoundError;
         var notFoundErrorMessage = notFoundError.ToString();
-        var notFoundResult = Result.Fail<BuildingInformation, ErrorMessage>(notFoundError);
+        var notFoundResult = Result.Fail<BuildingBasementInformation, ErrorMessage>(notFoundError);
         stub.Cache.Add($"overpass_api:{expectedAddress}", notFoundErrorMessage);
         
         mockOriginalService
@@ -121,8 +124,8 @@ public class MapProviderServiceCacheDecoratorTests
 
         var expectedAddress = new Address("Казань", "улица", "Кремлёвская", "35");
         var ct = CancellationToken.None;
-        var error = new ErrorMessage("Some error");
-        var errorResult = Result.Fail<BuildingInformation, ErrorMessage>(error);
+        var error = ErrorMessage.AbstractError;
+        var errorResult = Result.Fail<BuildingBasementInformation, ErrorMessage>(error);
         
         mockOriginalService
             .Setup(s => s.GetBuildingInformationAsync(expectedAddress, ct))
@@ -132,7 +135,7 @@ public class MapProviderServiceCacheDecoratorTests
                 It.IsAny<FusionCacheEntryOptions>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((string?)null);
         mockCache.Setup(c => c.SetAsync(
-                It.IsAny<string>(), It.IsAny<BuildingInformation>(),
+                It.IsAny<string>(), It.IsAny<BuildingBasementInformation>(),
                 It.IsAny<FusionCacheEntryOptions?>(),
                 It.IsAny<IEnumerable<string>?>(),
                 ct))
@@ -145,7 +148,7 @@ public class MapProviderServiceCacheDecoratorTests
         Assert.True(result.IsFailure);
         Assert.Equal(error, result.Error);
         mockCache.Verify(c => c.SetAsync(
-            It.IsAny<string>(), It.IsAny<BuildingInformation>(),
+            It.IsAny<string>(), It.IsAny<BuildingBasementInformation>(),
             It.IsAny<FusionCacheEntryOptions?>(),
             It.IsAny<IEnumerable<string>?>(),
             ct), Times.Never);
@@ -165,7 +168,7 @@ public class MapProviderServiceCacheDecoratorTests
 
         var expectedAddress = new Address("Казань", "улица", "Кремлёвская", "35");
         var expectedGeometry = StandartGeometry;
-        var buildingInfo = new BuildingInformation
+        var buildingInfo = new BuildingBasementInformation
         {
             Address = expectedAddress,
             Geometry = expectedGeometry,
@@ -173,7 +176,7 @@ public class MapProviderServiceCacheDecoratorTests
         };
         var ct = CancellationToken.None;
     
-        var successResult = Result.Ok<BuildingInformation, ErrorMessage>(buildingInfo);
+        var successResult = Result.Ok<BuildingBasementInformation, ErrorMessage>(buildingInfo);
         mockOriginalService
             .Setup(s => s.GetBuildingInformationAsync(expectedAddress, ct))
             .ReturnsAsync(successResult);

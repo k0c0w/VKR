@@ -1,10 +1,9 @@
 using Domain.Errors;
 using Domain.Repositories;
 using Domain.ValueObjects;
-using GeoJSON.Net.Geometry;
 using Moq;
 using ResultMonad;
-using UnitTests.UseCases.Fixtures;
+using UnitTests.Fixtures;
 using UseCases.Plans;
 
 namespace UnitTests.UseCases;
@@ -26,43 +25,13 @@ public sealed class GetAvailablePlansListUseCaseTests
         
         var address1 = _addressFixture.AddressFaker.Generate();
         var address2 = _addressFixture.AddressFaker.Generate();
-        var buildingInfo1 = new BuildingInformation
-        {
-            Address = address1,
-            Geometry = new Polygon(new List<LineString>
-            {
-                new(new List<Position>
-                {
-                    new(55.75, 49.11),
-                    new(55.75, 49.12),
-                    new(55.76, 49.12),
-                    new(55.76, 49.11),
-                    new(55.75, 49.11)
-                })
-            }),
-            LevelsCount = 3
-        };
-        var buildingInfo2 = new BuildingInformation
-        {
-            Address = address2,
-            Geometry = new Polygon(new List<LineString>
-            {
-                new(new List<Position>
-                {
-                    new(55.76, 37.61),
-                    new(55.76, 37.62),
-                    new(55.77, 37.62),
-                    new(55.77, 37.61),
-                    new(55.76, 37.61)
-                })
-            }),
-            LevelsCount = 5
-        };
+        var buildingInfo1 = (Guid.CreateVersion7(), address1);
+        var buildingInfo2 = (Guid.CreateVersion7(), address2);
         var buildingInfos = new[] { buildingInfo1, buildingInfo2 };
 
         buildingRepositoryMock
             .Setup(repo => repo.GetAllBuildingInformationAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok<BuildingInformation[], ErrorMessage>(buildingInfos));
+            .ReturnsAsync(Result.Ok< (Guid, Address)[], ErrorMessage>(buildingInfos));
 
         var useCase = new GetAvailablePlansListUseCase(buildingRepositoryMock.Object);
 
@@ -73,8 +42,8 @@ public sealed class GetAvailablePlansListUseCaseTests
         // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(2, planShortcuts.Length);
-        Assert.Equal(buildingInfo1.Address.ToString(), planShortcuts[0].BuildingAddress);
-        Assert.Equal(buildingInfo2.Address.ToString(), planShortcuts[1].BuildingAddress);
+        Assert.Equal(buildingInfo1.Item2.ToString(), planShortcuts[0].BuildingAddress);
+        Assert.Equal(buildingInfo2.Item2.ToString(), planShortcuts[1].BuildingAddress);
 
         buildingRepositoryMock.Verify(repo => repo.GetAllBuildingInformationAsync(It.IsAny<CancellationToken>()), Times.Once());
     }
@@ -89,7 +58,7 @@ public sealed class GetAvailablePlansListUseCaseTests
 
         buildingRepositoryMock
             .Setup(repo => repo.GetAllBuildingInformationAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Fail<BuildingInformation[], ErrorMessage>(expectedError));
+            .ReturnsAsync(Result.Fail<(Guid, Address)[], ErrorMessage>(expectedError));
 
         var useCase = new GetAvailablePlansListUseCase(buildingRepositoryMock.Object);
 

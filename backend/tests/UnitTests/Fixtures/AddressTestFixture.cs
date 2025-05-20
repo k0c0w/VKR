@@ -4,13 +4,13 @@ using Domain.ValueObjects;
 using Moq;
 using Services;
 
-namespace UnitTests.UseCases.Fixtures;
+namespace UnitTests.Fixtures;
 
 public class AddressTestFixture
 {
     public Faker<Address> AddressFaker { get; }
 
-    public AddressTestFixture()
+    public AddressTestFixture(bool alwaysProvideHouseUnit = false)
     {
         AddressFaker = new Faker<Address>()
             .CustomInstantiator(f => new Address(
@@ -18,16 +18,16 @@ public class AddressTestFixture
                 f.Address.StreetName(),
                 f.PickRandom("улица", "проспект", "переулок"),
                 f.Random.Number(1, 100).ToString(),
-                f.Random.Bool() ? f.Random.Char(min:'а', max:'я').ToString() : ""));
+       alwaysProvideHouseUnit || f.Random.Bool() ? f.Random.Char(min:'а', max:'я').ToString() : ""));
     }
 
     public AddressDto CreateAddressDto(Address address)
-    {
-        return new AddressDto(
-            address.City,
-            $"{address.StreetType} {address.StreetName}",
-            address.HouseNumber);
-    }
+        => new AddressDto
+        {
+            City = address.City,
+            Street = address.GetStreet(),
+            House = address.GetHouse()
+        };
 
     public void SetupAddressParsing(Mock<IAddressParser> addressParserMock, Address address, bool streetSuccess = true, bool houseSuccess = true)
     {

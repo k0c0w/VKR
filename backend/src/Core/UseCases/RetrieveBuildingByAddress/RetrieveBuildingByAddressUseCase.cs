@@ -22,13 +22,13 @@ public sealed record RetrieveBuildingByAddressUseCase
 
     public async Task<Result<BuildingDto, ErrorMessage>> RunAsync(RetrieveBuildingByAddressArgs args, CancellationToken ct)
     {
-        var address = GetAddress(args);
-        if (address is null)
+        var addressParsingResult = GetAddress(args);
+        if (addressParsingResult.IsFailure)
         {
-            return Result.Fail<BuildingDto, ErrorMessage>(new ErrorMessage("Не удалось распарсить адрес."));
+            return Result.Fail<BuildingDto, ErrorMessage>(addressParsingResult.Error);
         }
         
-        var buildingInfoResult = await _mapProviderService.GetBuildingInformationAsync(address, ct);
+        var buildingInfoResult = await _mapProviderService.GetBuildingInformationAsync(addressParsingResult.Value!, ct);
 
         if (buildingInfoResult.IsFailure)
         {
@@ -46,21 +46,24 @@ public sealed record RetrieveBuildingByAddressUseCase
         return Result.Ok<BuildingDto, ErrorMessage>(building);
     }
 
-    private Address? GetAddress(RetrieveBuildingByAddressArgs args)
+    private Result<Address, ErrorMessage> GetAddress(RetrieveBuildingByAddressArgs args)
     {
         var (city, street, house) = args.Address;
-        if (!_addressParser.TryParseStreet(street, out var streetType, out var streetName)
-            || !_addressParser.TryParseHouse(house, out var houseNumber, out var houseUnit))
+        if (!_addressParser.TryParseStreet(street, out var streetType, out var streetName))
         {
-            return null;
+            return Result.Fail<Address, ErrorMessage>(ErrorMessage.AddressErrors.CanNotParseStreet);
+        }
+        if(!_addressParser.TryParseHouse(house, out var houseNumber, out var houseUnit))
+        {
+            return Result.Fail<Address, ErrorMessage>(ErrorMessage.AddressErrors.CanNotParseHouse);
         }
 
-        return new Address(
+        return Result.Ok<Address, ErrorMessage>(new Address(
             city: city,
             streetName: streetName,
             streetType: streetType,
             houseNumber: houseNumber,
             houseUnit: houseUnit
-        );
+        ));
     }
 }

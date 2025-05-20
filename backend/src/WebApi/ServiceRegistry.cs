@@ -1,16 +1,14 @@
 using DataAccess;
-using Domain.Errors;
 using FluentValidation;
+using GeoJSON.Net.Converters;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Options;
 using Migrations;
-using ResultMonad;
+using Newtonsoft.Json;
 using Services;
 using Services.Implementation.OSM;
 using Services.Map;
-using UseCases;
 using UseCases.Plans;
-using UseCases.Plans.Models;
 using UseCases.RetrieveBuildingByAddress;
 using WebApi.Common.Validation;
 using WebApi.Utils;
@@ -27,7 +25,13 @@ internal static class ServiceRegistry
         
         builder.Services.AddHttpClient();
         builder.Services.AddLogging(cfg => cfg.AddConsole());
-        
+
+        builder.Services.AddControllers()
+            .AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor;
+            });
+
         AddCache(builder.Services, builder.Configuration);
         
         AddDatabase(builder.Services, builder.Configuration);
@@ -73,8 +77,7 @@ internal static class ServiceRegistry
         ValidatorOptions.Global.DisplayNameResolver = (_, member, _) 
             => member is not null ? PropertyNameConverter.SnakeCase(member.Name) : default;
         
-        services.AddSingleton<AddressDtoValidator>();
-        services.AddSingleton<AddressDtoValidator>();
+        services.AddValidatorsFromAssemblies([typeof(Program).Assembly]);
     }
     
     private static void AddDomainServices(IServiceCollection services, IConfiguration configuration)
@@ -94,8 +97,9 @@ internal static class ServiceRegistry
 
     private static void AddUseCases(IServiceCollection services)
     {
-        services.AddScoped<IUseCase<RetrieveBuildingByAddressArgs, Result<BuildingDto, ErrorMessage>>, RetrieveBuildingByAddressUseCase>();
-        services.AddScoped<IUseCase<GetPlanUseCaseArgs, Result<BuildingPlan, ErrorMessage>>, GetPlanUseCase>();
-        services.AddScoped<IUseCase<Result<BuildingPlanShortcut[], ErrorMessage>>, GetAvailablePlansListUseCase>();
+        services.AddScoped<RetrieveBuildingByAddressUseCase>();
+        services.AddScoped<GetPlanUseCase>();
+        services.AddScoped<GetAvailablePlansListUseCase>();
+        services.AddScoped<CreatePlanUseCase>();
     }
 }

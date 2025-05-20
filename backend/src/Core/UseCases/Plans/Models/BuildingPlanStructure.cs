@@ -1,0 +1,82 @@
+using System.Text.Json.Serialization;
+using Domain.Aggregates;
+using Domain.Entities;
+using Domain.ValueObjects;
+using Newtonsoft.Json;
+
+namespace UseCases.Plans.Models;
+
+public abstract record BuildingPlanStructure
+{
+    public string Id { get; init; }
+    
+    [System.Text.Json.Serialization.JsonIgnore]
+    [Newtonsoft.Json.JsonIgnore]
+    public abstract string Meaning { get; }
+}
+
+public record BuildingPlanWall : BuildingPlanStructure
+{
+    [JsonPropertyName("geometry")]
+    [JsonProperty("geometry")]
+    public GeometryDto<double[][]> Geometry { get; init; }
+
+    public override string Meaning => "Wall";
+
+    internal BuildingPlanWall(Wall wall)
+    {
+        Id = wall.Id.ToString();
+        Geometry = new GeometryDto<double[][]>
+        {
+            Type = wall.Geometry.Type.ToString(),
+            Coordinates = wall.Geometry.Coordinates
+                .Select(x => new double[] { x.Longitude, x.Latitude })
+                .ToArray()
+        };
+    }
+
+    [Newtonsoft.Json.JsonConstructor]
+    [System.Text.Json.Serialization.JsonConstructor]
+    protected BuildingPlanWall()
+    {
+    }
+}
+
+public record BuildingPlanRoom : BuildingPlanStructure
+{
+    [JsonPropertyName("name")]
+    [JsonProperty("name")]
+    public string Name { get; init; }
+    
+    [JsonPropertyName("architectual_id")]
+    [JsonProperty("architectual_id")]
+    public string ArchitectualId { get; init; }
+        
+    [JsonPropertyName("type")]
+    [JsonProperty("type")]
+    public RoomType Type { get; init; }
+    
+    [JsonPropertyName("geometry")]
+    [JsonProperty("geometry")]
+    public GeometryDto<double[][][]> Geometry { get; init; }
+
+    public override string Meaning => "Room";
+    
+    internal BuildingPlanRoom(Room room)
+    {
+        Id = room.Id.ToString();
+        Geometry = new GeometryDto<double[][][]>
+        {
+            Type = room.Geometry.Type.ToString(),
+            Coordinates = room.Geometry.Coordinates
+                .Select(ring => ring.Coordinates
+                    .Select(pos => new double[] { pos.Longitude, pos.Latitude })
+                    .ToArray()
+                )
+                .ToArray()
+        };
+        Name = room.Name ?? "";
+        Type = room.Type;
+        ArchitectualId = room.ArchitectualId;
+    }
+}

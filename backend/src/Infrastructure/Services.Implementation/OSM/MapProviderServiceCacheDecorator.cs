@@ -20,7 +20,7 @@ public class MapProviderServiceCacheDecorator : IMapProviderService
         _cache = cache;
     }
 
-    public async Task<Result<BuildingInformation, ErrorMessage>> GetBuildingInformationAsync(Address address,
+    public async Task<Result<BuildingBasementInformation, ErrorMessage>> GetBuildingInformationAsync(Address address,
         CancellationToken ct)
     {
         var cacheKey = $"{CachePrefix}:{address}";
@@ -44,7 +44,7 @@ public class MapProviderServiceCacheDecorator : IMapProviderService
         return buildingInformationResult;
     }
 
-    private async ValueTask<Result<BuildingInformation, ErrorMessage>?> TryFindInCacheAsync(string key,
+    private async ValueTask<Result<BuildingBasementInformation, ErrorMessage>?> TryFindInCacheAsync(string key,
         CancellationToken ct)
     {
         var cachedBuildingInformationSerialized = await _cache.GetOrDefaultAsync<string?>(key, token: ct);
@@ -55,16 +55,16 @@ public class MapProviderServiceCacheDecorator : IMapProviderService
 
         if (cachedBuildingInformationSerialized == NotFoundError)
         {
-            return Result.Fail<BuildingInformation, ErrorMessage>(MapProviderErrors.BuildingNotFoundError);
+            return Result.Fail<BuildingBasementInformation, ErrorMessage>(MapProviderErrors.BuildingNotFoundError);
         }
 
         try
         {
             var cachedBuildingInformation =
-                JsonConvert.DeserializeObject<BuildingInformation>(cachedBuildingInformationSerialized);
+                JsonConvert.DeserializeObject<BuildingBasementInformation>(cachedBuildingInformationSerialized);
             if (cachedBuildingInformation is not null)
             {
-                return Result.Ok<BuildingInformation, ErrorMessage>(cachedBuildingInformation);
+                return Result.Ok<BuildingBasementInformation, ErrorMessage>(cachedBuildingInformation);
             }
         }
         catch (JsonException)

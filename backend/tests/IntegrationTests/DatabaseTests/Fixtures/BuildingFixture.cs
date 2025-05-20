@@ -14,10 +14,8 @@ public static class BuildingFixture
     
     internal static Building CreateTestBuilding(string city = "Казань")
     {
-        var building = new Building(new BuildingInformation
-        {
-            Address = new Address(city, Randomizer.String(minChar:'а',maxChar:'я'), GetStreetType(), Random.Shared.Next(1, 150).ToString()),
-            Geometry = new Polygon([
+        var building = new Building(new Address(city, Randomizer.String(minChar:'а',maxChar:'я'), GetStreetType(), Random.Shared.Next(1, 150).ToString()),
+            new Polygon([
                 new LineString([
                     new Position(1, 1),
                     new Position(1, -1),
@@ -25,9 +23,8 @@ public static class BuildingFixture
                     new Position(-1, 1),
                     new Position(1, 1),
                 ])
-            ]),
-            LevelsCount = 1
-        });
+            ])
+        );
 
         var level = building.Levels.Single();
             

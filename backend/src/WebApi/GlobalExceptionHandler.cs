@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using WebApi.Common.ProblemDetails;
 
 namespace WebApi;
 
@@ -29,7 +30,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         var problemDetails = new ProblemDetails
         {
             Status = StatusCodes.Status500InternalServerError,
-            Title = "Internal server error.",
+            Title = ProblemDetailsTitles.ServerError,
             Detail= "Не удалось обработать запрос."
         };
 
