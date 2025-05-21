@@ -119,18 +119,22 @@ export default function CreateNewPlanPage() {
         }
     }, [loadedBuilding]);
 
-    return (<Container component="main" style={{width: 800, height: 600}}>
-        {!loadedBuilding && <LoadBuildingBoundariesSubPage 
-            setBuilding={setLoadedBuilding}
-            loaderBackground={<Skeleton width="100%" height={800}/>}
-        />}
-        {building && <CreateNewPlanSubPage createPlan={onPlanCreate} />}
-        {isLoading && <FullPageTint><CircularProgress color="primary"/></FullPageTint> }
-        {error && <AlertDialog
-            title="Ошибка при создании плана"
-            content={parseError(error)}
-            handleClose={reset}
-            open={error !== undefined}
-        />}
-    </Container>);
+    return <>
+        <title>Создать новый план</title>
+        <Container component="main" style={{width: 800, height: 600}}>
+            {!loadedBuilding && <LoadBuildingBoundariesSubPage 
+                setBuilding={setLoadedBuilding}
+                loaderBackground={<Skeleton width="100%" height={800}/>}
+            />}
+            {building && <CreateNewPlanSubPage createPlan={onPlanCreate} />}
+            {isLoading && <FullPageTint><CircularProgress color="primary"/></FullPageTint> }
+            {error && <AlertDialog
+                title="Ошибка при создании плана"
+                content={parseError(error)}
+                handleClose={reset}
+                open={error !== undefined}
+            />}
+        </Container>
+    </>
+
 }

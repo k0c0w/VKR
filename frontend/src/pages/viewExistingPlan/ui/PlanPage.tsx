@@ -87,15 +87,17 @@ export default function PlanPage() {
             }
         }
     }, [data, isSuccess, isError, error, dispatch]);
-
     
-    return <Container component="main" style={{width: 800, height: 600}}>
-        {isSuccess && building && <PlanEditorWidget readonlyMode={true} style={{width: 600, height: 800}}/>}
-        {!building && isFetching && <CircularProgress />}
-        {isError && error && 
-            <Stack>
-                <Typography component="h3">Не удалось загрузить план здания.</Typography>
-                <Button onClick={refetch}>Повторить</Button>
-            </Stack>}
-    </Container>
+    return <>
+        <title>Просмотр плана</title>
+        <Container component="main" style={{width: 800, height: 600}}>
+            {isSuccess && building && <PlanEditorWidget readonlyMode={true} style={{width: 600, height: 800}}/>}
+            {!building && isFetching && <CircularProgress />}
+            {isError && error && 
+                <Stack>
+                    <Typography component="h3">Не удалось загрузить план здания.</Typography>
+                    <Button onClick={refetch}>Повторить</Button>
+                </Stack>}
+        </Container>
+    </>
 }
