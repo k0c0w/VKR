@@ -3,11 +3,13 @@ import { rootReducer } from "./appReducer";
 import { mapApi } from "@features/map";
 import { rtkQueryErrorLogger } from "./rtkQueryErrorLogger";
 import { plansApi } from "@features/plans";
+import { authApi } from "@features/authorization";
 
 const rootStore = configureStore({
     reducer: rootReducer,
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware()
+        .concat(authApi.middleware)
         .concat(mapApi.middleware)
         .concat(plansApi.middleware)
         .concat(rtkQueryErrorLogger)

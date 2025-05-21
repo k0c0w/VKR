@@ -12,4 +12,8 @@ export class Routes {
     }
 
     public static readonly AvailablePlansRouteTemplate = "/plans";
+
+    public static readonly SignInRouteTemplate = "/login";
+
+    public static readonly SignOutRouteTemplate = "/logout"
 }

@@ -3,8 +3,14 @@ import CreateNewPlanPage from "@pages/createNewPlan";
 import { Routes } from "./routes";
 import { PlanPage as ViewExistingPlanPage } from "@pages/viewExistingPlan";
 import AvailablePlansPage from "@pages/viewAvailablePlans";
+import { LoginPage, LogoutPage } from "@pages/authorization";
 
 const router = createBrowserRouter([
+    {
+        path: Routes.AvailablePlansRouteTemplate,
+        element: <AvailablePlansPage />,
+        index: true,
+    },
     {
         path: Routes.CreateNewPlanRouteTemplate,
         element: <CreateNewPlanPage />
@@ -14,8 +20,12 @@ const router = createBrowserRouter([
         element: <ViewExistingPlanPage/>
     },
     {
-        path: Routes.AvailablePlansRouteTemplate,
-        element: <AvailablePlansPage />
+        path: Routes.SignInRouteTemplate,
+        element: <LoginPage/>
+    },
+    {
+        path: Routes.SignOutRouteTemplate,
+        element: <LogoutPage/>
     }
 ]);
 
