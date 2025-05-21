@@ -30,7 +30,7 @@ export default function CreateNewPlanSubPage({createPlan}: {createPlan: (b: Buil
     }, [building]);
 
     return <>
-        <PlanEditorWidget style={{width: 600, height: 800}} />
+        <PlanEditorWidget style={{width: 600, height: 800}} readonlyMode={false}/>
         <PlanEditorStepperWidget 
             backwardButtonDisabled={validating} 
             completeButtonDisabled={createButtonDisabled || validating} 

@@ -13,11 +13,12 @@ import LevelPickController from "../lib/LevelPickController";
 import MapObjectDescriptionPopup from "./MapObjectDescriptionPopup";
 import { PM } from "leaflet";
 
-interface CreateNewPlanWidgetProps {
+interface PlanEditorWidgetProps {
     style?: CSSProperties;
+    readonlyMode: boolean;
 }
 
-export default function PlanEditorWidget({style}: CreateNewPlanWidgetProps) {
+export default function PlanEditorWidget({style, readonlyMode}: PlanEditorWidgetProps) {
     const { building, currentLevelIndex } = useAppSelector(state => state.planEditorSlice);
     if (!building) {
         throw new Error("Initialize building first!")
@@ -35,11 +36,11 @@ export default function PlanEditorWidget({style}: CreateNewPlanWidgetProps) {
             levelLabels={levelLabels} 
             initialLevelIndex={currentLevelIndex}
         >
-            <GeomanPlugin showGeomanControls={true} />
+            <GeomanPlugin showGeomanControls={!readonlyMode} />
             <FocusOnce bounds={bounds}/>
-            <EnableButtonsAndControls />
+            <EnableButtonsAndControls readonlyMode={readonlyMode}/>
             
-            <LevelPickController />
+            <LevelPickController readonlyMode={readonlyMode} />
             <EditBuildingBoundariesController initialBoundaries={geometry}/>
             <EditRoomsController />
             <EditItInfrastructureController/>
@@ -63,17 +64,19 @@ function setButtonsForStep(pm: PM.PMMap, step: CreateNewPlanStep) {
     });
 }
 
-function EnableButtonsAndControls() {
+function EnableButtonsAndControls({readonlyMode}: {readonlyMode: boolean;}) {
     const map = useMap();
     const step = useAppSelector(state => state.planEditorSlice.currentStep);
 
     useEffect(() => {
         disableAllModes(map.pm);
-        setButtonsForStep(map.pm, step);
- 
-        const controlsVisible = step !== CreateNewPlanStep.BuildingBoundariesSetup;
-        setControlsVisible(map.pm, controlsVisible);
-    }, [map, step]);
+        if (!readonlyMode) {
+            setButtonsForStep(map.pm, step);
+            
+            const controlsVisible = step !== CreateNewPlanStep.BuildingBoundariesSetup;
+            setControlsVisible(map.pm, controlsVisible);
+        }
+    }, [map, step, readonlyMode]);
 
     return <></>
 }

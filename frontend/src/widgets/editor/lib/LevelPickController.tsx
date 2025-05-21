@@ -94,7 +94,7 @@ function EditLevelDialog({open, handleClose, setLevelName}: {open: boolean; hand
     />
 }
 
-export default function LevelPickController() {
+export default function LevelPickController({readonlyMode}: {readonlyMode: boolean;}) {
     const [levelNameDialogIsOpen, setLevelNameDialogOpen] = useState(false);
     const [editLeveDialogIsOpen, setEditLevelDialogIsOpen] = useState(false);
     const [removeLevelDialogIsOpen, setRemoveLevelDialogIsOpen] = useState(false);
@@ -109,6 +109,11 @@ export default function LevelPickController() {
     function renameLevel(levelName: string) {
         dispatch(editCurrentLevel({levelName}));
     }
+
+    useEffect(() => {
+      map.levelControl?.setRubbishBinDisabled(readonlyMode);
+      map.levelControl?.setShowLevelButtons(!readonlyMode);
+    }, [map, readonlyMode]);
 
     useEffect(() => {
         const onAddLevelClicked = () => setLevelNameDialogOpen(true);
@@ -132,20 +137,20 @@ export default function LevelPickController() {
     }, [map, dispatch, setLevelNameDialogOpen, setRemoveLevelDialogIsOpen, setEditLevelDialogIsOpen]);
 
     return <>
-        <LevelNameDialog 
+        {!readonlyMode && <LevelNameDialog 
             open={levelNameDialogIsOpen}
             handleClose={() => setLevelNameDialogOpen(false)}
             setLevelName={(name) => addLevel(name)}
-        />
-        <RemoveLevelDialog 
+        />}
+        {!readonlyMode && <RemoveLevelDialog 
             open={removeLevelDialogIsOpen}
             handleClose={() => setRemoveLevelDialogIsOpen(false)}
             onRemoveSubmit={() => dispatch(removeCurrentLevel())}
-        />
-        <EditLevelDialog
+        />}
+        {!readonlyMode && <EditLevelDialog
           open={editLeveDialogIsOpen}
           handleClose={() => setEditLevelDialogIsOpen(false)}
           setLevelName={renameLevel}
-        />
+        />}
     </>
 }

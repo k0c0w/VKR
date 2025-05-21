@@ -43,8 +43,8 @@ export default function PlanPage() {
                     levels: data.levels.map(l => ({
                         name: l.name,
                         number: l.number,
-                        infrastructure: l.itEquipments.map(ie => ({})),
-                        buildingStructure: l.structure.map(s => {
+                        infrastructure: l.itEquipments?.map(ie => ({})) ?? [],
+                        buildingStructure: l.structure?.map(s => {
                             if (s.meaning === "Wall") {
                                 const wall: Wall = {
                                     id: s.id,
@@ -71,7 +71,7 @@ export default function PlanPage() {
 
                             throw new Error("Unknown structure type.");
                         })
-                    })) as Level[]
+                    })) as Level[] 
                 }
             }
             dispatch(initNewState({
@@ -90,7 +90,7 @@ export default function PlanPage() {
 
     
     return <Container component="main" style={{width: 800, height: 600}}>
-        {isSuccess && building && <PlanEditorWidget  style={{width: 600, height: 800}}/>}
+        {isSuccess && building && <PlanEditorWidget readonlyMode={true} style={{width: 600, height: 800}}/>}
         {!building && isFetching && <CircularProgress />}
         {isError && error && 
             <Stack>
