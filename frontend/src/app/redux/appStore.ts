@@ -1,13 +1,15 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { rootReducer } from "./appReducer";
-import { mapApi } from "../../features/map";
+import { mapApi } from "@features/map";
 import { rtkQueryErrorLogger } from "./rtkQueryErrorLogger";
+import { plansApi } from "@features/plans";
 
 const rootStore = configureStore({
     reducer: rootReducer,
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware()
         .concat(mapApi.middleware)
+        .concat(plansApi.middleware)
         .concat(rtkQueryErrorLogger)
 });
 

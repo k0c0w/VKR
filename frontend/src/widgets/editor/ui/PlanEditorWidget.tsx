@@ -3,22 +3,22 @@ import EditBuildingBoundariesController from "../lib/EditBuildingBoundariesContr
 import EditItInfrastructureController from "../lib/EditItInfrastructureController";
 import EditRoomsController from "../lib/EditRoomsController";
 import { useAppSelector } from "@shared/hooks/reduxTypedHooks";
-import { CreateNewPlanStep } from "../lib/createNewPlanSlice";
-import FocusOnce from "./FocusOnce";
+import { CreateNewPlanStep } from "../lib/planEditorSlice";
+import FocusOnce from "../lib/FocusOnce";
 import { useMap } from "react-leaflet";
 import { disableAllModes, setControlsVisible } from "../lib/geoman/utils";
 import GeomanPlugin from "../lib/geoman/GeomanPlugin";
 import { BuildingMap } from "@shared/map";
 import LevelPickController from "../lib/LevelPickController";
-import MapObjectDescriptionPopup from "../ui/MapObjectDescriptionPopup";
+import MapObjectDescriptionPopup from "./MapObjectDescriptionPopup";
 import { PM } from "leaflet";
 
 interface CreateNewPlanWidgetProps {
     style?: CSSProperties;
 }
 
-export default function CreateNewPlanWidget({style}: CreateNewPlanWidgetProps) {
-    const { building, currentLevelIndex } = useAppSelector(state => state.createNewPlanReducer);
+export default function PlanEditorWidget({style}: CreateNewPlanWidgetProps) {
+    const { building, currentLevelIndex } = useAppSelector(state => state.planEditorSlice);
     if (!building) {
         throw new Error("Initialize building first!")
     }
@@ -65,7 +65,7 @@ function setButtonsForStep(pm: PM.PMMap, step: CreateNewPlanStep) {
 
 function EnableButtonsAndControls() {
     const map = useMap();
-    const step = useAppSelector(state => state.createNewPlanReducer.currentStep);
+    const step = useAppSelector(state => state.planEditorSlice.currentStep);
 
     useEffect(() => {
         disableAllModes(map.pm);

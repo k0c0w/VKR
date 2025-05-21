@@ -1,5 +1,5 @@
 import BringMapToHomeControl from "./ui/BringMapToHomeControl";
-import BuildingBasePolygon from "./ui/BuildingBasePolygon";
+import BuildingBasePolygon from "../../widgets/editor/ui/BuildingBasePolygon";
 import BuildingMap from "./ui/BuildingMap";
 import ITInfrastructureDescriptor, { ITInfrastructureDescriptorProps } from "./ui/ITInfrastructureDescriptor";
 import LevelPickControl from "./ui/LevelPickControl";

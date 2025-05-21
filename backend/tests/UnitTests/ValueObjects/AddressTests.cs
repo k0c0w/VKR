@@ -6,8 +6,8 @@ namespace UnitTests.ValueObjects;
 public class AddressTests
 {
     [Theory]
-    [InlineData("г. К, улица Кремлёвская, 35", "К", "Кремлёвская", "улица", "35", null)]
-    [InlineData("г. М, улица Кремлёвская, 35 а", "М", "Кремлёвская", "улица", "35", "а")]
+    [InlineData("г. К, улица Кремлевская, 35", "К", "Кремлёвская", "улица", "35", null)]
+    [InlineData("г. М, улица Кремлевская, 35 а", "М", "Кремлёвская", "улица", "35", "а")]
     public void ToString_ShouldReturnAddressString(string expectedAddressString, string city, string streetName, string streetType, string houseNumber, string? houseUnit)
     {
         var address = new Address(city, streetName, streetType, houseNumber, houseUnit);

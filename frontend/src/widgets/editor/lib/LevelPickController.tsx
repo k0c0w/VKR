@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector, } from "@shared/hooks/reduxTypedHooks";
 import { useEffect, useState } from "react";
 import { useMap } from "react-leaflet";
-import { addLevelAndSwitchOnIt, editCurrentLevel, removeCurrentLevel, setCurrentLevelIndex } from "./createNewPlanSlice";
+import { addLevelAndSwitchOnIt, editCurrentLevel, removeCurrentLevel, setCurrentLevelIndex } from "./planEditorSlice";
 import { Button, TextField } from "@mui/material";
 import DialogForm from "@shared/map/ui/DialogForm";
 
@@ -56,7 +56,7 @@ function RemoveLevelDialog({open, handleClose, onRemoveSubmit}: {open: boolean; 
 }
 
 function EditLevelDialog({open, handleClose, setLevelName}: {open: boolean; handleClose: () => void; setLevelName: (name: string) => void;}) {
-  const {building, currentLevelIndex} = useAppSelector(state => state.createNewPlanReducer);
+  const {building, currentLevelIndex} = useAppSelector(state => state.planEditorSlice);
   const [newLevelName, setNewLevelName] = useState(building!.properties.levels[currentLevelIndex].name);
 
   const onSubmit = (formJson: {[k: string]: any}) => {

@@ -85,7 +85,7 @@ public class CreatePlanUseCase(
             var levelResult = building.GetLevel(lp.Number);
             if (levelResult.IsFailure)
             {
-                return ResultWithError.Fail(createResult.Error);
+                return ResultWithError.Fail(levelResult.Error);
             }
 
             AddEquipments(levelResult.Value!, lp);

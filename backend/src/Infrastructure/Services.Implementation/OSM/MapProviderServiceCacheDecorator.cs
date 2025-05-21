@@ -34,7 +34,8 @@ public class MapProviderServiceCacheDecorator : IMapProviderService
 
         if (buildingInformationResult.IsSuccess)
         {
-            await CacheForDayAsync(cacheKey, buildingInformationResult.Value!, ct);
+            var stringValue = JsonConvert.SerializeObject(buildingInformationResult.Value!);
+            await CacheForDayAsync(cacheKey, stringValue, ct);
         }
         else if (buildingInformationResult.Error == MapProviderErrors.BuildingNotFoundError)
         {
@@ -75,6 +76,6 @@ public class MapProviderServiceCacheDecorator : IMapProviderService
         return null;
     }
 
-    private ValueTask CacheForDayAsync<TValue>(string key, TValue value, CancellationToken ct)
+    private ValueTask CacheForDayAsync(string key, string value, CancellationToken ct)
         => _cache.SetAsync(key, value, options => { options.Duration = TimeSpan.FromDays(1); }, token: ct);
 }

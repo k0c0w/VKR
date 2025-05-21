@@ -1,6 +1,6 @@
 import { SerializedError } from "@reduxjs/toolkit";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/dist/query/react";
-import { isProblemDetatils, isValidationProblemDetails, IValidationProblemDetails } from "@shared/types/ProblemDetails";
+import { isValidationProblemDetails, IValidationProblemDetails } from "@shared/types/ProblemDetails";
 import { Position } from "geojson";
 
 export interface IBuildingBoundariesQuery {
@@ -12,7 +12,10 @@ export interface IBuildingBoundariesQuery {
 export interface IBuildingBoundariesResponse {
     levelsCount: number;
     address: string;
-    geometry: Position[][];
+    geometry: {
+        type: "Polygon",
+        coordinates: Position[][];
+    }
 }
 
 interface BuildingBoundariesValidationProblemDetails extends IValidationProblemDetails {
@@ -23,24 +26,13 @@ interface BuildingBoundariesValidationProblemDetails extends IValidationProblemD
     };
 }
 
-interface DomainProblemDetails {
-    status: number;
-    title: "Доменная ошибка.";
-    detail?: string;
-}
-
-export function isSuccessResponse(response: unknown): response is IBuildingBoundariesResponse {
-    return (
-        typeof response === "object" &&
-        response !== null &&
-        "levelsCount" in response &&
-        typeof (response as any).levelsCount === "number" &&
+export function isSuccessResponse(response: any): response is IBuildingBoundariesResponse {
+    return "levelsCount" in response &&
+        typeof response.levelsCount === "number" &&
         "address" in response &&
-        typeof (response as any).address === "string" &&
         "geometry" in response &&
-        Array.isArray((response as any).geometry) &&
-        (response as any).geometry.every((poly: any) => Array.isArray(poly) && poly.every((pos: any) => Array.isArray(pos)))
-    );
+        "type" in response.geometry && response.geometry.type === "Polygon" &&
+        "coordinates" in response.geometry
 }
 
 export function isValidationErrorResponse(
@@ -55,28 +47,6 @@ export function isValidationErrorResponse(
         (Array.isArray(response.data.errors.City) ||
          Array.isArray(response.data.errors.Street) ||
          Array.isArray(response.data.errors.House))
-    );
-}
-
-export function isDomainErrorResponse(
-    response: FetchBaseQueryError | SerializedError
-): response is FetchBaseQueryError & { data: DomainProblemDetails & { status: 400 } } {
-    return (
-        isFetchBaseQueryError(response) &&
-        isProblemDetatils(response.data) &&
-        response.data.status === 400 &&
-        response.data.title === "Доменная ошибка."
-    );
-}
-
-export function isNotFoundErrorResponse(
-    response: FetchBaseQueryError | SerializedError
-): response is FetchBaseQueryError & { data: DomainProblemDetails & { status: 404 } } {
-    return (
-        isFetchBaseQueryError(response) &&
-        isProblemDetatils(response.data) &&
-        response.data.status === 404 &&
-        response.data.title === "Доменная ошибка."
     );
 }
 

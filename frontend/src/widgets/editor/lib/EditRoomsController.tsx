@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useMap } from "react-leaflet";
 import { useAppDispatch, useAppSelector } from "@shared/hooks/reduxTypedHooks";
-import { CreateNewPlanStep, focusOnFeature, setBuildingStructureOnCurrentLevel } from "./createNewPlanSlice";
+import { CreateNewPlanStep, focusOnFeature, setBuildingStructureOnCurrentLevel } from "./planEditorSlice";
 import { LatLng, Layer, Marker, PM, Polygon, Polyline } from "leaflet";
 import {  isRoom, isWall, RoomType, WallGoometry, RoomGeometry, Room, Wall, FeatureWithId } from "@entities/map";
 import { getGeoJsonFeatureGeometryFrom, getLayerLeafletId, isKnownShapeLayer, isMarkerLayer, isPolygonLayer, isPolylineLayer, toGeoJsonWithId, } from "@shared/map/lib/leafletUtilsAdditions";
@@ -65,7 +65,7 @@ const whenDisabledOptions = {
 
 export default function EditRoomsController() {
     const dispatch = useAppDispatch();
-    const { currentStep, currentLevelIndex, building } = useAppSelector(state => state.createNewPlanReducer);
+    const { currentStep, currentLevelIndex, building } = useAppSelector(state => state.planEditorSlice);
 
     if (!building) {
         throw new Error("You must initialize slice first!");
@@ -187,7 +187,7 @@ export default function EditRoomsController() {
          originLatLngs: L.LatLng[];
          newLatLngs: L.LatLng[];
      }) {
-        const { layer, startAngle, originLatLngs, newLatLngs } = e;
+        const { layer, } = e;
         
         if (currentStep !== CreateNewPlanStep.RoomsBoundariesSetup || !isKnownShapeLayer(layer)) {
             return;

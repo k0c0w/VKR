@@ -59,8 +59,8 @@ public class Building : IHaveIdentity<Guid>
     
     public Result<Level, ErrorMessage> GetLevel(int number)
         => _levels.TryGetValue(number, out var level) 
-            ? Result.Fail<Level, ErrorMessage>(ErrorMessage.EntityNotfoundError) 
-            : Result.Ok<Level, ErrorMessage>(level!);
+            ? Result.Ok<Level, ErrorMessage>(level!)
+            : Result.Fail<Level, ErrorMessage>(ErrorMessage.EntityNotfoundError); 
     
     public static Building CreateExistingBuildingInstance(Guid id, 
         Address address, 

@@ -1,11 +1,12 @@
 import { Address, parseAddress } from "@shared/types/ValueObjectsTypes";
 import { ReactNode, useEffect, useState } from "react";
-import AddressForm from "./AddressForm";
 import { Button, Container, Stack, Typography } from "@mui/material";
 import { Building } from "@entities/map/Building";
-import { mapApi, isBuildingSuccessResponse, isBuildingValidationErrorResponse, isBuildingDomainErrorResponse, isBuildingNotFoundErrorResponse } from "@features/map";
+import { mapApi, isBuildingValidationErrorResponse, isBuildingSuccessResponse } from "@features/map";
 import { Level } from "@entities/map";
 import { ArrayExtensions } from "@shared/utils/arrayExtensions";
+import {AddressFormWidget} from "@widgets/address";
+import { isDomainErrorResponse, isNotFoundErrorResponse } from "@shared/types/ProblemDetails";
 
 interface LoadBuildingWidgetProps {
     setBuilding: (building: Building) => void;
@@ -26,7 +27,7 @@ function getDefaultBuilding(address: Address): Building {
     };
 }
 
-export default function LoadBuildingWidget({setBuilding}:LoadBuildingWidgetProps) {
+export default function LoadBuildingBoundariesSubPage({setBuilding}:LoadBuildingWidgetProps) {
     const [address, setAddress] = useState<Address | undefined>();
     const [fetchAddress, {data, isSuccess, isFetching, isLoading, isError, error}] = mapApi.useLazyFetchBuildingBoundariesQuery();
     const [fatalError, setFatalError] = useState<string|null>(null);
@@ -61,10 +62,7 @@ export default function LoadBuildingWidget({setBuilding}:LoadBuildingWidgetProps
 
             const building: Building = {
                 type: "Feature",
-                geometry: {
-                    type: "Polygon",
-                    coordinates: geometry,
-                },
+                geometry: geometry,
                 properties: {
                     levels: [...levels],
                     address: addressVO ?? address
@@ -80,9 +78,9 @@ export default function LoadBuildingWidget({setBuilding}:LoadBuildingWidgetProps
                     house: errors.House,
                     street: errors.Street
                 });
-            } else if (error && isBuildingDomainErrorResponse(error)) {
+            } else if (error && isDomainErrorResponse(error)) {
                 setFatalError(error.data?.detail ?? "Произошла непредвиденная ошибка.");
-            } else if (error && isBuildingNotFoundErrorResponse(error)) {
+            } else if (error && isNotFoundErrorResponse(error)) {
                 setFatalError("Здание по указанному адресу не найдено.");
             } else {
                 setFatalError("Произошла непредвиденная ошибка.");
@@ -98,7 +96,7 @@ export default function LoadBuildingWidget({setBuilding}:LoadBuildingWidgetProps
     }, [isFetching, isLoading]);
 
     return <Container maxWidth="tablet">
-        <AddressForm 
+        <AddressFormWidget 
             onSubmit={onSubmit} 
             disabled={isFetching} 
             externalErrors={fromErrors} 

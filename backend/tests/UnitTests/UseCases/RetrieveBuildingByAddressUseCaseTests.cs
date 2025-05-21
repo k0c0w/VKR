@@ -60,7 +60,7 @@ public class RetrieveBuildingByAddressUseCaseTests
         var value = result.Value;
         Assert.Equal(address.ToString(), value.Address);
         Assert.Equal(buildingInfo.LevelsCount, value.LevelsCount);
-        Helpers.AssertGeometryEquality(buildingInfo.Geometry.Coordinates.Unpack(), value.Geometry.Unpack());
+        Helpers.AssertGeometryEquality(buildingInfo.Geometry.Coordinates.Unpack(), value.Geometry.Coordinates);
 
         addressParserMock.Verify(x => x.TryParseStreet(addressDto.Street, out It.Ref<string>.IsAny, out It.Ref<string>.IsAny), Times.Once());
         addressParserMock.Verify(x => x.TryParseHouse(addressDto.House, out It.Ref<string>.IsAny, out It.Ref<string>.IsAny), Times.Once());

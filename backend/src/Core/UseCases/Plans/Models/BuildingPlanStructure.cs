@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Common.Extensions;
 using Domain.Aggregates;
 using Domain.Entities;
 using Domain.ValueObjects;
@@ -30,7 +31,7 @@ public record BuildingPlanWall : BuildingPlanStructure
         {
             Type = wall.Geometry.Type.ToString(),
             Coordinates = wall.Geometry.Coordinates
-                .Select(x => new double[] { x.Longitude, x.Latitude })
+                .Select(x => x.ToArray())
                 .ToArray()
         };
     }
@@ -48,8 +49,8 @@ public record BuildingPlanRoom : BuildingPlanStructure
     [JsonProperty("name")]
     public string Name { get; init; }
     
-    [JsonPropertyName("architectual_id")]
-    [JsonProperty("architectual_id")]
+    [JsonPropertyName("architectualId")]
+    [JsonProperty("architectualId")]
     public string ArchitectualId { get; init; }
         
     [JsonPropertyName("type")]
@@ -70,7 +71,7 @@ public record BuildingPlanRoom : BuildingPlanStructure
             Type = room.Geometry.Type.ToString(),
             Coordinates = room.Geometry.Coordinates
                 .Select(ring => ring.Coordinates
-                    .Select(pos => new double[] { pos.Longitude, pos.Latitude })
+                    .Select(pos => pos.ToArray())
                     .ToArray()
                 )
                 .ToArray()

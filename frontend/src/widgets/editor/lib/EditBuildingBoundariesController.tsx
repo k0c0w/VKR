@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@shared/hooks/reduxTypedHooks"
-import { CreateNewPlanStep, editBuilding } from "./createNewPlanSlice";
-import BuildingBasePolygon from "../../../shared/map/ui/BuildingBasePolygon";
+import { CreateNewPlanStep, editBuilding } from "./planEditorSlice";
+import BuildingBasePolygon from "../ui/BuildingBasePolygon";
 import { useEffect, useRef } from "react";
 import { Polygon as LeafletPolygon } from "leaflet";
 import { Polygon as GeoJsonPolygon } from "geojson";
@@ -14,7 +14,7 @@ import { GEOJSON_PRECISION } from "@app/config/constants";
 export default function EditBuildingBoundariesController({initialBoundaries}: {initialBoundaries: GeoJsonPolygon}) {
     const dispatch = useAppDispatch();
     const ref = useRef<LeafletPolygon| null>(null);
-    const { currentStep, building } = useAppSelector(state => state.createNewPlanReducer);
+    const { currentStep, building } = useAppSelector(state => state.planEditorSlice);
     const map = useMap();
 
     function handleShapeChange(buildingBounds: Building) {

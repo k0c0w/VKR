@@ -1,11 +1,11 @@
 import { Building, hasValidState } from "@entities/map";
 import { useAppSelector } from "@shared/hooks/reduxTypedHooks";
 import AlertDialog from "@shared/ui/AlertDialog";
-import { CreateNewPlanStepperWidget, CreateNewPlanWidget } from "@widgets/map";
+import { PlanEditorWidget, PlanEditorStepperWidget } from "@widgets/editor";
 import { useEffect, useState } from "react";
 
 export default function CreateNewPlanSubPage({createPlan}: {createPlan: (b: Building) => void}) {
-    const building = useAppSelector(state => state.createNewPlanReducer.building)!;
+    const building = useAppSelector(state => state.planEditorSlice.building)!;
     const [createButtonDisabled, setCreateButtonDisabled] = useState(false);
     const [validating, setValidating] = useState(false);
     const [error, setError] = useState("");
@@ -30,8 +30,8 @@ export default function CreateNewPlanSubPage({createPlan}: {createPlan: (b: Buil
     }, [building]);
 
     return <>
-        <CreateNewPlanWidget style={{width: 600, height: 800}} />
-        <CreateNewPlanStepperWidget 
+        <PlanEditorWidget style={{width: 600, height: 800}} />
+        <PlanEditorStepperWidget 
             backwardButtonDisabled={validating} 
             completeButtonDisabled={createButtonDisabled || validating} 
             onComplete={onEditingComplete}

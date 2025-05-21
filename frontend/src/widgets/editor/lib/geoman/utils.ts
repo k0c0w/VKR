@@ -1,5 +1,4 @@
 import { Layer, PathOptions, PM } from "leaflet";
-import { CreateNewPlanStep } from "../createNewPlanSlice";
 import { isPolygonLayer, isPolylineLayer } from "@shared/map";
 import { audienceStyle, hallStyle, wallStyle } from "../styling/styling";
 import { RoomType } from "@entities/map";

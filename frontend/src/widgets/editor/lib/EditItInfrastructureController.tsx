@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector } from "@shared/hooks/reduxTypedHooks";
 import { useEffect, useState } from "react"
 import { useMap } from "react-leaflet";
-import { CreateNewPlanStep, focusOnFeature, setItInfrastructureOnCurrentLevel } from "./createNewPlanSlice";
+import { CreateNewPlanStep, focusOnFeature, setItInfrastructureOnCurrentLevel } from "./planEditorSlice";
 import EnableOrDisableLayers from "./EnableOrDisableLayers";
 import { GeoJSON, Layer, Marker, PM } from "leaflet";
 import { getGeoJsonFeatureGeometryFrom, getLayerLeafletId, isMarkerLayer } from "@shared/map";
@@ -37,7 +37,7 @@ const whenDisabledOptions = {
 
 export default function EditItInfrastructureController() {
     const dispatch = useAppDispatch();
-    const { currentStep, currentLevelIndex, building } = useAppSelector(state => state.createNewPlanReducer);
+    const { currentStep, currentLevelIndex, building } = useAppSelector(state => state.planEditorSlice);
     if (!building) {
         throw new Error("You must initialize slice first!");
     }

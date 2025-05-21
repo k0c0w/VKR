@@ -1,9 +1,11 @@
 
 import { combineReducers } from "@reduxjs/toolkit";
 import { mapApi } from "@features/map";
-import { createNewPlanReducer } from "@widgets/map";
+import { plansApi } from "@features/plans";
+import planEditorSlice from "@widgets/editor/lib/planEditorSlice";
 
 export const rootReducer = combineReducers({
-    createNewPlanReducer,
-    [mapApi.reducerPath]: mapApi.reducer
+    planEditorSlice,
+    [mapApi.reducerPath]: mapApi.reducer,
+    [plansApi.reducerPath]: plansApi.reducer,
 });

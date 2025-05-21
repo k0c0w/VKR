@@ -77,8 +77,8 @@ public sealed class GetPlanUseCaseTests
         var planLevel = plan.Levels.First();
         Assert.Equal(1, planLevel.Number);
         Assert.Equal("First", planLevel.Name);
-        Assert.Equal(2, planLevel.Structure.Count());
-        Assert.Empty(planLevel.ItEquipments);
+        Assert.Equal(2, planLevel.Structure?.Count());
+        Assert.Empty(planLevel.ItEquipments ?? []);
 
         buildingRepositoryMock.Verify(x => x.GetBuildingAsync(It.Is<IBuildingRepository.BuildingFilter>(f => f.Id == buildingId), It.IsAny<CancellationToken>()), Times.Once());
     }

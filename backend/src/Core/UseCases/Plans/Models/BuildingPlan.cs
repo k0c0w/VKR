@@ -19,8 +19,8 @@ public sealed class BuildingPlan
     [JsonProperty("levels")]
     public BuildingPlanLevel[] Levels { get; private init; }
 
-    [JsonPropertyName("basement_geometry")]
-    [JsonProperty("basement_geometry")]
+    [JsonPropertyName("basementGeometry")]
+    [JsonProperty("basementGeometry")]
     public GeometryDto<double[][][]> BasementGeometry { get; private init; }
 
     [System.Text.Json.Serialization.JsonConstructor]

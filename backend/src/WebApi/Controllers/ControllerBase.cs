@@ -4,7 +4,6 @@ using WebApi.Common.ProblemDetails;
 
 namespace WebApi.Controllers;
 
-[ApiController]
 public abstract class ControllerBase : Microsoft.AspNetCore.Mvc.ControllerBase
 {
     protected ProblemDetails ToProblemDetails(ErrorMessage error)

@@ -51,7 +51,7 @@ public sealed record Address : IEquatable<Address>
     public static Address FromString(string addressToStringResult)
     {
         const StringSplitOptions splitOptions = StringSplitOptions.RemoveEmptyEntries;
-        var tokens = addressToStringResult.Split(", ", splitOptions);
+        var tokens = addressToStringResult.Replace('ё', 'е').Split(", ", splitOptions);
         if (tokens.Length != 3)
         {
             ThrowArgumentException();

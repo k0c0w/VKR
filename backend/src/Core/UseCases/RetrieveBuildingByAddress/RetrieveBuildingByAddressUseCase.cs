@@ -1,8 +1,10 @@
+using Common.Extensions;
 using Domain.Errors;
 using Domain.ValueObjects;
 using ResultMonad;
 using Services;
 using Services.Map;
+using UseCases.Plans.Models;
 
 namespace UseCases.RetrieveBuildingByAddress;
 
@@ -38,7 +40,15 @@ public sealed record RetrieveBuildingByAddressUseCase
         var buildingInfo = buildingInfoResult.Value!;
         var building = new BuildingDto
         {
-            Geometry = buildingInfo.Geometry.Coordinates,
+            Geometry = new GeometryDto<double[][][]>
+            {
+                Type = "Polygon",
+                Coordinates = buildingInfo.Geometry.Coordinates
+                    .Select(ring => ring.Coordinates
+                        .Select(p => p.ToArray())
+                        .ToArray())
+                    .ToArray(),
+            } ,
             LevelsCount = buildingInfo.LevelsCount,
             Address = buildingInfo.Address.ToString(),
         };

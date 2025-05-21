@@ -37,8 +37,8 @@ public class AddressTestFixture
             {
                 if (!streetSuccess)
                 {
-                    type = null;
-                    name = null;
+                    type = null!;
+                    name = null!;
                     return false;
                 }
                 type = address.StreetType;
@@ -52,8 +52,8 @@ public class AddressTestFixture
             {
                 if (!houseSuccess)
                 {
-                    number = null;
-                    unit = null;
+                    number = null!;
+                    unit = null!;
                     return false;
                 }
                 number = address.HouseNumber;

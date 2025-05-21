@@ -26,7 +26,7 @@ interface AddressFormProps {
     submitButtonVariant?: "outlined" | "contained";
 }
 
-export default function AddressForm({onSubmit, externalErrors, disabled, submitButtonVariant = "contained"}:AddressFormProps) {
+export default function AddressFormWidget({onSubmit, externalErrors, disabled, submitButtonVariant = "contained"}:AddressFormProps) {
     const {register, handleSubmit, formState:{errors: formErrors}} = useForm<Address>({
         resolver: yupResolver(schema),
         mode: 'onChange',

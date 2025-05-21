@@ -3,7 +3,7 @@ import { Polygon as ReactLeafletPolygon } from "react-leaflet";
 import { LatLngExpression, Polygon as LeafletPolygon, PM } from "leaflet";
 import { GEOJSON_PRECISION } from "@app/config/constants";
 import { Feature, Polygon as GeoJsonPolygon } from "geojson";
-import { basementStyle } from "../../../widgets/map/lib/styling/styling";
+import { basementStyle } from "../lib/styling/styling";
 
 interface BuildingBasePolygonProps {
     editable: boolean;

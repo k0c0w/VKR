@@ -5,7 +5,7 @@ import StepLabel from '@mui/material/StepLabel';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { useAppDispatch, useAppSelector } from '@shared/hooks/reduxTypedHooks';
-import { CreateNewPlanStep, focusOnFeature, setStep } from '../lib/createNewPlanSlice';
+import { CreateNewPlanStep, focusOnFeature, setStep } from '../lib/planEditorSlice';
 import { useEffect } from 'react';
 
 const steps = ['Здание', 'Помещения', 'Инфраструктура'];
@@ -30,7 +30,7 @@ interface CreateNewPlanStepperWidgetProps {
 }
 
 export default function CreateNewPlanStepperWidget({onComplete, completeButtonDisabled, backwardButtonDisabled}: CreateNewPlanStepperWidgetProps) {
-  const currentStep = useAppSelector(state => state.createNewPlanReducer.currentStep);
+  const currentStep = useAppSelector(state => state.planEditorSlice.currentStep);
   const dispatch = useAppDispatch();
 
   const handleNext = function() {

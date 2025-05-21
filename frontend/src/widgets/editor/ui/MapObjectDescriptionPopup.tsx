@@ -5,7 +5,7 @@ import { ITInfrastructureDescriptorProps } from "@shared/map/ui/ITInfrastructure
 import { useMap } from "react-leaflet";
 import { useCallback, useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@shared/hooks/reduxTypedHooks";
-import { focusOnFeature, updateMetaProperties } from "../lib/createNewPlanSlice";
+import { focusOnFeature, updateMetaProperties } from "../lib/planEditorSlice";
 import { isRoom, ITInfrastructure, ITInfrastructureMetaProperties, Room, RoomMetaProperties } from "@entities/map";
 import React from "react";
 import * as turf from "@turf/turf";
@@ -82,7 +82,7 @@ const Content = React.forwardRef<HTMLDivElement, ContentProps>(function Content(
 })
 
 export default function MapObjectDescriptionPopup() {
-    const focusedOnFeature = useAppSelector(state => state.createNewPlanReducer.selectedFeatureInfo);
+    const focusedOnFeature = useAppSelector(state => state.planEditorSlice.selectedFeatureInfo);
     const popupRef = useRef<HTMLDivElement>(null); 
     const dispatch = useAppDispatch();
     const map = useMap();

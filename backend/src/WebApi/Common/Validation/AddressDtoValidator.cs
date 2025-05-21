@@ -8,6 +8,7 @@ public sealed class AddressDtoValidator : AbstractValidator<AddressDto>
     public AddressDtoValidator()
     {
         RuleFor(x => x.City)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty()
                 .WithMessage("Не должно быть пустым.")
             .MaximumLength(128)

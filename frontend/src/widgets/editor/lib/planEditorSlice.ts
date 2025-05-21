@@ -44,8 +44,8 @@ interface IninitNewStatePayload {
     step: CreateNewPlanStep;
 }
 
-export const createNewPlanSlice = createSlice({
-    name: "createNewPlan",
+export const planEditorSlice = createSlice({
+    name: "planEditor",
     initialState,
     reducers: {
         resetToInitialState(state) {
@@ -246,17 +246,17 @@ export const createNewPlanSlice = createSlice({
     }
 })
 
-export default createNewPlanSlice.reducer;
+export default planEditorSlice.reducer;
 
 /* Map edit mode switching */ 
-export const { setStep } = createNewPlanSlice.actions;
+export const { setStep } = planEditorSlice.actions;
 
 /* Building inside things */
-export const { editBuilding, setBuildingStructureOnCurrentLevel, setItInfrastructureOnCurrentLevel, updateMetaProperties } = createNewPlanSlice.actions;
+export const { editBuilding, setBuildingStructureOnCurrentLevel, setItInfrastructureOnCurrentLevel, updateMetaProperties } = planEditorSlice.actions;
 
 /* Level Handling */
-export const {addLevelAndSwitchOnIt, removeCurrentLevel, setCurrentLevelIndex, editCurrentLevel} = createNewPlanSlice.actions;
+export const {addLevelAndSwitchOnIt, removeCurrentLevel, setCurrentLevelIndex, editCurrentLevel} = planEditorSlice.actions;
 
-export const { focusOnFeature } = createNewPlanSlice.actions;
+export const { focusOnFeature } = planEditorSlice.actions;
 
-export const { resetToInitialState, initNewState } = createNewPlanSlice.actions;
+export const { resetToInitialState, initNewState } = planEditorSlice.actions;

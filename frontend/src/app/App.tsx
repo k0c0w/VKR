@@ -6,7 +6,7 @@ import { Provider as ReduxProvider } from "react-redux";
 import RootStore from "./redux/appStore";
 /* Routing */
 import { RouterProvider } from "react-router-dom";
-import Router from "./config/routing";
+import Router from "./routing/routing";
 
 export default function App() {
 

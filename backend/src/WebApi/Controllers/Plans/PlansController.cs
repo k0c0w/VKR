@@ -8,7 +8,6 @@ using WebApi.Common.ProblemDetails;
 namespace WebApi.Controllers.Plans;
 
 [Route("plans")]
-[ApiController]
 public sealed class PlansController : ControllerBase
 {
     [HttpGet("")]
