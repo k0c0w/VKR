@@ -1,7 +1,8 @@
 import { createBrowserRouter } from "react-router";
 import CreateNewPlanPage from "@pages/createNewPlan";
 import { Routes } from "./routes";
-import { PlanPage } from "@pages/plan";
+import { PlanPage as ViewExistingPlanPage } from "@pages/viewExistingPlan";
+import AvailablePlansPage from "@pages/viewAvailablePlans";
 
 const router = createBrowserRouter([
     {
@@ -10,7 +11,11 @@ const router = createBrowserRouter([
     },
     {
         path: Routes.SpecificPlanRouteTemplate,
-        element: <PlanPage/>
+        element: <ViewExistingPlanPage/>
+    },
+    {
+        path: Routes.AvailablePlansRouteTemplate,
+        element: <AvailablePlansPage />
     }
 ]);
 

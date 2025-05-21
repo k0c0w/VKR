@@ -20,7 +20,6 @@ export default function AlertDialog({open, handleClose, title, content}: {open:b
           <DialogContent>
             <DialogContentText id="alert-dialog-description">
                 {content}
-            
           </DialogContentText>
           </DialogContent>
           <DialogActions>

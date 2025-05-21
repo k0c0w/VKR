@@ -3,6 +3,7 @@ import {createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"
 import { ICreateNewPlanResult, ICreateNewPlanArgs } from "../models/CreateNewPlan";
 import { IGetPlanListResult } from "../models/GetPlanList";
 import { ISpecificPlan, ISpecificPlanArgs } from "../models/SpecificPlan";
+import { IRequestPlanRemovalArgs } from "../models/RequestRemoval";
 
 const plansApi = createApi({
     reducerPath: "plansApi",
@@ -11,7 +12,7 @@ const plansApi = createApi({
     }),
     tagTypes: ['plans-list'],
     endpoints: (build) => ({
-        getAvailablePlansList: build.query<IGetPlanListResult, any>({
+        getAvailablePlansList: build.query<IGetPlanListResult[], void>({
             query: () => ({
                 url: '/',
                 method: 'GET'
@@ -32,6 +33,12 @@ const plansApi = createApi({
               }),
             invalidatesTags: ['plans-list'],
         }),
+        requestPlanRemoval: build.mutation<any, IRequestPlanRemovalArgs>({
+            query: ({buildingId}) => ({
+                url: `/${buildingId}/request-removal`,
+                method: 'POST'
+            })
+        })
     }) 
 });
 
