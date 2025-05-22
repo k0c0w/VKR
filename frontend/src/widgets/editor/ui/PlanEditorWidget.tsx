@@ -12,6 +12,7 @@ import { BuildingMap } from "@shared/map";
 import LevelPickController from "../lib/LevelPickController";
 import MapObjectDescriptionPopup from "./MapObjectDescriptionPopup";
 import { PM } from "leaflet";
+import ImageOverlayController from "../lib/ImageOverlayController";
 
 interface PlanEditorWidgetProps {
     style?: CSSProperties;
@@ -41,6 +42,7 @@ export default function PlanEditorWidget({style, readonlyMode}: PlanEditorWidget
             <EnableButtonsAndControls readonlyMode={readonlyMode}/>
             
             <LevelPickController readonlyMode={readonlyMode} />
+            <ImageOverlayController readonlyMode={readonlyMode} onImageComputeClicked={() => {}} />
             <EditBuildingBoundariesController initialBoundaries={geometry}/>
             <EditRoomsController />
             <EditItInfrastructureController/>

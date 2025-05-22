@@ -18,8 +18,8 @@ const BuildingMap = ({
     , children
     , ...other}:MapProps) => 
     <MapContainer
-        doubleClickZoom={false}
         {...other}
+        doubleClickZoom={false}
         minZoom={17}
         maxZoom={23}
         center={center}
