@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import CreateNewPlanPage from "@pages/createNewPlan";
 import { Routes } from "./routes";
 import { PlanPage as ViewExistingPlanPage } from "@pages/viewExistingPlan";
@@ -26,6 +26,10 @@ const router = createBrowserRouter([
     {
         path: Routes.SignOutRouteTemplate,
         element: <LogoutPage/>
+    },
+    {
+        path: "*",
+        element: <Navigate to={Routes.AvailablePlansRouteTemplate} replace/>
     }
 ]);
 
