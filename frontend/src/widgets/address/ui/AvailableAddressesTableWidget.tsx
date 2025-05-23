@@ -81,8 +81,9 @@ export default function AvailableAddressesTableWidget({ addresses, paginationMod
         open={removeAddressId !== undefined}
         handleClose={() => setRemoveAddressId(undefined)}
         title={removeAddressId ? `Оставить заявку на удаление ${addresses.find(x => x.buildingId === removeAddressId)?.address}?`: ""}
-        content={<Button variant='outlined' color='error' size="large" onClick={removePlan}>Да</Button>}
-       />
+      >
+        <Button variant='outlined' color='error' size="large" onClick={removePlan}>Да</Button>
+      </AlertDialog>
     </div>
   );
 };

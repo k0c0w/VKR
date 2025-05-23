@@ -6,7 +6,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
-export default function AlertDialog({open, handleClose, title, content}: {open:boolean; handleClose: () => void; title: string; content: React.ReactNode | string}) {
+export default function AlertDialog({open, handleClose, title, children}: {open:boolean; handleClose: () => void; title: string; children?: React.ReactNode}) {
     return (
         <Dialog
           open={open}
@@ -19,7 +19,7 @@ export default function AlertDialog({open, handleClose, title, content}: {open:b
           </DialogTitle>
           <DialogContent>
             <DialogContentText id="alert-dialog-description">
-                {content}
+                {children}
           </DialogContentText>
           </DialogContent>
           <DialogActions>

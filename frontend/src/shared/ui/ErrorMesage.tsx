@@ -1,16 +1,12 @@
 import { ReactNode } from 'react';
-import { Stack, Button, Box } from '@mui/material';
+import { Stack, Box } from '@mui/material';
 
 interface ErrorMessageProps {
-  info: ReactNode; 
-  action?: {
-    onClick: () => void;
-    text: string;
-  };
+  children: ReactNode;
   maxWidth?: number | string;
-}
+} 
 
-export default function ErrorMessage({ info, action, maxWidth = 650 }: ErrorMessageProps) {
+export default function ErrorMessage({ children, maxWidth = 650 }: ErrorMessageProps) {
   return (
     <Box sx={{ maxWidth, mx: 'auto', my: 4, minHeight: '50vh' }}>
       <Stack
@@ -20,12 +16,7 @@ export default function ErrorMessage({ info, action, maxWidth = 650 }: ErrorMess
         justifyContent="center"
         sx={{ height: '100%', textAlign: 'center' }}
       >
-        <Box>{info}</Box>
-        {action && (
-          <Button variant="outlined" color="primary" onClick={action.onClick}>
-            {action.text}
-          </Button>
-        )}
+        {children}
       </Stack>
     </Box>
   );

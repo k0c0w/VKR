@@ -39,7 +39,6 @@ export default function AvailablePlansPageContent({data}: {data: IGetPlanListRes
             open={error !== undefined}
             handleClose={reset}
             title="Не удалось оставить заявку об удалении."
-            content={""}
         />
     </>
 }

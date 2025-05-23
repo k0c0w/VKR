@@ -12,7 +12,7 @@ import { ImageOverlayControl, imageOverlayControl as createControl } from "@shar
 
 interface ImageOverlayControllerProps {
   readonlyMode: boolean;
-  onImageComputeClicked: (imageUrl: string) => void;
+  onImageComputeClicked: (imageOverlay: L.DistortableImageOverlay) => void;
 }
 
 export default function ImageOverlayController({readonlyMode, onImageComputeClicked}: ImageOverlayControllerProps) {
@@ -23,8 +23,8 @@ export default function ImageOverlayController({readonlyMode, onImageComputeClic
 
   useEffect(() => {
     const propagateImage = () => {
-      if (imageUrl) {
-        onImageComputeClicked(imageUrl)
+      if (imageOverlay) {
+        onImageComputeClicked(imageOverlay);
       }
     }
     map.on("distortableimage:magictoolclicked", propagateImage);

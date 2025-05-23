@@ -4,6 +4,7 @@ import { mapApi } from "@features/map";
 import { rtkQueryErrorLogger } from "./rtkQueryErrorLogger";
 import { plansApi } from "@features/plans";
 import { authApi } from "@features/authorization";
+import { aiApi } from "@features/ai";
 
 const rootStore = configureStore({
     reducer: rootReducer,
@@ -12,6 +13,7 @@ const rootStore = configureStore({
         .concat(authApi.middleware)
         .concat(mapApi.middleware)
         .concat(plansApi.middleware)
+        .concat(aiApi.middleware)
         .concat(rtkQueryErrorLogger)
 });
 

@@ -9,7 +9,7 @@ export default function LogoutPage() {
     const dispatch = useAppDispatch();
 
     if (currentUser) {
-        signOut({});
+        signOut();
         dispatch(setUser(undefined));
     }
 

@@ -1,5 +1,5 @@
 import { plansApi } from "@features/plans";
-import { Container, Typography } from "@mui/material";
+import { Box, Button, Container, Typography } from "@mui/material";
 import { AvailableAddressesTableSkeletonWidget } from "@widgets/address";
 import AvailablePlansPageContent from "./AvailablePlansPageContent";
 import ErrorMessage from "@shared/ui/ErrorMesage";
@@ -13,9 +13,15 @@ export default function AvailablePlansPage() {
             {isLoading && <AvailableAddressesTableSkeletonWidget/>}
             {isSuccess && data && <AvailablePlansPageContent data={data}/>}
             {isError && error && 
-                <ErrorMessage info={<Typography>Произошла ошибка при загрузке</Typography>}
-                    action={{onClick: refetch, text:"Повторить загрузку"}}
-            />}
+                <ErrorMessage>
+                    <Box>
+                        <Typography>Произошла ошибка при загрузке</Typography>
+                    </Box>
+                    <Button variant="outlined" onClick={refetch}>
+                        Повторить загрузку
+                    </Button>
+                </ErrorMessage>
+            }
         </Container>
     </>
 }

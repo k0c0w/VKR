@@ -128,12 +128,13 @@ export default function CreateNewPlanPage() {
             />}
             {building && <CreateNewPlanSubPage createPlan={onPlanCreate} />}
             {isLoading && <FullPageTint><CircularProgress color="primary"/></FullPageTint> }
-            {error && <AlertDialog
-                title="Ошибка при создании плана"
-                content={parseError(error)}
+            {error && <AlertDialog title="Ошибка при создании плана"
                 handleClose={reset}
                 open={error !== undefined}
-            />}
+                >
+                    {parseError(error)}
+                </AlertDialog>
+            }
         </Container>
     </>
 

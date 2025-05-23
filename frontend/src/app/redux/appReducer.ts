@@ -5,6 +5,7 @@ import { plansApi } from "@features/plans";
 import planEditorSlice from "@widgets/editor/lib/planEditorSlice";
 import authSlice from "@features/authorization/api/authSlice";
 import { authApi } from "@features/authorization";
+import { aiApi } from "@features/ai";
 
 export const rootReducer = combineReducers({
     authSlice,
@@ -12,4 +13,5 @@ export const rootReducer = combineReducers({
     [authApi.reducerPath]: authApi.reducer,
     [mapApi.reducerPath]: mapApi.reducer,
     [plansApi.reducerPath]: plansApi.reducer,
+    [aiApi.reducerPath]: aiApi.reducer,
 });

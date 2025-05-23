@@ -38,9 +38,10 @@ export default function CreateNewPlanSubPage({createPlan}: {createPlan: (b: Buil
         />
         <AlertDialog 
             title="Невалидное состояние плана"
-            content={error}
             open={error !== ""}
             handleClose={() => setError("")}
-        />
+        >
+            {error}
+        </AlertDialog>
     </>
 }

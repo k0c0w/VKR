@@ -5,7 +5,7 @@ import { ISignInArgs } from "../models/SignIn";
 const authApi = createApi({
     reducerPath: "authApi",
     baseQuery: fetchBaseQuery ({
-        baseUrl: `${BASE_URL}/authorization`
+        baseUrl: `${BASE_URL}/authorization`,
     }),
     endpoints: (build) => ({
         signIn: build.mutation<any, ISignInArgs>({
@@ -19,7 +19,7 @@ const authApi = createApi({
                 method: 'POST'
             })
         }),
-        signOut: build.mutation<any, any>({
+        signOut: build.mutation<void, void>({
             query: () => ({
                 url: '/sign-out',
                 method: 'POST'
