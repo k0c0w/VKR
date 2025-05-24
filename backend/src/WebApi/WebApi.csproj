@@ -36,4 +36,14 @@
       <ProjectReference Include="..\Infrastructure\Services.Implementation\Services.Implementation.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Utils\Yolo\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Utils\Yolo\yolo-seg.onnx">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

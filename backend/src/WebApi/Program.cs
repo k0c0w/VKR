@@ -31,6 +31,7 @@ app.UseRouting();
 app.MapControllers();
 
 app.Run();
+return;
 
 void TryMigrateOrExit(IServiceProvider serviceProvider)
 {
@@ -53,4 +54,5 @@ void TryMigrateOrExit(IServiceProvider serviceProvider)
     }
 }
 
-bool InProcessMigrationsAreOn(IConfiguration configuration) => !string.IsNullOrEmpty(configuration["IN_PROCESS_MIGRATIONS_ON"]);
+bool InProcessMigrationsAreOn(IConfiguration configuration) 
+    => !string.IsNullOrEmpty(configuration["IN_PROCESS_MIGRATIONS_ON"]);

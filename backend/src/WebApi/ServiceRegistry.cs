@@ -1,17 +1,22 @@
+using Compunet.YoloSharp;
 using DataAccess;
+using DataAccess.Abstractions;
+using DataAccess.Repositories;
 using FluentValidation;
-using GeoJSON.Net.Converters;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Options;
 using Migrations;
 using Newtonsoft.Json;
 using Services;
 using Services.Implementation.OSM;
+using Services.Implementation.PlanAnalyzer;
+using Services.Implementation.PlanAnalyzer.Ocr;
 using Services.Map;
+using Services.PlanImageAnalyzer;
 using UseCases.Plans;
 using UseCases.RetrieveBuildingByAddress;
-using WebApi.Common.Validation;
-using WebApi.Utils;
+using WebApi.BackgroundWorkers;
+using WebApi.ExceptionHandlers;
 using ZiggyCreatures.Caching.Fusion;
 
 namespace WebApi;
@@ -39,6 +44,8 @@ internal static class ServiceRegistry
         AddDomainServices(builder.Services, builder.Configuration);
         AddUseCases(builder.Services);
         AddValidators(builder.Services);
+
+        AddPlanRecognition(builder.Services, builder.Configuration);
         
         return builder.Build();
     }
@@ -74,9 +81,6 @@ internal static class ServiceRegistry
     
     private static void AddValidators(IServiceCollection services)
     {
-        ValidatorOptions.Global.DisplayNameResolver = (_, member, _) 
-            => member is not null ? PropertyNameConverter.SnakeCase(member.Name) : default;
-        
         services.AddValidatorsFromAssemblies([typeof(Program).Assembly]);
     }
     
@@ -101,5 +105,27 @@ internal static class ServiceRegistry
         services.AddScoped<GetPlanUseCase>();
         services.AddScoped<GetAvailablePlansListUseCase>();
         services.AddScoped<CreatePlanUseCase>();
+    }
+
+    private static void AddPlanRecognition(IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<InMemoryPlanImageBus.PlanImageBusOptions>(configuration.GetSection("DataBus"));
+        
+        services.AddSingleton<InMemoryPlanImageBus>();
+        services.AddScoped<IPublisher<PlanImageMessage>>(sp => sp.GetRequiredService<InMemoryPlanImageBus>());
+        services.AddHostedService<ProcessPlanImageConsumerBackgroundService>();
+        services.AddScoped<IPlanImageAnalysisRepository, PlanImageAnalysisRepository>();
+        services.AddScoped<IPlanImageAnalyzerService, PlanImageAnalyzer>();
+        services.AddSingleton<IOcr, NoOcr>();
+
+        var yoloSection = configuration.GetRequiredSection("Yolo");
+        var weightsPath = yoloSection.GetValue<string>("PathToWeights") ?? throw new InvalidOperationException("Provide Yolo:PathToWeights");
+        var useCuda = yoloSection.GetValue<bool>("UseCuda");
+        services.AddScoped<YoloPredictor>(_ => new YoloPredictor(weightsPath, 
+            new YoloPredictorOptions
+            {
+                UseCuda = useCuda,
+            })
+        );
     }
 }

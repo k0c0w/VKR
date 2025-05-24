@@ -1,7 +1,7 @@
+using DataAccess.Abstractions;
 using DataAccess.Repositories;
 using Domain;
 using Domain.Repositories;
-using Domain.ValueObjects;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 

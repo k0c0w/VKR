@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Common.ProblemDetails;
 
-namespace WebApi;
+namespace WebApi.ExceptionHandlers;
 
 public sealed class GlobalExceptionHandler : IExceptionHandler
 {
