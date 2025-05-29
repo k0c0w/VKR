@@ -160,6 +160,17 @@ export const planEditorSlice = createSlice({
                 }
             }
         },
+        setRoomsOnCurrentLevel(state, {payload}: PayloadAction<Room[]>) {
+            const rooms = payload;
+            const {building, currentLevelIndex} = state;
+
+            if (!building) {
+                return;
+            }
+
+            const level = building.properties.levels[currentLevelIndex];
+            level.buildingStructure = rooms; 
+        },
         setItInfrastructureOnCurrentLevel(state, {payload}: PayloadAction<{featureId: guid, feature: ITInfrastructure | null}>) {
             const {featureId, feature} = payload;
             const level = state.building?.properties.levels[state.currentLevelIndex];
@@ -252,7 +263,7 @@ export default planEditorSlice.reducer;
 export const { setStep } = planEditorSlice.actions;
 
 /* Building inside things */
-export const { editBuilding, setBuildingStructureOnCurrentLevel, setItInfrastructureOnCurrentLevel, updateMetaProperties } = planEditorSlice.actions;
+export const { editBuilding, setBuildingStructureOnCurrentLevel, setItInfrastructureOnCurrentLevel, updateMetaProperties, setRoomsOnCurrentLevel } = planEditorSlice.actions;
 
 /* Level Handling */
 export const {addLevelAndSwitchOnIt, removeCurrentLevel, setCurrentLevelIndex, editCurrentLevel} = planEditorSlice.actions;

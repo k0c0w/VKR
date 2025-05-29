@@ -4,7 +4,6 @@ import { Button, Container, Stack, Typography } from "@mui/material";
 import { Building } from "@entities/map/Building";
 import { mapApi, isBuildingValidationErrorResponse, isBuildingSuccessResponse } from "@features/map";
 import { Level } from "@entities/map";
-import { ArrayExtensions } from "@shared/utils/arrayExtensions";
 import {AddressFormWidget} from "@widgets/address";
 import { isDomainErrorResponse, isNotFoundErrorResponse } from "@shared/types/ProblemDetails";
 
@@ -52,8 +51,8 @@ export default function LoadBuildingBoundariesSubPage({setBuilding}:LoadBuilding
         if (isSuccess && data && isBuildingSuccessResponse(data) && address) {
             const {geometry, levelsCount, address:addressFromServer} = data;
             const addressVO = parseAddress(addressFromServer);
-            const levels: Level[] = ArrayExtensions.Range(0, levelsCount)
-            .map(x => ({
+            const levels: Level[] = Array.from({length: levelsCount})
+            .map((_, x) => ({
                 buildingStructure: [],
                 infrastructure: [],
                 name: `${x + 1} этаж`,

@@ -147,7 +147,7 @@ public class PlanImageAnalyzer(YoloPredictor yoloPredictor, ILogger<IPlanImageAn
                     continue;
                 }
 
-                var bitIndex = y * width + x;
+                var bitIndex = y * width + x;    
                 var byteIndex = bitIndex / 8;
                 var bitOffset = bitIndex % 8;
                 bytes[byteIndex] |= (byte)(1 << (7 - bitOffset));

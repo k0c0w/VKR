@@ -12,5 +12,20 @@ module.exports = {
                 tsConfigPath: "./tsconfig.extend.json"
             }
         }
-    ]
+    ],
+    webpack: {
+        configure: (webpackConfig) => {
+            return {
+                ...webpackConfig,
+                resolve: {
+                  ...webpackConfig.resolve,
+                  fallback: {
+                    ...webpackConfig.resolve.fallback,
+                    fs: false,
+                    path: require.resolve("path-browserify")
+                  }
+                }
+            };
+        }
+    },
 };

@@ -2,7 +2,7 @@ import { plansApi } from "@features/plans";
 import { Box, Button, Container, Typography } from "@mui/material";
 import { AvailableAddressesTableSkeletonWidget } from "@widgets/address";
 import AvailablePlansPageContent from "./AvailablePlansPageContent";
-import ErrorMessage from "@shared/ui/ErrorMesage";
+import ErrorMessage from "@shared/ui/ErrorMessage";
 
 export default function AvailablePlansPage() {
     const {data, isLoading, isSuccess, isError, error, refetch} = plansApi.useGetAvailablePlansListQuery();

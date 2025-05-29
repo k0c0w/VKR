@@ -19,6 +19,7 @@ import { LineString, Polygon as GeoJsonPolygon, Point } from "geojson";
 import { resetStyle, splitWallsAndRooms } from "./helpers";
 import { roundCoordinates } from "@shared/map/lib/leafletUtilsAdditions";
 import { GEOJSON_PRECISION } from "@app/config/constants";
+import { BuildingMapPanes } from "@shared/map";
 
 const DEFAULT_ROOM_TYPE = RoomType.Audience;
 
@@ -327,29 +328,34 @@ export default function EditRoomsController() {
     }, [map, currentStep, handleCreate]);
 
     useEffect(() => {
-        const thisRenderRequest = `${currentLevelIndex}:${building.properties.levels.length}`
+        const thisRenderRequest = `${currentLevelIndex}:${building.properties.levels.length}:${building.properties.levels[currentLevelIndex].buildingStructure.length}`
 
         if (lastLevelRender !== thisRenderRequest) {
-            for(const layerId in layers) {
+            for (const layerId in layers) {
                 layers[layerId].remove();
             }
 
             const levelFeatures = building.properties.levels[currentLevelIndex].buildingStructure;
-            
-            const newLeafletId2FeatureId: {[layerId:number]: guid} = {};
-            const newLayers: {[layerId: number]: LayerWithFeatureId}  = {};
+            const newLeafletId2FeatureId: { [layerId: number]: guid } = {};
+            const newLayers: { [layerId: number]: LayerWithFeatureId } = {};
+
+            const paneOptions = { pane: BuildingMapPanes.buildingStructure.pane }
             for (const feature of levelFeatures) {
                 let newLayer: Polyline | Polygon | Marker;
                 if (isWall(feature)) {
-                    const coords = feature.geometry.coordinates.map(position => GeoJSON.coordsToLatLng(position as [number, number])) as LatLng[];
-                    newLayer = L.polyline(coords) as Polyline;
+                    const coords = feature.geometry.coordinates.map(position =>
+                        GeoJSON.coordsToLatLng(position as [number, number])
+                    ) as LatLng[];
+                    newLayer = L.polyline(coords, paneOptions) as Polyline;
                     newLayer.setStyle(wallStyle);
                 } else if (isRoom(feature)) {
-                    const latlngs = feature.geometry.coordinates.map(positions => GeoJSON.coordsToLatLngs(positions)) as LatLng[][];
-                    newLayer = new Polygon(latlngs);
-                    newLayer.setStyle(getStyleByRoomType(feature.properties.type))
+                    const latlngs = feature.geometry.coordinates.map(positions =>
+                        GeoJSON.coordsToLatLngs(positions)
+                    ) as LatLng[][];
+                    newLayer = new Polygon(latlngs, paneOptions);
+                    newLayer.setStyle(getStyleByRoomType(feature.properties.type));
                 } else if (isPoint(feature)) {
-                    alert("Point!!")
+                    alert("Point!!");
                     continue;
                 } else {
                     continue;
@@ -363,14 +369,12 @@ export default function EditRoomsController() {
 
                 const layerId = getLayerLeafletId(newLayer);
                 newLayers[layerId] = mutateToLayerWithFeatureIdBasedOn(newLayer, feature.id);
-
-                newLeafletId2FeatureId[layerId] = feature.id
+                newLeafletId2FeatureId[layerId] = feature.id;
             }
 
             setLastLevelRender(thisRenderRequest);
             setLayers(newLayers);
         }
-
     }, [map, currentLevelIndex, lastLevelRender, layers, building, setLastLevelRender, setLayers]);
 
     useEffect(() => {

@@ -4,20 +4,21 @@ import { LatLngExpression, Polygon as LeafletPolygon, PM } from "leaflet";
 import { GEOJSON_PRECISION } from "@app/config/constants";
 import { Feature, Polygon as GeoJsonPolygon } from "geojson";
 import { basementStyle } from "../lib/styling/styling";
+import { BuildingMapPanes } from "@shared/map";
 
-interface BuildingBasePolygonProps {
+interface BuildingBasementPolygonProps {
     editable: boolean;
     positions: LatLngExpression[][];
     ref?: Ref<LeafletPolygon<any> | null>;
     onChange?(positions: Feature<GeoJsonPolygon>): void;
 }
 
-export default function BuildingBasePolygon({
+export default function BuildingBasementPolygon({
     positions,
     ref,
     editable,
     onChange,
-}: BuildingBasePolygonProps) {
+}: BuildingBasementPolygonProps) {
     const polyRef = useRef<LeafletPolygon | null>(null);
 
     const setRefFunc: React.Ref<LeafletPolygon> = (r) => {
@@ -97,5 +98,5 @@ export default function BuildingBasePolygon({
         };
     }, [onChange, editable]);
 
-    return <ReactLeafletPolygon ref={setRefFunc} positions={positions} pathOptions={basementStyle} />;
+    return <ReactLeafletPolygon ref={setRefFunc} positions={positions} pathOptions={basementStyle} pane={BuildingMapPanes.buildingBasement.pane} />;
 }

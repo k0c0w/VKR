@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@shared/hooks/reduxTypedHooks"
 import { CreateNewPlanStep, editBuilding } from "./planEditorSlice";
-import BuildingBasePolygon from "../ui/BuildingBasePolygon";
+import BuildingBasementPolygon from "../ui/BuildingBasementPolygon";
 import { useEffect, useRef } from "react";
 import { Polygon as LeafletPolygon } from "leaflet";
 import { Polygon as GeoJsonPolygon } from "geojson";
@@ -33,7 +33,7 @@ export default function EditBuildingBoundariesController({initialBoundaries}: {i
         }
     }, [currentStep, map]);
 
-    return <BuildingBasePolygon
+    return <BuildingBasementPolygon
         ref={ref}
         editable={currentStep === CreateNewPlanStep.BuildingBoundariesSetup}
         positions={building ? mapGeoJsonPolygonToLeafletExpression(building.geometry) : mapGeoJsonPolygonToLeafletExpression(initialBoundaries)}

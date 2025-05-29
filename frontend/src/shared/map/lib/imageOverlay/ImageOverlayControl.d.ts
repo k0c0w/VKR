@@ -10,6 +10,9 @@ class ImageOverlayControl extends L.Control {
   reset: () => void;
   on(type: "imageOverlayControl:opacityChange", fn: (e: { opacity: number }) => void): this;
   off(type: "imageOverlayControl:opacityChange", fn: (e: { opacity: number }) => void): this;
+
+  on(type: "imageOverlayControl:click", fn: () => void): this;
+  off(type: "imageOverlayControl:click", fn: () => void): this;
 }
 
 declare const imageOverlayControl: (options: ImageOverlayControlOptions) => ImageOverlayControl;

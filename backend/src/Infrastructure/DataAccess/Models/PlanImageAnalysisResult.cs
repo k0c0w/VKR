@@ -26,7 +26,7 @@ public record PlanImageAnalysisResult
     public enum PlanImageAnalysisStatus
     {
         [EnumMember(Value="pending")]
-        Pending,
+        Pending = 1,
         [EnumMember(Value="completed")]
         Completed
     }

@@ -19,7 +19,6 @@ export default function ImageOverlayController({readonlyMode, onImageComputeClic
   const map = useMap();
   const [imageOverlayControl, setImageOverlayControl] = useState<ImageOverlayControl | null>(null);
   const [imageOverlay, setImageOverlay] = useState<L.DistortableImageOverlay | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const propagateImage = () => {
@@ -32,7 +31,7 @@ export default function ImageOverlayController({readonlyMode, onImageComputeClic
     return () => {
       map.off("distortableimage:magictoolclicked", propagateImage);
     }
-  }, [map, imageUrl, onImageComputeClicked]);
+  }, [map, onImageComputeClicked]);
 
   useEffect(() => {
     const changeOpacity = ({opacity}:{opacity: number;}) => {
@@ -43,20 +42,36 @@ export default function ImageOverlayController({readonlyMode, onImageComputeClic
 
     imageOverlayControl?.on("imageOverlayControl:opacityChange", changeOpacity);
 
+    const selectImageOverlay = () => imageOverlay?.select();
+    imageOverlayControl?.on("imageOverlayControl:click", selectImageOverlay);
+
+
     return () => {
-          imageOverlayControl?.off("imageOverlayControl:opacityChange", changeOpacity);
+        imageOverlayControl?.off('imageOverlayControl:click', selectImageOverlay);
+        imageOverlayControl?.off("imageOverlayControl:opacityChange", changeOpacity);
     }
   }, [imageOverlay, imageOverlayControl]);
 
   useEffect(() => {
-    if (imageOverlay && imageOverlayControl) {
-      imageOverlay.on("select", () => imageOverlayControl.showOpacitySlider(true));
-      imageOverlay.on("deselect", () => imageOverlayControl.showOpacitySlider(false));
-      imageOverlay.on("remove", () => {
-        imageOverlayControl.reset();
+    const onSelect = () => imageOverlayControl?.showOpacitySlider(true);
+    const onDeselect = () => imageOverlayControl?.showOpacitySlider(false);
+    const onRemove = () => {
+        imageOverlayControl?.reset();
         setImageOverlay(null);
-        setImageUrl(null);
-      });
+    }
+    
+    if (imageOverlay && imageOverlayControl) {
+      imageOverlay.on("select", onSelect);
+      imageOverlay.on("deselect", () => onDeselect);
+      imageOverlay.on("remove", onRemove);
+    }
+
+    return () => {
+      if (imageOverlay && imageOverlayControl) {
+          imageOverlay.off("select", onSelect);
+          imageOverlay.off("deselect", onDeselect);
+          imageOverlay.off("remove", onRemove);
+      }
     }
   }, [imageOverlay, imageOverlayControl]);
 
@@ -86,6 +101,7 @@ export default function ImageOverlayController({readonlyMode, onImageComputeClic
         }
         const newOverlay = L.distortableImageOverlay(url, {
           mode: "freeRotate",
+          interactive: true,
           selected: true,
           actions: [L.DragAction, L.ScaleAction, L.LockAction, L.RotateAction, L.MagicToolAction, L.DeleteAction],
           translation: {
@@ -97,11 +113,9 @@ export default function ImageOverlayController({readonlyMode, onImageComputeClic
           }
         });
 
-        newOverlay.setZIndex(200);
-
         newOverlay.addTo(map);
+        newOverlay.bringToBack();
         setImageOverlay(newOverlay);
-        setImageUrl(url);
       }
     });
 

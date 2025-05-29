@@ -4,6 +4,7 @@ import { ControlPosition } from "leaflet";
 import { useMap } from "react-leaflet";
 import { ReactNode, useEffect } from "react";
 import { overrideDraw } from "./Draw.Overrides";
+import { BuildingMapPanes } from "@shared/map";
 
 interface GeomanPluginProps {
     showGeomanControls: boolean,
@@ -18,6 +19,12 @@ export default function GeomanPlugin({ showGeomanControls, children }: GeomanPlu
     useEffect(() => {
         map.pm.setLang("ru");
         overrideDraw(map);
+
+        map.pm.setGlobalOptions({
+            panes: {
+                layerPane: BuildingMapPanes.buildingStructure.pane,
+            },
+        });
 
         map.pm.addControls({
             position: toolBarPosition,

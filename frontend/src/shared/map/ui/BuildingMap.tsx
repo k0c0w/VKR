@@ -2,6 +2,7 @@ import 'leaflet/dist/leaflet.css';
 import { MapContainer, MapContainerProps } from "react-leaflet";
 import LevelPickControl from './LevelPickControl';
 import BringMapToHomeControl from './BringMapToHomeControl';
+import { CreateMapPanesComponent } from './BuildingMapPanes';
 
 interface MapProps extends MapContainerProps {
     disableGeoman?: boolean;
@@ -29,6 +30,7 @@ const BuildingMap = ({
     >
         <LevelPickControl levelLabels={levelLabels} initialSelectedLevelIndex={initialLevelIndex} disableLevelRemoval={levelLabels.length <= 1}/>
         <BringMapToHomeControl home={center} />
+        <CreateMapPanesComponent />
         {children}
     </MapContainer>
 

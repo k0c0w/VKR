@@ -10,13 +10,16 @@ const aiApi = createApi({
     }),
     endpoints: (build) => ({
         requestPlanLabeling: build.mutation<IRequestPlanLabelingResponse, IRequestPlanLabelingArgs>({
-            query: ({planImage}) => ({
-                url: '/indoor-plans',
-                params: {
-                    planImage
-                },
-                method: 'POST'
-            })
+            query: ({planImage}) => {
+                const formData = new FormData();
+                formData.append('planImage', planImage);
+
+                return {
+                    url: '/indoor-plans',
+                    body: formData,
+                    method: 'POST'
+                }
+            }
         }),
         getPlanLabelingResult: build.query<IGetPlanLabelingResultResponse, IGetPlanLabelingResultArgs>({
             query: ({requestId}) => ({

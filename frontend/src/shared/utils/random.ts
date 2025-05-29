@@ -1,8 +1,7 @@
 import { Guid, guid } from "@shared/types/guid";
-import { ArrayExtensions } from "./arrayExtensions";
 
 export function generateRandomGuidWhichDoesNotExistsIn(others: guid[]): guid {
-    for(const _ of ArrayExtensions.Range(0, 10)) {
+    for(const _ of Array.from({length: 10})) {
         const guid = Guid.New();
 
         const index = others.findIndex(otherGuid => guid === otherGuid);

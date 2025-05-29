@@ -6,107 +6,103 @@ function getWallClass() {
     const originalLine = L.PM.Draw.Line;
 
     const Wall = originalLine.extend({
-        _syncHintMarker(e) {
-            // move the cursor marker
-            this._hintMarker.setLatLng(e.latlng);
-            const args = {
-                target: new L.Marker(e.latlng, {
-                    draggable: false,
-                    icon: L.divIcon({ className: 'marker-icon' }),
-                }), 
-                type: "VertexSyncHintMarker"
-            };
-
-            if (!this._vertexValidation(args)) {
-                if (!this.isRed) {
-                    this.isRed = true;
-                    this._hintline.setStyle({
-                      color: '#f00000ff',
-                    });
-                }
-                return;
-            }
-            originalLine.prototype._syncHintMarker.call(this, e);
-        },
-        _createVertex(e) {
-            const args = {
-                target: new L.Marker(e.latlng, {
-                    draggable: false,
-                    icon: L.divIcon({ className: 'marker-icon' }),
-                }), 
-                type: "VertexCreationAttempt"
-            };
-            
-            if (!this._vertexValidation(args)) {
-                return;
-            }
-
-            originalLine.prototype._createVertex.call(this, e);
-        },
-        _onMarkerDragEnd(e) {
-          const marker = e.target;
+      enable(options) {
+          L.Util.setOptions(this, options);
       
-          if (!this._vertexValidationDragEnd(marker)) {
-            return;
-          }
+          // enable draw mode
+          this._enabled = true;
       
-          const { indexPath } = L.PM.Utils.findDeepMarkerIndex(this._markers, marker);
+          this._markers = [];
       
-          // if self intersection is not allowed but this edit caused a self intersection,
-          // reset and cancel; do not fire events
-          let intersection = !this.options.allowSelfIntersection && this.hasSelfIntersection();
-          if (
-            intersection &&
-            this.options.allowSelfIntersectionEdit &&
-            this._markerAllowedToDrag
-          ) {
-            intersection = false;
-          }
+          // create a new layergroup
+          this._layerGroup = new L.FeatureGroup();
+          this._layerGroup._pmTempLayer = true;
+          this._layerGroup.addTo(this._map);
       
-          const intersectionReset = this._vertexValidation("move", e) 
-            &&
-            !this.options.allowSelfIntersection && intersection;
-      
-          this._fireMarkerDragEnd(e, indexPath, intersectionReset);
-      
-          if (intersectionReset) {
-            // reset coordinates
-            this._layer.setLatLngs(this._coordsBeforeEdit);
-            this._coordsBeforeEdit = null;
-      
-            // re-enable markers for the new coords
-            this._initMarkers();
-      
-            if (this.options.snappable) {
-              this._initSnappableMarkers();
-            }
-      
-            // check for selfintersection again (mainly to reset the style)
-            this._handleLayerStyle();
-      
-            this._fireLayerReset(e, indexPath);
-            return;
-          }
-          if (
-            !this.options.allowSelfIntersection &&
-            this.options.allowSelfIntersectionEdit
-          ) {
-            this._handleLayerStyle();
-          }
-          // fire edit event
-          this._fireEdit();
-          this._layerEdited = true;
-          this._fireChange(this._layer.getLatLngs(), 'Edit');
-        },
-        _vertexValidation(e) {
-            const marker = e.target;
+          // this is the polyLine that'll make up the polygon
+          this._layer = L.polyline([], {
+            ...this.options.templineStyle,
+            pmIgnore: false,
+          });
+          this._setPane(this._layer, 'layerPane');
+          this._layer._pmTempLayer = true;
+          this._layerGroup.addLayer(this._layer);
         
-            const addVertexValidation = this.options.addVertexValidation;
-            if (addVertexValidation && typeof addVertexValidation === 'function') {
-                return addVertexValidation({ layer: this._layer, marker, event: e });
-            }
+          // this is the hintline from the mouse cursor to the last marker
+          this._hintline = L.polyline([], this.options.hintlineStyle);
+          this._setPane(this._hintline, 'layerPane');
+          console.log(this._hintline.options.pane);
+          this._hintline._pmTempLayer = true;
+          this._layerGroup.addLayer(this._hintline);
         
-            return true;
+          // this is the hintmarker on the mouse cursor
+          this._hintMarker = L.marker(this._map.getCenter(), {
+            interactive: false, // always vertex marker below will be triggered from the click event -> _finishShape #911
+            zIndexOffset: 100,
+            icon: L.divIcon({ className: 'marker-icon cursor-marker' }),
+          });
+          this._setPane(this._hintMarker, 'vertexPane');
+          this._hintMarker._pmTempLayer = true;
+          this._layerGroup.addLayer(this._hintMarker);
+        
+          // show the hintmarker if the option is set
+          if (this.options.cursorMarker) {
+            L.DomUtil.addClass(this._hintMarker._icon, 'visible');
+          }
+        
+          // add tooltip to hintmarker
+          if (this.options.tooltips) {
+            this._hintMarker
+              .bindTooltip('Начать фигуру', {
+                permanent: true,
+                offset: L.point(0, 10),
+                direction: 'bottom',
+              
+                opacity: 0.8,
+              })
+              .openTooltip();
+          }
+        
+          // change map cursor
+          this._map.getContainer().classList.add('geoman-draw-cursor');
+        
+          // create a polygon-point on click
+          this._map.on('click', this._createVertex, this);
+        
+          // finish on layer event
+          // #http://leafletjs.com/reference.html#interactive-layer-click
+          if (this.options.finishOn && this.options.finishOn !== 'snap') {
+            this._map.on(this.options.finishOn, this._finishShape, this);
+          }
+        
+          // prevent zoom on double click if finishOn is === dblclick
+          if (this.options.finishOn === 'dblclick') {
+            this.tempMapDoubleClickZoomState = this._map.doubleClickZoom._enabled;
+          
+            if (this.tempMapDoubleClickZoomState) {
+              this._map.doubleClickZoom.disable();
+            }
+          }
+        
+          // sync hint marker with mouse cursor
+          this._map.on('mousemove', this._syncHintMarker, this);
+        
+          // sync the hintline with hint marker
+          this._hintMarker.on('move', this._syncHintLine, this);
+        
+          // toggle the draw button of the Toolbar in case drawing mode got enabled without the button
+          this._map.pm.Toolbar.toggleButton(this.toolbarButtonName, true);
+        
+          // an array used in the snapping mixin.
+          // TODO: think about moving this somewhere else?
+          this._otherSnapLayers = [];
+        
+          // make sure intersection is not set while start drawing
+          this.isRed = false;
+        
+          // fire drawstart event
+          this._fireDrawStart();
+          this._setGlobalDrawMode();
         },
     });
 
@@ -229,6 +225,8 @@ function getRoomClass(wallClass) {
 
     return Room;
 }
+
+
 
 function overrideDraw(map) {
   const Wall = getWallClass();

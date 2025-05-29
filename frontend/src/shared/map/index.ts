@@ -1,11 +1,11 @@
 import BringMapToHomeControl from "./ui/BringMapToHomeControl";
-import BuildingBasePolygon from "../../widgets/editor/ui/BuildingBasePolygon";
 import BuildingMap from "./ui/BuildingMap";
+import { BuildingMapPanes } from "./ui/BuildingMapPanes";
 import ITInfrastructureDescriptor, { ITInfrastructureDescriptorProps } from "./ui/ITInfrastructureDescriptor";
 import LevelPickControl from "./ui/LevelPickControl";
 import RoomDescriptor, { RoomDescriptorProps } from "./ui/RoomDescriptor";
 
-export  { BuildingMap };
+export  { BuildingMap, BuildingMapPanes };
 
 export * from "./lib/leafletUtilsAdditions";
 
@@ -21,5 +21,3 @@ export function isITInfrastructureDescriptorProps(
 export type {ITInfrastructureDescriptorProps, RoomDescriptorProps};
 export { ITInfrastructureDescriptor, RoomDescriptor };
 export { LevelPickControl, BringMapToHomeControl };
-export { BuildingBasePolygon };
-
