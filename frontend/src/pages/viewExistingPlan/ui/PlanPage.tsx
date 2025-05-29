@@ -1,6 +1,7 @@
 import { Routes } from "@app/routing/routes";
 import { Building, Level, Room, Wall } from "@entities/map";
 import { plansApi } from "@features/plans";
+import { fromServerRoomType } from "@features/plans";
 import { Button, CircularProgress, Container, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@shared/hooks/reduxTypedHooks";
 import { isNotFoundErrorResponse } from "@shared/types/ProblemDetails";
@@ -61,7 +62,7 @@ export default function PlanPage() {
                                     geometry: s.geometry,
                                     properties: {
                                         meaning: "Room",
-                                        type: s.type,
+                                        type: fromServerRoomType(s.type),
                                         name: s.name,
                                         id: s.architectualId,
                                     }

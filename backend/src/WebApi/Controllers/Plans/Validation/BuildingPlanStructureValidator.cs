@@ -8,17 +8,18 @@ public abstract class BuildingPlanStructureValidator<T> : AbstractValidator<T> w
 {
     protected BuildingPlanStructureValidator()
     {
-        RuleFor(x => x.Id)
-            .NotEmpty()
-            .WithMessage("Structure ID must not be empty.")
-            .Must(BeValidGuid)
-            .WithMessage("Structure ID must be a valid GUID.");
+        When(x => !string.IsNullOrEmpty(x.Id), () =>
+        {
+            RuleFor(x => x.Id)
+                .Must(BeValidGuid)
+                .WithMessage("Не валидный uuid.");
+        });
 
         RuleFor(x => x.Meaning)
             .NotEmpty()
-            .WithMessage("Meaning must not be empty.")
+            .WithMessage("Значение обязательно.")
             .Must(m => m == "Wall" || m == "Room")
-            .WithMessage("Meaning must be either 'Wall' or 'Room'.");
+            .WithMessage("Допустимы лишь значения: 'Wall', 'Room'.");
     }
 
     private bool BeValidGuid(string? id)
@@ -33,7 +34,7 @@ public class BuildingPlanWallValidator : BuildingPlanStructureValidator<Building
     {
         RuleFor(x => x.Geometry)
             .NotNull()
-            .WithMessage("Wall geometry must not be null.")
+            .WithMessage("Геометрия объекта обязательна.")
             .SetValidator(new GeometryDtoValidator<double[][]>());
     }
 }
@@ -44,23 +45,23 @@ public class BuildingPlanRoomValidator : BuildingPlanStructureValidator<Building
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .WithMessage("Room name must not be empty.")
-            .MaximumLength(50)
-            .WithMessage("Room name must not exceed 50 characters.");
+            .WithMessage("Поле обязательно.")
+            .MaximumLength(64)
+            .WithMessage("Не более 64 символов.");
 
         RuleFor(x => x.ArchitectualId)
             .NotEmpty()
-            .WithMessage("Architectural ID must not be empty.")
-            .MaximumLength(50)
-            .WithMessage("Architectural ID must not exceed 50 characters.");
+            .WithMessage("Поле обязательно.")
+            .MaximumLength(64)
+            .WithMessage("Не более 64 символов.");
 
         RuleFor(x => x.Type)
             .IsInEnum()
-            .WithMessage("Room type must be a valid enum value.");
+            .WithMessage("Не известное значение типа комнаты.");
 
         RuleFor(x => x.Geometry)
             .NotNull()
-            .WithMessage("Room geometry must not be null.")
+            .WithMessage("Геометрия объекта обязательна.")
             .SetValidator(new GeometryDtoValidator<double[][][]>());
     }
 }

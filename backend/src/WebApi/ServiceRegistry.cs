@@ -34,6 +34,7 @@ internal static class ServiceRegistry
         builder.Services.AddControllers()
             .AddNewtonsoftJson(options =>
             {
+                options.SerializerSettings.TypeNameHandling = TypeNameHandling.Auto;
                 options.SerializerSettings.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor;
             });
 

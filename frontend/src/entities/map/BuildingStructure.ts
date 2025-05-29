@@ -116,11 +116,11 @@ export function roomHasCompleteState(room: Room): boolean {
         return false;
     }
 
-    if (name === undefined || name.trim() === "") {
+    if (name === undefined || name?.trim() === "") {
         return false;
     }
 
-    if (id === undefined || id.trim() === "") {
+    if (id === undefined || id?.trim() === "") {
         return false;
     }
 

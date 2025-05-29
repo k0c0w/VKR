@@ -33,6 +33,14 @@ export default function EditBuildingBoundariesController({initialBoundaries}: {i
         }
     }, [currentStep, map]);
 
+    useEffect(() => {
+        if (!map.levelControl) {
+            return;
+        } else {
+            map.levelControl.setControlDisabled(currentStep === CreateNewPlanStep.BuildingBoundariesSetup);
+        }
+    }, [map, currentStep]);
+
     return <BuildingBasementPolygon
         ref={ref}
         editable={currentStep === CreateNewPlanStep.BuildingBoundariesSetup}

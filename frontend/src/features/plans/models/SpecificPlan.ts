@@ -1,6 +1,6 @@
-import { RoomType } from "@entities/map";
 import { guid } from "@shared/types/guid";
 import { LineString, Polygon } from "geojson";
+import { ServerRoomType } from "./common";
 
 export interface ISpecificPlan {
     id: guid;
@@ -13,10 +13,8 @@ export interface ISpecificPlan {
     levels: Level[];
 };
 
-
-
 type Structure = {id: guid;} 
-    & ({geometry: Polygon; meaning: "Room"; name: string; architectualId: string; type: RoomType;}
+    & ({geometry: Polygon; meaning: "Room"; name: string; architectualId: string; type: ServerRoomType;}
         |{geometry:LineString; meaning:"Wall"});
 
 type Level = {

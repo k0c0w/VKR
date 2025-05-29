@@ -2,6 +2,8 @@ import { Room, RoomMetaProperties, RoomType } from "@entities/map";
 import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, TextField } from "@mui/material";
 import { useState } from "react";
 
+const emptyAction = () => {};
+
 export interface RoomDescriptorProps {
     room: Room;
     belongsTo: {
@@ -12,10 +14,11 @@ export interface RoomDescriptorProps {
         id?: boolean;
         type?: boolean;
         name?: boolean;
-    }
+    },
+    editable: boolean;
 }
 
-export default function RoomDescriptor({room, onMetaPropsChange, belongsTo, errors}: RoomDescriptorProps) {
+export default function RoomDescriptor({room, onMetaPropsChange, belongsTo, errors, editable}: RoomDescriptorProps) {
     const [metaProps, setMetaProps] = useState<RoomMetaProperties>({
         name: room.properties.name ?? "",
         id: room.properties.id ?? "",
@@ -43,7 +46,7 @@ export default function RoomDescriptor({room, onMetaPropsChange, belongsTo, erro
         <>
             <FormControl error={errors?.type} fullWidth sx={{ mb: 2 }}>
                 <InputLabel id="space-label">Тип помещения</InputLabel>
-                <Select labelId="space-label" value={metaProps.type} label="Space" onChange={onSelectChange}>
+                <Select disabled={!editable} labelId="space-label" value={metaProps.type} label="Space" onChange={editable ? onSelectChange : emptyAction}>
                     {Object.values(RoomType).map((val, i) => <MenuItem key={i} value={val}>{val}</MenuItem>)}
                 </Select>
             </FormControl>
@@ -52,7 +55,7 @@ export default function RoomDescriptor({room, onMetaPropsChange, belongsTo, erro
                 label="Наименование помещения"
                 error={errors?.name}
                 value={metaProps.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
+                onChange={editable ? (e) => handleInputChange("name", e.target.value) : emptyAction}
                 sx={{ mb: 2 }}
             />
             <TextField
@@ -60,7 +63,7 @@ export default function RoomDescriptor({room, onMetaPropsChange, belongsTo, erro
                 label="Индетификатор помещения"
                 error={errors?.id}
                 value={metaProps.id}
-                onChange={(e) => handleInputChange("id", e.target.value)}
+                onChange={editable ? (e) => handleInputChange("id", e.target.value) : emptyAction}
                 sx={{ mb: 2 }}
             />
             {/* Non-Editable Belongs To Fields */}

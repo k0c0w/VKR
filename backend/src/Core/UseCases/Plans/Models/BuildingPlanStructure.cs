@@ -7,12 +7,16 @@ using Newtonsoft.Json;
 
 namespace UseCases.Plans.Models;
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = nameof(Meaning))]
+[JsonDerivedType(typeof(BuildingPlanWall), "Wall")]
+[JsonDerivedType(typeof(BuildingPlanRoom), "Room")]
+[Newtonsoft.Json.JsonConverter(typeof(BuildingPlanStructureConverter))]
 public abstract record BuildingPlanStructure
 {
-    public string Id { get; init; }
+    public string? Id { get; init; }
     
-    [System.Text.Json.Serialization.JsonIgnore]
-    [Newtonsoft.Json.JsonIgnore]
+    [JsonProperty("meaning")]
+    [JsonPropertyName("meaning")]
     public abstract string Meaning { get; }
 }
 
@@ -79,5 +83,11 @@ public record BuildingPlanRoom : BuildingPlanStructure
         Name = room.Name ?? "";
         Type = room.Type;
         ArchitectualId = room.ArchitectualId;
+    }
+
+    [Newtonsoft.Json.JsonConstructor]
+    [System.Text.Json.Serialization.JsonConstructor]
+    protected BuildingPlanRoom()
+    {
     }
 }

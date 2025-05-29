@@ -1,9 +1,9 @@
-import { RoomType } from "@entities/map";
 import { SerializedError } from "@reduxjs/toolkit";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { guid } from "@shared/types/guid";
-import { IValidationProblemDetails, isFetchBaseQueryError, isValidationProblemDetails } from "@shared/types/ProblemDetails";
-import { LineString, Polygon, Position } from "geojson";
+import {  isFetchBaseQueryError, isValidationProblemDetails } from "@shared/types/ProblemDetails";
+import { LineString, Polygon } from "geojson";
+import { ServerRoomType } from "./common";
 
 export interface ICreateNewPlanResult {
     id: guid;
@@ -13,7 +13,7 @@ interface IBuildingStructure {
     geometry: LineString | Polygon;
 }
 
-type Structure = IBuildingStructure & ({meaning: "Room"; name: string; architectualId: string; type: RoomType;}|{meaning:"Wall"});
+type Structure = IBuildingStructure & ({meaning: "Room"; name: string; architectualId: string; type: ServerRoomType;}|{meaning:"Wall"});
 
 type Level = {
     name?: string;

@@ -263,14 +263,6 @@ export default function EditRoomsController() {
     }
 
     useEffect(() => {
-        if (!map.levelControl) {
-            return;
-        } else {
-            map.levelControl.setShowLevelButtons(currentStep === CreateNewPlanStep.RoomsBoundariesSetup);
-        }
-    }, [map, currentStep]);
-
-    useEffect(() => {
         Object.values(layers).forEach(layer => {
             layer.on("pm:remove", handleRemove);
             layer.on("pm:rotateend", handleRotateEnd);

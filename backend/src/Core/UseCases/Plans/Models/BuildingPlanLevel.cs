@@ -17,8 +17,8 @@ public sealed record BuildingPlanLevel
     [JsonPropertyName("structure")]
     public IEnumerable<BuildingPlanStructure>? Structure { get; init; } = [];
 
-    [JsonProperty("it_equipments")]
-    [JsonPropertyName("it_equipments")]
+    [JsonProperty("itEquipments")]
+    [JsonPropertyName("itEquipments")]
     public IEnumerable<BuildingPlanItEquipment>? ItEquipments { get; init; } = [];
         
     [Newtonsoft.Json.JsonConstructor]

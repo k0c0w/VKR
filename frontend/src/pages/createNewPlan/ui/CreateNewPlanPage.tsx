@@ -15,7 +15,7 @@ import { plansApi } from "@features/plans";
 import { isRoom, RoomType } from "@entities/map";
 import { LineString, Polygon } from "geojson";
 import { isDomainErrorResponse, isFetchBaseQueryError, isServerErrorResponse } from "@shared/types/ProblemDetails";
-import { isValidationErrorResponse } from "@features/plans/models/CreateNewPlan";
+import { isValidationErrorResponse, mapRoomType } from "@features/plans";
 
 function parseError(error: FetchBaseQueryError | SerializedError): ReactNode {
     if (isFetchBaseQueryError(error)) {
@@ -78,14 +78,14 @@ export default function CreateNewPlanPage() {
                         architectualId: x.properties.id,
                         name: x.properties.name ?? "",
                         geometry: geometry,
-                        type: x.properties.type,
+                        type: mapRoomType(x.properties.type),
                         meaning: "Room",
                     } as {
                         architectualId:string;
                         name:string;
                         geometry: Polygon;
                         meaning: "Room",
-                        type: RoomType
+                        type: number
                     };
                 }
 

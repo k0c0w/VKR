@@ -25,8 +25,9 @@ interface ContentProps {
         };
     };
     onClose: () => void;
+    readonlyMode: boolean;
 }
-const Content = React.forwardRef<HTMLDivElement, ContentProps>(function Content({onClose, focusedOnFeature}:  ContentProps, ref) {
+const Content = React.forwardRef<HTMLDivElement, ContentProps>(function Content({onClose, focusedOnFeature, readonlyMode}:  ContentProps, ref) {
     const dispatch = useAppDispatch();
     
     const handlePopupClick = (e: React.MouseEvent) => {
@@ -43,7 +44,8 @@ const Content = React.forwardRef<HTMLDivElement, ContentProps>(function Content(
             belongsTo: {
                 levelName: level.name
             },
-            onMetaPropsChange: (roomUpdate:RoomMetaProperties) => dispatch(updateMetaProperties({levelIndex:level.index, featureId: feature.id, props:roomUpdate}))
+            onMetaPropsChange: (roomUpdate:RoomMetaProperties) => dispatch(updateMetaProperties({levelIndex:level.index, featureId: feature.id, props:roomUpdate})),
+            editable: !readonlyMode
         }
     } else {
         popupContentProps = {
@@ -52,6 +54,7 @@ const Content = React.forwardRef<HTMLDivElement, ContentProps>(function Content(
                 levelName: level.name,
                 roomName: roomName
             },
+            editable: !readonlyMode,
             onMetaPropsChange: (infr: ITInfrastructureMetaProperties) => dispatch(updateMetaProperties({levelIndex:level.index, featureId: feature.id, props:infr}))
         }
     }
@@ -69,7 +72,7 @@ const Content = React.forwardRef<HTMLDivElement, ContentProps>(function Content(
             padding: "10px",
             backgroundColor: "white",
             boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            zIndex: 1000, // Ensure it overlays the map
+            zIndex: 1000,
         }}
     >
         <Box display="flex" justifyContent="flex-end">
@@ -81,7 +84,7 @@ const Content = React.forwardRef<HTMLDivElement, ContentProps>(function Content(
     </Box>
 })
 
-export default function MapObjectDescriptionPopup() {
+export default function MapObjectDescriptionPopup({readonlyMode}: {readonlyMode?: boolean}) {
     const focusedOnFeature = useAppSelector(state => state.planEditorSlice.selectedFeatureInfo);
     const popupRef = useRef<HTMLDivElement>(null); 
     const dispatch = useAppDispatch();
@@ -96,6 +99,12 @@ export default function MapObjectDescriptionPopup() {
             if (focusedOnFeature === undefined) {
                 return;
             }
+
+            if (map.pm.globalDrawModeEnabled() || map.pm.globalEditModeEnabled() || map.pm.globalRemovalModeEnabled() || map.pm.globalRotateModeEnabled()) {
+                onClose();
+                return;
+            }
+
             const target = e.originalEvent.target as Node;
             const clickWasInsideThePopup = popupRef.current && popupRef.current.contains(target);
             if (clickWasInsideThePopup) {
@@ -118,5 +127,5 @@ export default function MapObjectDescriptionPopup() {
         }
     }, [map, focusedOnFeature, onClose]);
 
-    return <>{focusedOnFeature !== undefined && <Content ref={popupRef} onClose={onClose} focusedOnFeature={focusedOnFeature} />}</>
+    return <>{focusedOnFeature !== undefined && <Content readonlyMode={readonlyMode ?? false} ref={popupRef} onClose={onClose} focusedOnFeature={focusedOnFeature} />}</>
 }

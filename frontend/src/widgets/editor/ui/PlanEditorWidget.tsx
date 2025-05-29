@@ -37,6 +37,7 @@ export default function PlanEditorWidget({style, readonlyMode}: PlanEditorWidget
             center={centroid} 
             levelLabels={levelLabels} 
             initialLevelIndex={currentLevelIndex}
+            maxBounds={readonlyMode ? bounds : undefined}
         >
             <GeomanPlugin showGeomanControls={!readonlyMode} />
             <FocusOnce bounds={bounds}/>
@@ -48,8 +49,7 @@ export default function PlanEditorWidget({style, readonlyMode}: PlanEditorWidget
             <EditItInfrastructureController/>
             <AutomaticImageLabelingPlugin readonlyMode={readonlyMode}/>
 
-            <MapObjectDescriptionPopup />
-
+            <MapObjectDescriptionPopup readonlyMode={readonlyMode}/>
         </BuildingMap>
 }
 
