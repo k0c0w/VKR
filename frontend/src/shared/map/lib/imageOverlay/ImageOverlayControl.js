@@ -88,7 +88,7 @@ export const imageOverlayControl = (options) => {
 
       L.DomEvent.on(fileInput, "change", (event) => {
         const input = event.target;
-        if (input.files && input.files[0]) {
+        if (input.files && input.files[0] && !this._isFileLoaded) {
           const file = input.files[0];
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -124,6 +124,7 @@ export const imageOverlayControl = (options) => {
       this._controlButton.dataset.loaded = "false"; 
       this.showOpacitySlider(false);
       this._isFileLoaded = false;
+      this._fileInput.value = '';
     },
   });
 
