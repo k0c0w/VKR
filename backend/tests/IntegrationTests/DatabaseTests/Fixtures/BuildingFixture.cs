@@ -7,6 +7,9 @@ namespace IntegrationTests.DatabaseTests.Fixtures;
 
 public static class BuildingFixture
 {
+    private static readonly Faker NameFaker = new ();
+    public static string GetRandomCompanyName() => NameFaker.Company.CompanyName();
+    
     private static readonly Randomizer Randomizer = new ();
     private static string[] streetTypes = ["улица", "шоссе"];
 
@@ -15,6 +18,7 @@ public static class BuildingFixture
     internal static Building CreateTestBuilding(string city = "Казань")
     {
         var building = new Building(new Address(city, Randomizer.String(minChar:'а',maxChar:'я'), GetStreetType(), Random.Shared.Next(1, 150).ToString()),
+            GetRandomCompanyName(),
             new Polygon([
                 new LineString([
                     new Position(1, 1),

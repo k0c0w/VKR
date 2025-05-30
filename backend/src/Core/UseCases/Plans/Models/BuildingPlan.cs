@@ -14,6 +14,10 @@ public sealed class BuildingPlan
     [JsonPropertyName("address")]
     [JsonProperty("address")]
     public AddressDto Address { get; private init; }
+    
+    [JsonPropertyName("buildingName")]
+    [JsonProperty("buildingName")]
+    public string BuildingName { get; private init; }
 
     [JsonPropertyName("levels")]
     [JsonProperty("levels")]
@@ -25,12 +29,13 @@ public sealed class BuildingPlan
 
     [System.Text.Json.Serialization.JsonConstructor]
     [Newtonsoft.Json.JsonConstructor]
-    private BuildingPlan(string? id, AddressDto address, IEnumerable<BuildingPlanLevel>? levels, GeometryDto<double[][][]> basementGeometry)
+    private BuildingPlan(string? id, AddressDto address, string buildingName, IEnumerable<BuildingPlanLevel>? levels, GeometryDto<double[][][]> basementGeometry)
     {
         Id = id;
         Address = address;
         Levels = levels != null ? levels.ToArray() : [];
         BasementGeometry = basementGeometry;
+        BuildingName = buildingName;
     }
 
     internal BuildingPlan(Building building)
@@ -53,5 +58,6 @@ public sealed class BuildingPlan
         };
         
         Levels = building.Levels.Select(l => new BuildingPlanLevel(l)).ToArray();
+        BuildingName = building.Name;
     }
 }

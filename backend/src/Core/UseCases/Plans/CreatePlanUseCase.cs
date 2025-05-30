@@ -31,7 +31,7 @@ public class CreatePlanUseCase(
         }
         var address = parseAddressResult.Value!;
 
-        var notExistenceResult = await BuildingWithSuchAddressDoesNotExistsAsync(address, ct);
+        var notExistenceResult = await BuildingWithSuchAddressOrNameDoesNotExistsAsync(address, plan.BuildingName, ct);
         if (notExistenceResult.IsFailure)
         {
             return Result.Fail<BuildingPlan, ErrorMessage>(notExistenceResult.Error);
@@ -42,7 +42,7 @@ public class CreatePlanUseCase(
             return Result.Fail<BuildingPlan, ErrorMessage>(ErrorMessage.ValidationError("Здание должно содержать хотябы 1 этаж."));
         }
         
-        var building = new Building(address, new Polygon(plan.BasementGeometry.Coordinates));
+        var building = new Building(address, args.Plan.BuildingName, new Polygon(plan.BasementGeometry.Coordinates));
         var addLevelsResult = AddLevels(building, plan.Levels);
         if (addLevelsResult.IsSuccess)
         {
@@ -52,21 +52,16 @@ public class CreatePlanUseCase(
         return Result.Fail<BuildingPlan, ErrorMessage>(addLevelsResult.Error);
     }
 
-    private async Task<ResultWithError<ErrorMessage>> BuildingWithSuchAddressDoesNotExistsAsync(Address address, CancellationToken ct)
+    private async Task<ResultWithError<ErrorMessage>> BuildingWithSuchAddressOrNameDoesNotExistsAsync(Address address, string name, CancellationToken ct)
     {
-        //todo: add repository method to check existence without loading whole building
-        var addressFilter = IBuildingRepository.BuildingFilter.AddressFilter(address);
+        var existsResult = await buildingRepository.AnyBuildingWithAddressOrNameAsync(name, address, ct);
 
-        var buildingResult = await buildingRepository.GetBuildingAsync(addressFilter, ct);
-
-        if (buildingResult.IsSuccess)
+        return existsResult switch
         {
-            return ResultWithError.Fail(ErrorMessage.EntityIsAlreadyExists);
-        }
-        
-        return buildingResult.Error == ErrorMessage.EntityNotfoundError 
-            ? ResultWithError.Ok<ErrorMessage>() 
-            : ResultWithError.Fail(buildingResult.Error);
+            { IsSuccess: true, Value: true } => ResultWithError.Fail(ErrorMessage.EntityIsAlreadyExists),
+            { IsSuccess: true, Value: false } => ResultWithError.Ok<ErrorMessage>(),
+            _ => ResultWithError.Fail(existsResult.Error)
+        };
     }
     
     private static ResultWithError<ErrorMessage> AddLevels(Building building, IEnumerable<BuildingPlanLevel> levelPlans)

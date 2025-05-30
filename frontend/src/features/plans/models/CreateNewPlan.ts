@@ -23,6 +23,7 @@ type Level = {
 }
 
 export interface ICreateNewPlanArgs {
+    name: string;
     address: {
         city: string;
         street: string;

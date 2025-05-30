@@ -27,7 +27,8 @@ public sealed class GetPlanUseCaseTests
         // Arrange
         var addressParserMock = new Mock<IAddressParser>();
         var buildingRepositoryMock = new Mock<IBuildingRepository>();
-        
+
+        var buildingName = "Учебное здание №2";
         var address = _addressFixture.AddressFaker.Generate();
         var buildingId = Guid.NewGuid();
         var basementGeometry = new Polygon(new List<LineString>
@@ -55,7 +56,7 @@ public sealed class GetPlanUseCaseTests
         var room = Room.CreateExistingButEmptyRoom(Guid.NewGuid(), levelId, roomDescription);
         var level = Level.CreateExistingLevel(buildingId, 1, "First", [room], [wall]);
 
-        var building = Building.CreateExistingBuildingInstance(buildingId, address, basementGeometry, [level]);
+        var building = Building.CreateExistingBuildingInstance(buildingId, address, buildingName,  basementGeometry, [level]);
 
         _addressFixture.SetupAddressParsing(addressParserMock, address);
         buildingRepositoryMock
@@ -79,6 +80,7 @@ public sealed class GetPlanUseCaseTests
         Assert.Equal("First", planLevel.Name);
         Assert.Equal(2, planLevel.Structure?.Count());
         Assert.Empty(planLevel.ItEquipments ?? []);
+        Assert.Equal(buildingName, plan.BuildingName);
 
         buildingRepositoryMock.Verify(x => x.GetBuildingAsync(It.Is<IBuildingRepository.BuildingFilter>(f => f.Id == buildingId), It.IsAny<CancellationToken>()), Times.Once());
     }

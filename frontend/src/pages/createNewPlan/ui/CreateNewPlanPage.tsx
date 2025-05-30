@@ -67,6 +67,7 @@ export default function CreateNewPlanPage() {
                 house: address.houseNumber,
                 street: address.street
             },
+            name: properties.name,
             basementGeometry: geometry,
             levels: levels.map(l => ({
               name: l.name,

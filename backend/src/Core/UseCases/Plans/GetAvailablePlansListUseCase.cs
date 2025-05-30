@@ -17,7 +17,7 @@ public sealed class GetAvailablePlansListUseCase(IBuildingRepository buildingRep
         }
 
         var allAvailablePlans = buildingInfosResult.Value
-            .Select(bi => new BuildingPlanShortcut( bi.BuildingId.ToString(), bi.Address.ToString()))
+            .Select(bi => new BuildingPlanShortcut( bi.BuildingId.ToString(), bi.Address.ToString(), bi.BuildingName))
             .ToArray();
 
         return Result.Ok<BuildingPlanShortcut[], ErrorMessage>(allAvailablePlans);

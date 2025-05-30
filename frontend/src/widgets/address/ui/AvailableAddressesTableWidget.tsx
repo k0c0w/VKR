@@ -1,7 +1,7 @@
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
 import { AvailableAddressModel } from '../model/AvailableAddressModel';
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { Button, IconButton } from '@mui/material';
 import { Routes } from '@app/routing/routes';
 import { guid } from '@shared/types/guid';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
@@ -26,11 +26,13 @@ export default function AvailableAddressesTableWidget({ addresses, paginationMod
   }
   const rows = addresses.map((address) => ({
     id: address.buildingId,
+    buildingName: address.buildingName,
     address: address.address,
   }));
 
   const columns: GridColDef<{ id: string; address: string }>[] = [
-        { field: 'address', headerName: 'Адрес', flex: 1 },
+        {field: 'buildingName', headerName: 'Наименование', flex: 1},
+        { field: 'address', headerName: 'Адрес', flex: 2 },
         {
             field: 'action-open',
             headerName: '',

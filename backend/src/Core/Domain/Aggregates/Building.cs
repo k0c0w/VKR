@@ -15,26 +15,31 @@ public class Building : IHaveIdentity<Guid>
 
     public Polygon BasementGeometry { get; }
 
+    public string Name { get; }
+    
     public int LevelsCount => _levels.Count;
 
     public IReadOnlyCollection<Level> Levels => _levels.Values;
     
-    public Building(Address address, Polygon buildingBasement)
+    public Building(Address address, string buildingName, Polygon buildingBasement)
     {
         Id = Guid.CreateVersion7();
         BasementGeometry = buildingBasement;
         Address = address;
+        ArgumentException.ThrowIfNullOrEmpty(Name);
+        Name = buildingName;
         _levels = new Dictionary<int, Level>
         {
             [1] = new (Id, 1)
         };
     }
     
-    private Building(Guid id, Address address, Polygon buildingBasement, IEnumerable<Level> buildingLevels)
+    private Building(Guid id, Address address, string buildingName, Polygon buildingBasement, IEnumerable<Level> buildingLevels)
     {
         id.ThrowIfEmpty(nameof(id));
         Id = id;
         Address = address;
+        Name = buildingName;
         BasementGeometry = buildingBasement;
         _levels = buildingLevels.ToDictionary(key => key.Number, value => value);
     }
@@ -64,9 +69,10 @@ public class Building : IHaveIdentity<Guid>
     
     public static Building CreateExistingBuildingInstance(Guid id, 
         Address address, 
+        string buildingName,
         Polygon buildingBasement, 
         IEnumerable<Level> buildingLevels)
     {
-        return new Building(id, address, buildingBasement, buildingLevels);
+        return new Building(id, address, buildingName, buildingBasement, buildingLevels);
     }
 }

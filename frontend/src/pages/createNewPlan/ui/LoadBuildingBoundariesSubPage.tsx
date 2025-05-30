@@ -12,7 +12,7 @@ interface LoadBuildingWidgetProps {
     loaderBackground?: ReactNode
 }
 
-function getDefaultBuilding(address: Address): Building {
+function getDefaultBuilding(address: Address, name: string): Building {
     return {
         type: "Feature",
         geometry: {
@@ -21,7 +21,8 @@ function getDefaultBuilding(address: Address): Building {
         },
         properties: {
             levels: [{number: 1, name: "1 этаж", buildingStructure: [], infrastructure: []}],
-            address
+            address,
+            name,
         }
     };
 }
@@ -43,7 +44,7 @@ export default function LoadBuildingBoundariesSubPage({setBuilding}:LoadBuilding
 
     const onManualBuildingCreation = () => {
         if (address) {
-            setBuilding(getDefaultBuilding(address));
+            setBuilding(getDefaultBuilding(address, "Новое Здание"));
         }
     }
 
@@ -64,7 +65,8 @@ export default function LoadBuildingBoundariesSubPage({setBuilding}:LoadBuilding
                 geometry: geometry,
                 properties: {
                     levels: [...levels],
-                    address: addressVO ?? address
+                    address: addressVO ?? address,
+                    name: "Новое Здание"
                 }
             };
 

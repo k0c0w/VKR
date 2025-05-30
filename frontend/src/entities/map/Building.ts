@@ -4,6 +4,7 @@ import { Level, levelHasValidState } from "./Level";
 
 export type BuildingMetaProperties = {
     address: Address;
+    name: string;
     levels: Level[];
 }
 

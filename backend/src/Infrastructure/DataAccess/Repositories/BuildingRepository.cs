@@ -57,11 +57,12 @@ internal sealed class BuildingRepository(
         }
     }
 
-    public async Task<Result<(Guid BuildingId, Address Address)[], ErrorMessage>> GetAllBuildingInformationAsync(CancellationToken ct)
+    public async Task<Result<(Guid BuildingId, Address Address, string BuildingName)[], ErrorMessage>> GetAllBuildingInformationAsync(CancellationToken ct)
     {
         const string sql = """
                                SELECT 
                                         b.id
+                                      , b.name
                                       , b.address
                                  FROM buildings b
                                  JOIN (SELECT
@@ -72,11 +73,11 @@ internal sealed class BuildingRepository(
                                        ) bl ON bl.building_id = b.id;
                            """;
 
-        var buildingInfos = new List<(Guid BuildingId, Address Address)>(cachedCapacity);
+        var buildingInfos = new List<(Guid BuildingId, Address Address, string BuildingName)>(cachedCapacity);
         var openConResult = await GetOpenedConnectionAsync(ct);
         if (openConResult.IsFailure)
         {
-            return Result.Fail<(Guid BuildingId, Address Address)[], ErrorMessage>(openConResult.Error);
+            return Result.Fail<(Guid BuildingId, Address Address, string)[], ErrorMessage>(openConResult.Error);
         }
 
         await using var conn = openConResult.Value!;
@@ -89,19 +90,20 @@ internal sealed class BuildingRepository(
             while (await reader.ReadAsync(ct))
             {
                 var buildingId = reader.GetGuid(0);
-                var addressString = reader.GetString(1);
+                var buildingName = reader.GetString(1);
+                var addressString = reader.GetString(2);
 
-                buildingInfos.Add((buildingId, Address.FromString(addressString)));
+                buildingInfos.Add((buildingId, Address.FromString(addressString), buildingName));
             }
 
             cachedCapacity = buildingInfos.Count;
 
-            return Result.Ok<(Guid BuildingId, Address Address)[], ErrorMessage>(buildingInfos.ToArray());
+            return Result.Ok<(Guid BuildingId, Address Address, string BuildingName)[], ErrorMessage>(buildingInfos.ToArray());
         }
         catch (NpgsqlException ex)
         {
             LogError(ex, nameof(GetAllBuildingInformationAsync));
-            return Result.Fail<(Guid BuildingId, Address Address)[], ErrorMessage>(ErrorMessage.RepositorySpecificErrors.AddError);
+            return Result.Fail<(Guid, Address, string )[], ErrorMessage>(ErrorMessage.RepositorySpecificErrors.AddError);
         }
     }
 
@@ -109,7 +111,8 @@ internal sealed class BuildingRepository(
         CancellationToken ct)
     {
         const string buildingInfoSqlFormat = """
-                                                 SELECT   b.id        
+                                                 SELECT   b.id
+                                                        , b.name
                                                         , b.address
                                                         , b.geometry
                                                    FROM buildings b
@@ -133,6 +136,7 @@ internal sealed class BuildingRepository(
         try
         {
             Guid buildingId;
+            string buildingName;
             Address buildingAddress;
             Polygon buildingBasementGeometry;
             await using (var buildingInfoCommand = new NpgsqlCommand(buildingInfoSql, conn))
@@ -146,9 +150,10 @@ internal sealed class BuildingRepository(
                 }
 
                 buildingId = buildingReader.GetGuid(0);
-                var buildingAddressString = buildingReader.GetString(1);
+                buildingName = buildingReader.GetString(1);
+                var buildingAddressString = buildingReader.GetString(2);
                 buildingAddress = Address.FromString(buildingAddressString);
-                buildingBasementGeometry = buildingReader.GetFieldValue<Polygon>(2);
+                buildingBasementGeometry = buildingReader.GetFieldValue<Polygon>(3);
             }
 
             var wallsAndRooms = await FetchWallsAndRoomsAsync(conn, buildingId, ct);
@@ -181,6 +186,7 @@ internal sealed class BuildingRepository(
             return Result.Ok<Building, ErrorMessage>(Building.CreateExistingBuildingInstance(
                 buildingId,
                 buildingAddress,
+                buildingName,
                 buildingBasementGeometry, 
                 levels));
         }
@@ -192,7 +198,43 @@ internal sealed class BuildingRepository(
         }
     }
 
-    private async Task<List<LevelInfo>> FetchBuildingLevelsAsync(NpgsqlConnection connection, Guid buildingId,
+    public async Task<Result<bool, ErrorMessage>> AnyBuildingWithAddressOrNameAsync(string name, Address address, CancellationToken ct)
+    {
+        const string existenceSql = """
+                                    SELECT 1
+                                      FROM buildings b
+                                     WHERE b.name = $name or b.address = $address
+                                     LIMIT 1;
+                                    """;
+        
+        var nameParam = new NpgsqlParameter("name", name);
+        var addressParam = new NpgsqlParameter("address", address.ToString());
+
+        var openConResult = await GetOpenedConnectionAsync(ct);
+        if (openConResult.IsFailure)
+        {
+            return Result.Fail<bool, ErrorMessage>(openConResult.Error);
+        }
+
+        await using var conn = openConResult.Value!;
+        await using var command = new NpgsqlCommand(existenceSql, conn);
+        command.Parameters.Add(nameParam);
+        command.Parameters.Add(addressParam);
+        
+        try
+        {
+            var scalar = await command.ExecuteScalarAsync(ct);
+
+            return Result.Ok<bool, ErrorMessage>(scalar is not null);
+        }
+        catch (NpgsqlException ex)
+        {
+            LogError(ex, nameof(GetAllBuildingInformationAsync));
+            return Result.Fail<bool, ErrorMessage>(ErrorMessage.RepositorySpecificErrors.AddError);
+        }
+    }
+
+    private static async Task<List<LevelInfo>> FetchBuildingLevelsAsync(NpgsqlConnection connection, Guid buildingId,
         CancellationToken ct)
     {
         const string levelsSql = $"""
@@ -219,7 +261,7 @@ internal sealed class BuildingRepository(
         return levels;
     }
 
-    private async Task<Tuple<IEnumerable<Wall>, IEnumerable<Room>>> FetchWallsAndRoomsAsync(NpgsqlConnection connection,
+    private static async Task<Tuple<IEnumerable<Wall>, IEnumerable<Room>>> FetchWallsAndRoomsAsync(NpgsqlConnection connection,
         Guid buildingId, CancellationToken ct)
     {
         const string roomsOrWallsSql = $"""

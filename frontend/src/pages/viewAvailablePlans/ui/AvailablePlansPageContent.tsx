@@ -6,7 +6,7 @@ import { AvailableAddressesTableWidget, SearchAddressInTableFormWidget, useSearc
 import { useEffect, useState } from "react";
 
 export default function AvailablePlansPageContent({data}: {data: IGetPlanListResult[]}) {
-    const [addresses, setAddresses] = useState(data.map(x => ({buildingId: x.buildingId, address: x.buildingAddress})));
+    const [addresses, setAddresses] = useState(data.map(x => ({buildingId: x.buildingId, address: x.buildingAddress, buildingName: x.buildingName})));
     const { searchQuery, setSearchQuery, filteredAddresses } = useSearchAvailableAddress(addresses);
     const [requestRemoval, {error, reset}] = plansApi.useRequestPlanRemovalMutation();
 

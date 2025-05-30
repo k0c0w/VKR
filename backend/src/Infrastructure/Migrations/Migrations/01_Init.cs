@@ -10,9 +10,11 @@ public class Init : Migration
         const string sql = """
             CREATE TABLE buildings (
                 id UUID PRIMARY KEY,
+                name TEXT NOT NULL,
                 address TEXT NOT NULL,
                 geometry JSONB NOT NULL,
-                CONSTRAINT uk_buildings UNIQUE (address)
+                CONSTRAINT uk_buildings_address UNIQUE (address),
+                CONSTRAINT uk_buildings_name UNIQUE (name)
             );
 
             CREATE TABLE buildings_levels (

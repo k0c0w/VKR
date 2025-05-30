@@ -4,6 +4,7 @@ import { ServerRoomType } from "./common";
 
 export interface ISpecificPlan {
     id: guid;
+    name: string;
     address: {
         city: string;
         street: string;

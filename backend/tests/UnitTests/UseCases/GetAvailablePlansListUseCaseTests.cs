@@ -25,13 +25,13 @@ public sealed class GetAvailablePlansListUseCaseTests
         
         var address1 = _addressFixture.AddressFaker.Generate();
         var address2 = _addressFixture.AddressFaker.Generate();
-        var buildingInfo1 = (Guid.CreateVersion7(), address1);
-        var buildingInfo2 = (Guid.CreateVersion7(), address2);
+        var buildingInfo1 = (Guid.CreateVersion7(), address1, "Учебное здание 1");
+        var buildingInfo2 = (Guid.CreateVersion7(), address2, "Учебное здание 2");
         var buildingInfos = new[] { buildingInfo1, buildingInfo2 };
 
         buildingRepositoryMock
             .Setup(repo => repo.GetAllBuildingInformationAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok< (Guid, Address)[], ErrorMessage>(buildingInfos));
+            .ReturnsAsync(Result.Ok< (Guid, Address, string)[], ErrorMessage>(buildingInfos));
 
         var useCase = new GetAvailablePlansListUseCase(buildingRepositoryMock.Object);
 
@@ -42,8 +42,12 @@ public sealed class GetAvailablePlansListUseCaseTests
         // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(2, planShortcuts.Length);
+        Assert.Equal(buildingInfo1.Item1.ToString(), planShortcuts[0].BuildingId);
         Assert.Equal(buildingInfo1.Item2.ToString(), planShortcuts[0].BuildingAddress);
+        Assert.Equal(buildingInfo1.Item3, planShortcuts[0].BuildingName);
+        Assert.Equal(buildingInfo2.Item1.ToString(), planShortcuts[1].BuildingId);
         Assert.Equal(buildingInfo2.Item2.ToString(), planShortcuts[1].BuildingAddress);
+        Assert.Equal(buildingInfo2.Item3, planShortcuts[1].BuildingName);
 
         buildingRepositoryMock.Verify(repo => repo.GetAllBuildingInformationAsync(It.IsAny<CancellationToken>()), Times.Once());
     }
@@ -58,7 +62,7 @@ public sealed class GetAvailablePlansListUseCaseTests
 
         buildingRepositoryMock
             .Setup(repo => repo.GetAllBuildingInformationAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Fail<(Guid, Address)[], ErrorMessage>(expectedError));
+            .ReturnsAsync(Result.Fail<(Guid, Address, string)[], ErrorMessage>(expectedError));
 
         var useCase = new GetAvailablePlansListUseCase(buildingRepositoryMock.Object);
 

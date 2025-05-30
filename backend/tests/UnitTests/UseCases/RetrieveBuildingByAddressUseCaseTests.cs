@@ -25,7 +25,8 @@ public class RetrieveBuildingByAddressUseCaseTests
         // Arrange
         var addressParserMock = new Mock<IAddressParser>();
         var mapProviderServiceMock = new Mock<IMapProviderService>();
-        
+
+        var buildingName = "Здание 2";
         var address = _addressFixture.AddressFaker.Generate();
         var addressDto = _addressFixture.CreateAddressDto(address);
         var buildingInfo = new BuildingBasementInformation

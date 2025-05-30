@@ -17,6 +17,12 @@ public class BuildingPlanValidator : AbstractValidator<BuildingPlan>
             .WithMessage("Поле обязательно.")
             .SetValidator(new AddressDtoValidator());
 
+        RuleFor(x => x.BuildingName)
+            .NotNull()
+            .WithMessage("Поле обязательно.")
+            .MaximumLength(64)
+            .WithMessage("Не более 64 символов.");
+
         RuleFor(x => x.Levels)
             .NotNull()
             .WithMessage("Поле обязательно.")
