@@ -66,7 +66,7 @@ internal sealed class BuildingRepository(
                                  FROM buildings b
                                  JOIN (SELECT
                                                 buildings_levels.building_id as building_id
-                                              , count(buildings_levels.number) as levels_count
+                                              , count(buildings_levels.name) as levels_count
                                          FROM buildings_levels
                                         GROUP BY buildings_levels.building_id
                                        ) bl ON bl.building_id = b.id;
@@ -102,7 +102,7 @@ internal sealed class BuildingRepository(
         catch (NpgsqlException ex)
         {
             LogError(ex);
-            return Result.Fail<(Guid, Address, string )[], ErrorMessage>(ErrorMessage.RepositorySpecificErrors.AddError);
+            return Result.Fail<(Guid, Address, string )[], ErrorMessage>(ErrorMessage.RepositorySpecificErrors.GetError);
         }
     }
 
@@ -165,7 +165,7 @@ internal sealed class BuildingRepository(
         {
             LogError(ex);
 
-            return Result.Fail<Building, ErrorMessage>(ErrorMessage.AbstractError);
+            return Result.Fail<Building, ErrorMessage>(ErrorMessage.RepositorySpecificErrors.GetError);
         }
 
         var itEquipmentResult = await itEquipmentCatalogue.GetItEquipmentByAddressAsync(buildingAddress, ct);
@@ -227,7 +227,7 @@ internal sealed class BuildingRepository(
         catch (NpgsqlException ex)
         {
             LogError(ex);
-            return Result.Fail<bool, ErrorMessage>(ErrorMessage.RepositorySpecificErrors.AddError);
+            return Result.Fail<bool, ErrorMessage>(ErrorMessage.RepositorySpecificErrors.GetError);
         }
     }
     
