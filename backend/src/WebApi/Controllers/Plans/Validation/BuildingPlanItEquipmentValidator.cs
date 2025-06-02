@@ -1,7 +1,7 @@
 using FluentValidation;
 using UseCases.Plans.Models;
 
-namespace UseCases.Plans.Validators;
+namespace WebApi.Controllers.Plans.Validation;
 
 public class BuildingPlanItEquipmentValidator : AbstractValidator<BuildingPlanItEquipment>
 {

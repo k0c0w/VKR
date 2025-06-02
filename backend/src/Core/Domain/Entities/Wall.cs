@@ -1,3 +1,4 @@
+using Domain.Aggregates;
 using Domain.ValueObjects;
 using GeoJSON.Net.Geometry;
 
@@ -7,16 +8,18 @@ public sealed class Wall : IHaveIdentity<Guid>
 {
     public Guid Id { get; }
 
-    public LevelIdentity BelongsToLevel { get; private set; }
+    internal Level BelongsToLevel { get; private set; }
+    
+    public Guid BelongsToLevelId => BelongsToLevel.Id;
     
     public LineString Geometry { get; private set; }
 
-    internal Wall(LevelIdentity levelContainingWall, LineString wallGeometry) 
+    internal Wall(Level levelContainingWall, LineString wallGeometry) 
         : this(Guid.CreateVersion7(), levelContainingWall, wallGeometry)
     {
     }
 
-    private Wall(Guid id, LevelIdentity levelContainingWall, LineString wallGeometry)
+    private Wall(Guid id, Level levelContainingWall, LineString wallGeometry)
     {
         if (id == Guid.Empty)
         {
@@ -24,12 +27,17 @@ public sealed class Wall : IHaveIdentity<Guid>
         }
         ArgumentNullException.ThrowIfNull(levelContainingWall, nameof(levelContainingWall));
         ArgumentNullException.ThrowIfNull(wallGeometry, nameof(wallGeometry));
+        ArgumentNullException.ThrowIfNull(levelContainingWall, nameof(levelContainingWall));
 
         Id = id;
         BelongsToLevel = levelContainingWall;
         Geometry = wallGeometry;
+        BelongsToLevel = levelContainingWall;
     }
 
-    public static Wall CreateExistingWallInstance(Guid wallId, LevelIdentity belongingLevelId, LineString geometry)
-        => new Wall(wallId, belongingLevelId, geometry);
+    public static void CreateExistingRoomAtLevel(Level level, Guid wallId,  LineString geometry)
+    {
+        var wall = new Wall(wallId, level, geometry);
+        level.AddStructure(wall);
+    }
 }

@@ -1,5 +1,6 @@
 using FluentValidation;
 using UseCases.Plans.Models;
+using WebApi.Controllers.Plans.Validation;
 
 namespace WebApi.Common.Validation;
 

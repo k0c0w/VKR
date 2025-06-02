@@ -8,7 +8,6 @@
 
     <ItemGroup>
       <PackageReference Include="MaybeMonad.Extensions.ResultMonad" Version="1.0.1" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
     </ItemGroup>
 
     <ItemGroup>

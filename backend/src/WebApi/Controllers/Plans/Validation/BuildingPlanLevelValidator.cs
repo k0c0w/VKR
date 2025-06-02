@@ -1,16 +1,11 @@
 using FluentValidation;
-using UseCases.Plans.Validators;
 
-namespace WebApi.Common.Validation;
+namespace WebApi.Controllers.Plans.Validation;
 
 public class BuildingPlanLevelValidator : AbstractValidator<BuildingPlanLevel>
 {
     public BuildingPlanLevelValidator()
     {
-        RuleFor(x => x.Number)
-            .NotEqual(0)
-            .WithMessage("Этаж не может быть 0.");
-
         RuleFor(x => x.Name)
             .MaximumLength(64)
             .When(x => string.IsNullOrEmpty(x.Name))
@@ -20,15 +15,13 @@ public class BuildingPlanLevelValidator : AbstractValidator<BuildingPlanLevel>
             .ForEach(structure =>
             {
                 structure.SetInheritanceValidator(v =>
-                {
+                {  
                     v.Add(new BuildingPlanRoomValidator());
                     v.Add(new BuildingPlanWallValidator());
                 });
-            })
-            .When(x => x.Structure != null);
+            });
 
         RuleFor(x => x.ItEquipments)
-            .ForEach(equipment => equipment.SetValidator(new BuildingPlanItEquipmentValidator()))
-            .When(x => x.ItEquipments != null);
+            .ForEach(equipment => equipment.SetValidator(new BuildingPlanItEquipmentValidator()));
     }
 }

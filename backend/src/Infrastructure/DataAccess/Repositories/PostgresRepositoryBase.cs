@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Transactions;
 using Domain.Errors;
 using Microsoft.Extensions.Logging;
@@ -6,9 +7,10 @@ using ResultMonad;
 
 namespace DataAccess;
 
-internal abstract class PostgresRepositoryBase(NpgsqlDataSource dataSource, ILogger? logger)
+public abstract class PostgresRepositoryBase(NpgsqlDataSource dataSource, ILogger? logger)
 {
     protected ILogger? Logger => logger;
+    
     protected NpgsqlDataSource DataSource => dataSource;
 
     protected async ValueTask<Result<NpgsqlConnection, ErrorMessage>> GetOpenedConnectionAsync(CancellationToken ct)
@@ -34,8 +36,8 @@ internal abstract class PostgresRepositoryBase(NpgsqlDataSource dataSource, ILog
         }
     }
 
-    protected void LogError(Exception ex, string methodName)
+    protected void LogError(Exception ex, [CallerMemberName] string? calledFromMethodName = default)
     {
-        Logger?.LogError(ex, "Database error:{method}:{message}", methodName, ex.Message);
+        Logger?.LogError(ex, "Database error:{method}:{message}", calledFromMethodName, ex.Message);
     }
 }

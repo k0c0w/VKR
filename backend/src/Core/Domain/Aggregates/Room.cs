@@ -1,4 +1,3 @@
-using Domain.Entities;
 using Domain.ValueObjects;
 using GeoJSON.Net.Geometry;
 
@@ -6,12 +5,11 @@ namespace Domain.Aggregates;
 
 public class Room : IHaveIdentity<Guid>
 {
-    private readonly List<ItEquipment> _itEquipments = new ();
     public Guid Id { get; }
     
-    public IReadOnlyCollection<ItEquipment> ItEquipments => _itEquipments;
+    internal Level BelongsToLevel { get; }
 
-    public LevelIdentity BelongsToLevel { get; }
+    public Guid BelongsToLevelId => BelongsToLevel.Id;
 
     public RoomType Type => RoomDescription.Type;
 
@@ -23,24 +21,24 @@ public class Room : IHaveIdentity<Guid>
     
     private RoomDescription RoomDescription { get; set; }
     
-    internal Room(LevelIdentity belongsToLevel, RoomDescription roomDescription, IEnumerable<ItEquipment> equipments) 
+    internal Room(Level belongsToLevel, RoomDescription roomDescription) 
         : this(Guid.CreateVersion7(), belongsToLevel, roomDescription)
     {
-        _itEquipments = equipments.ToList();
     }
 
-    private Room (Guid id, LevelIdentity levelIdentity, RoomDescription roomDescription)
+    private Room (Guid id, Level belongsToLevel, RoomDescription roomDescription)
     {
         id.ThrowIfEmpty(nameof(id));
         ArgumentNullException.ThrowIfNull(roomDescription, nameof(roomDescription));
 
         Id = id;
         RoomDescription = roomDescription;
-        BelongsToLevel = levelIdentity;
+        BelongsToLevel = belongsToLevel;
     }
 
-    public static Room CreateExistingButEmptyRoom(Guid roomId, LevelIdentity roomLevel, RoomDescription description)
+    public static void CreateExistingRoomAtLevel(Level roomLevel, Guid roomId, RoomDescription description)
     {
-        return new Room(roomId, roomLevel, description);
+        var room = new Room(roomId, roomLevel, description);
+        roomLevel.AddStructure(room);
     }
 }

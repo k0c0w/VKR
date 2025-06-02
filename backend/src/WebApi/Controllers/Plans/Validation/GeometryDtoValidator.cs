@@ -1,12 +1,12 @@
 using FluentValidation;
 using UseCases.Plans.Models;
 
-namespace WebApi.Common.Validation;
+namespace WebApi.Controllers.Plans.Validation;
 
 public class GeometryDtoValidator<TArray> : AbstractValidator<GeometryDto<TArray>>
 {
-    private const string required = "Координатная пара обязательна.";
-    private const string eachCoordinateMustHave2Positions = "Каждая пара координат должна содержать ровно 2 числа ([долгота, широта]).";
+    private const string Required = "Координатная пара обязательна.";
+    private const string EachCoordinateMustHave2Positions = "Каждая пара координат должна содержать ровно 2 числа ([долгота, широта]).";
     
     public GeometryDtoValidator()
     {
@@ -86,11 +86,11 @@ public class GeometryDtoValidator<TArray> : AbstractValidator<GeometryDto<TArray
     {
         ruleBuilder
             .NotNull()
-                .WithMessage(required)
+                .WithMessage(Required)
             .NotEmpty()
-                .WithMessage(required)
+                .WithMessage(Required)
             .Must(position => position!.Length == 2)
-                .WithMessage(eachCoordinateMustHave2Positions);
+                .WithMessage(EachCoordinateMustHave2Positions);
     }
     
     private static bool AreEqual(double a, double b)

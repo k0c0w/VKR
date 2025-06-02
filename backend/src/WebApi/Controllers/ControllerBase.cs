@@ -1,4 +1,5 @@
 using Domain.Errors;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Common.ProblemDetails;
 
@@ -6,6 +7,14 @@ namespace WebApi.Controllers;
 
 public abstract class ControllerBase : Microsoft.AspNetCore.Mvc.ControllerBase
 {
+    protected IResult ToValidationProblemResult(ValidationResult validationResult)
+    {
+        return Results.ValidationProblem(
+            errors: validationResult.ToDictionary(),
+            title: ProblemDetailsTitles.ArgumentValidationError,
+            statusCode: StatusCodes.Status400BadRequest);
+    }
+    
     protected ProblemDetails ToProblemDetails(ErrorMessage error)
     {
         var problemDetails = new ProblemDetails
@@ -26,18 +35,30 @@ public abstract class ControllerBase : Microsoft.AspNetCore.Mvc.ControllerBase
                 break;
 
             case ErrorMessage.ErrorType.DomainActionError:
+                int statusCode;
                 if (error == ErrorMessage.EntityNotfoundError)
                 {
                     problemDetails.Title = ProblemDetailsTitles.NotFoundError;
-                    problemDetails.Status = StatusCodes.Status404NotFound;
-                    problemDetails.Detail = error.ToString();
+                    statusCode = StatusCodes.Status404NotFound;
+                }
+                else if (error == ErrorMessage.AuthenticationErrors.AccessDenied)
+                {
+                    problemDetails.Title = ProblemDetailsTitles.DomainError;
+                    statusCode = StatusCodes.Status403Forbidden;
+                }
+                else if (error == ErrorMessage.AuthenticationErrors.Unauthorized)
+                {
+                    problemDetails.Title = ProblemDetailsTitles.DomainError;
+                    statusCode = StatusCodes.Status401Unauthorized;
                 }
                 else
                 {
                     problemDetails.Title = ProblemDetailsTitles.DomainError;
-                    problemDetails.Status = StatusCodes.Status400BadRequest;
-                    problemDetails.Detail = error.ToString();
+                    statusCode = StatusCodes.Status400BadRequest;
                 }
+                
+                problemDetails.Detail = error.ToString();
+                problemDetails.Status = statusCode;
 
                 break;
 

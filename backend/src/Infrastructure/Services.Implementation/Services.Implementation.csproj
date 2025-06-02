@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\Core\Common\Common.csproj" />
       <ProjectReference Include="..\..\Core\Services\Services.csproj" />
     </ItemGroup>
 
@@ -17,9 +18,18 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="HtmlAgilityPack" Version="1.12.1" />
+      <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5" />
       <PackageReference Include="System.Drawing.Common" Version="9.0.5" />
       <PackageReference Include="YoloSharp" Version="6.0.3" />
       <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.2.0" />
+
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="OutParser" Version="1.1.1" />
+    </ItemGroup>
+    <PropertyGroup>
+        <InterceptorsNamespaces>$(InterceptorsNamespaces);OutParsing</InterceptorsNamespaces>
+    </PropertyGroup>
 </Project>

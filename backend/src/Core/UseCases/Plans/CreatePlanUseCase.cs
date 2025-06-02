@@ -1,8 +1,10 @@
 using Common.Dto;
 using Domain;
 using Domain.Aggregates;
+using Domain.Entities;
 using Domain.Errors;
 using Domain.Repositories;
+using Domain.Services;
 using Domain.ValueObjects;
 using GeoJSON.Net.Geometry;
 using ResultMonad;
@@ -14,10 +16,14 @@ namespace UseCases.Plans;
 public class CreatePlanUseCase(
     IAddressParser addressParser,
     IBuildingRepository buildingRepository,
-    IUnitOfWork unitOfWork
+    IUnitOfWork unitOfWork,
+    IItEquipmentCatalogue catalogue
     )
     : IUseCase<CreatePlanUseCase.CreatePlanUseCaseArgs, Result<BuildingPlan, ErrorMessage>>
 {
+    private const string AtLeast1LevelErrorText = "Здание должно содержать хотябы 1 этаж."; 
+    private const string UnknownItEquipment = "План содержит оборудование, которое не было добавлено в каталог."; 
+    
     public sealed record CreatePlanUseCaseArgs(BuildingPlan Plan);
     
     public async Task<Result<BuildingPlan, ErrorMessage>> RunAsync(CreatePlanUseCaseArgs args, CancellationToken ct)
@@ -37,13 +43,25 @@ public class CreatePlanUseCase(
             return Result.Fail<BuildingPlan, ErrorMessage>(notExistenceResult.Error);
         }
 
+        var itEquipmentLoadResult = await LoadItEquipmentForBuildingFromCatalogueAsync(address, ct);
+        if (itEquipmentLoadResult.IsFailure)
+        {
+            return Result.Fail<BuildingPlan, ErrorMessage>(itEquipmentLoadResult.Error);
+        }
+        var itEquipmentKnowledge = itEquipmentLoadResult.Value!;
+        if (!AllItEquipmentIsPresentInCatalogue(plan.Levels.SelectMany(x => x.ItEquipments ?? []),
+                itEquipmentKnowledge))
+        {
+            return Result.Fail<BuildingPlan, ErrorMessage>(ErrorMessage.ValidationError(UnknownItEquipment));
+        }
+        
         if (!plan.Levels.Any())
         {
-            return Result.Fail<BuildingPlan, ErrorMessage>(ErrorMessage.ValidationError("Здание должно содержать хотябы 1 этаж."));
+            return Result.Fail<BuildingPlan, ErrorMessage>(ErrorMessage.ValidationError(AtLeast1LevelErrorText));
         }
         
         var building = new Building(address, args.Plan.BuildingName, new Polygon(plan.BasementGeometry.Coordinates));
-        var addLevelsResult = AddLevels(building, plan.Levels);
+        var addLevelsResult = AddLevels(building, plan.Levels, itEquipmentKnowledge);
         if (addLevelsResult.IsSuccess)
         {
             return await SaveBuildingAsync(building, ct);
@@ -52,6 +70,24 @@ public class CreatePlanUseCase(
         return Result.Fail<BuildingPlan, ErrorMessage>(addLevelsResult.Error);
     }
 
+    private async Task<Result<IDictionary<string, ItEquipmentDescription>, ErrorMessage>> LoadItEquipmentForBuildingFromCatalogueAsync(
+        Address address, CancellationToken ct)
+    {
+        var fetchResult = await catalogue.GetAllItEquipmentAtBuildingAsync(address, ct);
+
+        if (fetchResult.IsSuccess)
+        {
+            return Result.Ok<IDictionary<string, ItEquipmentDescription>, ErrorMessage>(fetchResult.Value
+                .ToDictionary(k => k.Id, v => v));
+        }
+        
+        var error = fetchResult.Error== ErrorMessage.EntityNotfoundError 
+            ? ErrorMessage.ItEquipmentCatalogueErrors.BuildingIsNotPresentInCatalogue 
+            : ErrorMessage.ItEquipmentCatalogueErrors.CanNotFetchDataFromCatalogue;
+        
+        return Result.Fail<IDictionary<string, ItEquipmentDescription>, ErrorMessage>(error);
+    }
+    
     private async Task<ResultWithError<ErrorMessage>> BuildingWithSuchAddressOrNameDoesNotExistsAsync(Address address, string name, CancellationToken ct)
     {
         var existsResult = await buildingRepository.AnyBuildingWithAddressOrNameAsync(name, address, ct);
@@ -64,40 +100,47 @@ public class CreatePlanUseCase(
         };
     }
     
-    private static ResultWithError<ErrorMessage> AddLevels(Building building, IEnumerable<BuildingPlanLevel> levelPlans)
+    private static bool AllItEquipmentIsPresentInCatalogue(IEnumerable<BuildingPlanItEquipment> planItEquipments, 
+        IDictionary<string, ItEquipmentDescription> itEquipmentInCatalogue)
     {
-        var hasLevelWithNumber1 = levelPlans.Any(x => x.Number == 1);
-        var withoutLevelWithNumber1 = levelPlans.Where(x => x.Number != 1);
+        return planItEquipments.All(x => itEquipmentInCatalogue.ContainsKey(x.InventoryNumber));
+    }
+    
+    private static ResultWithError<ErrorMessage> AddLevels(Building building, IEnumerable<BuildingPlanLevel> levelPlans,
+        IDictionary<string, ItEquipmentDescription> itEquipmentCatalogue)
+    {
+        var hasLevelWithNumber1 = levelPlans.Any(x => x.Name == Level.FirstLevelDefaultName);
+        var withoutLevelWithNumber1 = levelPlans.Where(x => x.Name != Level.FirstLevelDefaultName);
 
-        foreach(var lp in withoutLevelWithNumber1.DistinctBy(x => x.Number))
+        foreach(var lp in withoutLevelWithNumber1.DistinctBy(x => x.Name))
         {
-            var createResult = building.CreateLevel(lp.Number, lp.Name);
+            var createResult = building.CreateLevel(lp.Name);
             if (createResult.IsFailure)
             {
                 return ResultWithError.Fail(createResult.Error);
             }
 
-            var levelResult = building.GetLevel(lp.Number);
+            var levelResult = building.GetLevel(lp.Name);
             if (levelResult.IsFailure)
             {
                 return ResultWithError.Fail(levelResult.Error);
             }
 
-            AddEquipments(levelResult.Value!, lp);
+            AddEquipments(levelResult.Value!, lp, itEquipmentCatalogue);
         }
 
-        var firstLevelResult = building.GetLevel(1);
+        var firstLevelResult = building.GetLevel(Level.FirstLevelDefaultName);
         if (firstLevelResult.IsSuccess)
         {
             var firstLevel = firstLevelResult.Value!;
             if (hasLevelWithNumber1)
             {
-                var levelPlan = levelPlans.First(x => x.Number == 1);
-                AddEquipments(firstLevel, levelPlan);
+                var levelPlan = levelPlans.First(x => x.Name == Level.FirstLevelDefaultName);
+                AddEquipments(firstLevel, levelPlan, itEquipmentCatalogue);
             }
             else
             {
-                var level = building.GetLevel(1);
+                var level = building.GetLevel(Level.FirstLevelDefaultName);
                 if (level.IsSuccess)
                 {
                     building.RemoveLevel(level.Value!);
@@ -108,7 +151,7 @@ public class CreatePlanUseCase(
         return ResultWithError.Ok<ErrorMessage>();
     }
 
-    private static void AddEquipments(Level level, BuildingPlanLevel levelPlan)
+    private static void AddEquipments(Level level, BuildingPlanLevel levelPlan, IDictionary<string, ItEquipmentDescription> itEquipmentCatalogue)
     {
         foreach (var structure in levelPlan.Structure)
         {
@@ -131,7 +174,10 @@ public class CreatePlanUseCase(
 
         foreach (var itEquipmentPlan in levelPlan.ItEquipments)
         {
-            //todo: add itEquipment
+            var itEquipmentDescription = itEquipmentCatalogue[itEquipmentPlan.InventoryNumber];
+            var itEquipment = itEquipmentPlan.ToDomain(itEquipmentDescription);
+
+            level.AddEquipment(itEquipment);
         }
     }
     

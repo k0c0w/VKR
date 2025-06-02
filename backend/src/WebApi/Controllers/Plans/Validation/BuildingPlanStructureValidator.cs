@@ -2,7 +2,7 @@ using FluentValidation;
 using UseCases.Plans.Models;
 using WebApi.Common.Validation;
 
-namespace UseCases.Plans.Validators;
+namespace WebApi.Controllers.Plans.Validation;
 
 public abstract class BuildingPlanStructureValidator<T> : AbstractValidator<T> where T : BuildingPlanStructure
 {

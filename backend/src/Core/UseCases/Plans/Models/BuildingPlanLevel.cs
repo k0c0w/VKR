@@ -5,26 +5,28 @@ using UseCases.Plans.Models;
 
 public sealed record BuildingPlanLevel
 {
-    [JsonProperty("number")]
-    [JsonPropertyName("number")]
-    public int Number { get; init; }
-        
     [JsonProperty("name")]
     [JsonPropertyName("name")]
     public string? Name { get; init; }
 
     [JsonProperty("structure")]
     [JsonPropertyName("structure")]
-    public IEnumerable<BuildingPlanStructure>? Structure { get; init; } = [];
+    public IEnumerable<BuildingPlanStructure> Structure { get; init; } = [];
 
     [JsonProperty("itEquipments")]
     [JsonPropertyName("itEquipments")]
-    public IEnumerable<BuildingPlanItEquipment>? ItEquipments { get; init; } = [];
+    public IEnumerable<BuildingPlanItEquipment> ItEquipments { get; init; } = [];
         
     [Newtonsoft.Json.JsonConstructor]
     [System.Text.Json.Serialization.JsonConstructor]
-    protected BuildingPlanLevel()
+    protected BuildingPlanLevel(int number,
+        string name, 
+        IEnumerable<BuildingPlanStructure>? structure,  
+        IEnumerable<BuildingPlanItEquipment>? itEquipments)
     {
+        Name = name;
+        Structure = structure ?? [];
+        ItEquipments = itEquipments ?? [];
     }
 
     internal BuildingPlanLevel(Level level)
@@ -35,8 +37,7 @@ public sealed record BuildingPlanLevel
             .Concat(level.Rooms.Select(r => new BuildingPlanRoom(r)));
 
         Name = level.Name;
-        Number = level.Number;
-        ItEquipments = level.Rooms.SelectMany(x => x.ItEquipments)
+        ItEquipments = level.ItEquipments
             .Select(e => new BuildingPlanItEquipment(e));
     }
 }

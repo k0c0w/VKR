@@ -18,40 +18,48 @@ public class Init : Migration
             );
 
             CREATE TABLE buildings_levels (
+                id UUID PRIMARY KEY,
                 building_id UUID NOT NULL REFERENCES buildings(id) ON DELETE CASCADE,
-                number INTEGER NOT NULL,
                 name TEXT NOT NULL,
-                CONSTRAINT pk_buildings_levels PRIMARY KEY (building_id, number)
+                CONSTRAINT uk_buildings_levels UNIQUE(building_id, name)
             );
 
             CREATE TABLE buildings_rooms (
                 id UUID PRIMARY KEY,
-                building_id UUID NOT NULL,
-                level INTEGER NOT NULL,
+                level_id UUID NOT NULL,
                 type SMALLINT NOT NULL,
                 architectural_id TEXT NOT NULL,
                 geometry JSONB NOT NULL,
                 name TEXT,
-                CONSTRAINT uk_rooms UNIQUE (building_id, level, architectural_id),
-                CONSTRAINT fk_rooms_buildings_levels FOREIGN KEY (building_id, level)
-                    REFERENCES buildings_levels(building_id, number) ON DELETE CASCADE
+                CONSTRAINT uk_rooms UNIQUE (level_id, architectural_id),
+                CONSTRAINT fk_rooms_buildings_levels FOREIGN KEY (level_id)
+                    REFERENCES buildings_levels(id) ON DELETE CASCADE
             );
 
             CREATE TABLE buildings_walls (
                 id UUID PRIMARY KEY,
-                building_id UUID NOT NULL,
-                level INTEGER NOT NULL,
+                level_id UUID NOT NULL,
                 geometry JSONB NOT NULL,
-                CONSTRAINT fk_walls_buildings_levels FOREIGN KEY (building_id, level)
-                    REFERENCES buildings_levels(building_id, number) ON DELETE CASCADE
+                CONSTRAINT fk_walls_buildings_levels FOREIGN KEY (level_id)
+                    REFERENCES buildings_levels(id) ON DELETE CASCADE
             );
 
-            CREATE TABLE it_equipment (
-                id UUID PRIMARY KEY,
-                inventory_number TEXT NOT NULL,
-                serial_number TEXT NOT NULL,
-                name TEXT NOT NULL,
-                room_id UUID REFERENCES buildings_rooms(id) ON DELETE SET NULL
+            CREATE TABLE buildings_it_equipment (
+                inventory_number TEXT NOT NULL PRIMARY KEY,
+                level_id UUID NOT NULL,
+                geometry JSONB NOT NULL,
+                CONSTRAINT fk_buildings_it_equipment FOREIGN KEY (level_id) REFERENCES buildings_levels(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE users (
+              id UUID PRIMARY KEY,
+              email VARCHAR(320) NOT NULL UNIQUE
+            );
+
+            CREATE TABLE users_to_user_roles (
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                role_type SMALLINT NOT NULL,
+                CONSTRAINT uk_single_role_of_same_type UNIQUE(user_id, role_type)
             );
         """;
 
@@ -61,11 +69,14 @@ public class Init : Migration
     public override void Down()
     {
         const string sql = """
-            DROP TABLE it_equipment;
+            DROP TABLE buildings_it_equipment;
             DROP TABLE buildings_walls;
             DROP TABLE buildings_rooms;
             DROP TABLE buildings_levels;
             DROP TABLE buildings;
+
+            DROP TABLE users_to_user_roles;
+            DROP TABLE users;
         """;
 
         Execute.Sql(sql);

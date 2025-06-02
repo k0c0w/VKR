@@ -7,7 +7,7 @@ namespace Domain.Aggregates;
 
 public class Building : IHaveIdentity<Guid>
 {
-    private readonly Dictionary<int, Level> _levels;
+    private readonly Dictionary<string, Level> _levels;
 
     public Guid Id { get; }
 
@@ -28,9 +28,10 @@ public class Building : IHaveIdentity<Guid>
         Address = address;
         ArgumentException.ThrowIfNullOrEmpty(Name);
         Name = buildingName;
-        _levels = new Dictionary<int, Level>
+        
+        _levels = new Dictionary<string, Level>()
         {
-            [1] = new (Id, 1)
+            [Level.FirstLevelDefaultName] = new(Id, Level.FirstLevelDefaultName),
         };
     }
     
@@ -41,29 +42,29 @@ public class Building : IHaveIdentity<Guid>
         Address = address;
         Name = buildingName;
         BasementGeometry = buildingBasement;
-        _levels = buildingLevels.ToDictionary(key => key.Number, value => value);
+        _levels = buildingLevels.ToDictionary(key => key.Name, value => value);
     }
 
-    public ResultWithError<ErrorMessage> CreateLevel(int number, string levelName)
+    public ResultWithError<ErrorMessage> CreateLevel(string levelName)
     {
-        if (_levels.ContainsKey(number))
+        if (_levels.ContainsKey(levelName))
         {
-            return ResultWithError.Fail( ErrorMessage.ValidationError($"Этаж с номером {number} уже существует."));
+            return ResultWithError.Fail( ErrorMessage.ValidationError($"{levelName} уже существует."));
         }
 
-        var level = new Level(Id, number, levelName);
-        _levels.Add(number, level);
+        var level = new Level(Id, levelName);
+        _levels.Add(levelName, level);
         
         return ResultWithError.Ok<ErrorMessage>();
     }
 
     public void RemoveLevel(Level level)
     {
-        _levels.Remove(level.Number);
+        _levels.Remove(level.Name);
     }
     
-    public Result<Level, ErrorMessage> GetLevel(int number)
-        => _levels.TryGetValue(number, out var level) 
+    public Result<Level, ErrorMessage> GetLevel(string levelName)
+        => _levels.TryGetValue(levelName, out var level) 
             ? Result.Ok<Level, ErrorMessage>(level!)
             : Result.Fail<Level, ErrorMessage>(ErrorMessage.EntityNotfoundError); 
     

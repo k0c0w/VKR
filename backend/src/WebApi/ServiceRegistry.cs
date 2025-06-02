@@ -8,11 +8,13 @@ using Microsoft.Extensions.Options;
 using Migrations;
 using Newtonsoft.Json;
 using Services;
+using Services.Implementation.DisKfu;
 using Services.Implementation.OSM;
 using Services.Implementation.PlanAnalyzer;
 using Services.Implementation.PlanAnalyzer.Ocr;
 using Services.Map;
 using Services.PlanImageAnalyzer;
+using UseCases.Authorization;
 using UseCases.Plans;
 using UseCases.RetrieveBuildingByAddress;
 using WebApi.BackgroundWorkers;
@@ -98,6 +100,8 @@ internal static class ServiceRegistry
                 return new OverpassApiClient(overpassApiHost, httpClient);
             })
             .Decorate<IMapProviderService, MapProviderServiceCacheDecorator>();
+        
+        services.AddDisKfuServices();
     }
 
     private static void AddUseCases(IServiceCollection services)
@@ -106,6 +110,7 @@ internal static class ServiceRegistry
         services.AddScoped<GetPlanUseCase>();
         services.AddScoped<GetAvailablePlansListUseCase>();
         services.AddScoped<CreatePlanUseCase>();
+        services.AddScoped<SignInUseCase>();
     }
 
     private static void AddPlanRecognition(IServiceCollection services, IConfiguration configuration)

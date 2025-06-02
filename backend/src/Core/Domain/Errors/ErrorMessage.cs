@@ -53,4 +53,18 @@ public readonly struct ErrorMessage : IEquatable<ErrorMessage>
         
         public static readonly ErrorMessage CanNotParseHouse = ValidationError("Не удалось распарсить дом.");
     }
+
+    public static class ItEquipmentCatalogueErrors
+    {
+        public static readonly ErrorMessage BuildingIsNotPresentInCatalogue =
+            DomainError("Данное здание не прдеставлено в каталоге ИТ-оборудования.");
+        
+        public static readonly ErrorMessage CanNotFetchDataFromCatalogue = DomainError("Не удалось получить данные из каталога ИТ-оборудования.");
+    }
+    
+    public static class AuthenticationErrors
+    {
+        public static readonly ErrorMessage Unauthorized = DomainError("Запрос не авторизован.");
+        public static readonly ErrorMessage AccessDenied = DomainError("Доступ запрещён.");
+    }
 }
