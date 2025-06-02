@@ -1,6 +1,7 @@
 using System.Net;
 using DataAccess.Abstractions;
 using DataAccess.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.Implementation.PlanAnalyzer;
@@ -10,6 +11,7 @@ using WebApi.Controllers.Ai.Validation;
 namespace WebApi.Controllers.Ai;
 
 [Route("ai")]
+[Authorize]
 public class AiController : ControllerBase
 {
     [HttpPost("indoor-plans")]

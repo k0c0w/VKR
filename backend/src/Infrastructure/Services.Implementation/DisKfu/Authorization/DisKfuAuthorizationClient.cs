@@ -8,10 +8,10 @@ using OutParsing;
 
 namespace Services.Implementation.DisKfu.Authorization;
 
-public class AuthorizationClient : DisKfuClientBase, IDisKfuAuthorizationService
+public class DisKfuAuthorizationClient : DisKfuClientBase
 {
-    public AuthorizationClient(IHttpClientFactory httpClientFactory, ILogger<IDisKfuAuthorizationService>? logger = default) 
-        : base(httpClientFactory, logger ?? NullLogger<IDisKfuAuthorizationService>.Instance)
+    public DisKfuAuthorizationClient(IHttpClientFactory httpClientFactory, ILogger<DisKfuAuthorizationClient>? logger = default) 
+        : base(httpClientFactory, logger ?? NullLogger<DisKfuAuthorizationClient>.Instance)
     {
     }
 

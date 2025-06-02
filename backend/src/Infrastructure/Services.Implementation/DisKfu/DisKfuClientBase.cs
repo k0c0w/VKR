@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Services.Implementation.DisKfu;
 
-public class DisKfuClientBase
+public abstract class DisKfuClientBase
 {
     public const string ClientName = "DisKfuClient";
     

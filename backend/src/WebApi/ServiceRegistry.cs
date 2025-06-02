@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Migrations;
 using Newtonsoft.Json;
 using Services;
+using Services.Implementation.Authorization;
 using Services.Implementation.DisKfu;
 using Services.Implementation.OSM;
 using Services.Implementation.PlanAnalyzer;
@@ -39,6 +40,18 @@ internal static class ServiceRegistry
                 options.SerializerSettings.TypeNameHandling = TypeNameHandling.Auto;
                 options.SerializerSettings.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor;
             });
+        builder.Services.AddAuthentication(AuthorizationService.AuthenticationScheme)
+            .AddCookie(AuthorizationService.AuthenticationScheme, options =>
+            {
+                options.Cookie.Name = AuthorizationService.AuthenticationScheme;
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.Cookie.SameSite = SameSiteMode.Strict;
+                options.LoginPath = "/authorization/sign-in";
+                options.ExpireTimeSpan = TimeSpan.FromHours(1);
+            });
+        builder.Services.AddAuthorization();
+        builder.Services.AddHttpContextAccessor();
 
         AddCache(builder.Services, builder.Configuration);
         
@@ -102,6 +115,7 @@ internal static class ServiceRegistry
             .Decorate<IMapProviderService, MapProviderServiceCacheDecorator>();
         
         services.AddDisKfuServices();
+        services.AddScoped<Domain.Services.IAuthorizationService, AuthorizationService>();
     }
 
     private static void AddUseCases(IServiceCollection services)

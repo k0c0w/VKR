@@ -19,7 +19,7 @@ public static class ServiceCollectionExtensions
             client.DefaultRequestHeaders.UserAgent.ParseAdd("DisKfuInteractivePlansApp");
         });
 
-        services.AddScoped<IDisKfuAuthorizationService, AuthorizationClient>();
+        services.AddScoped<DisKfuAuthorizationClient>();
         services.AddScoped<IItEquipmentCatalogue, ItEquipmentCatalogueClient>();
     }
 }

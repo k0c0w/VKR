@@ -28,6 +28,9 @@ if (InProcessMigrationsAreOn(app.Configuration))
 app.UseExceptionHandler();
 
 app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();

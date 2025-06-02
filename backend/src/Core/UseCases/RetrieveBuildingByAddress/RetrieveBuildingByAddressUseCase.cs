@@ -1,5 +1,6 @@
 using Common.Extensions;
 using Domain.Errors;
+using Domain.Services;
 using Domain.ValueObjects;
 using ResultMonad;
 using Services;
@@ -8,20 +9,13 @@ using UseCases.Plans.Models;
 
 namespace UseCases.RetrieveBuildingByAddress;
 
-public sealed record RetrieveBuildingByAddressUseCase 
-    : IUseCase<RetrieveBuildingByAddressArgs, Result<BuildingDto, ErrorMessage>>
+public sealed class RetrieveBuildingByAddressUseCase(
+    IAuthorizationService authService,
+    IMapProviderService mapProviderService, 
+    IAddressParser addressParser
+    )
+    : WithAuthorizeUseCaseBase(authService), IUseCase<RetrieveBuildingByAddressArgs, Result<BuildingDto, ErrorMessage>>
 {
-    private readonly IMapProviderService _mapProviderService;
-    private readonly IAddressParser _addressParser;
-    
-    public RetrieveBuildingByAddressUseCase(
-        IMapProviderService mapProviderService, 
-        IAddressParser addressParser)
-    {
-        _mapProviderService = mapProviderService;
-        _addressParser = addressParser;
-    }
-
     public async Task<Result<BuildingDto, ErrorMessage>> RunAsync(RetrieveBuildingByAddressArgs args, CancellationToken ct)
     {
         var addressParsingResult = GetAddress(args);
@@ -30,7 +24,7 @@ public sealed record RetrieveBuildingByAddressUseCase
             return Result.Fail<BuildingDto, ErrorMessage>(addressParsingResult.Error);
         }
         
-        var buildingInfoResult = await _mapProviderService.GetBuildingInformationAsync(addressParsingResult.Value!, ct);
+        var buildingInfoResult = await mapProviderService.GetBuildingInformationAsync(addressParsingResult.Value!, ct);
 
         if (buildingInfoResult.IsFailure)
         {
@@ -59,11 +53,11 @@ public sealed record RetrieveBuildingByAddressUseCase
     private Result<Address, ErrorMessage> GetAddress(RetrieveBuildingByAddressArgs args)
     {
         var (city, street, house) = args.Address;
-        if (!_addressParser.TryParseStreet(street, out var streetType, out var streetName))
+        if (!addressParser.TryParseStreet(street, out var streetType, out var streetName))
         {
             return Result.Fail<Address, ErrorMessage>(ErrorMessage.AddressErrors.CanNotParseStreet);
         }
-        if(!_addressParser.TryParseHouse(house, out var houseNumber, out var houseUnit))
+        if(!addressParser.TryParseHouse(house, out var houseNumber, out var houseUnit))
         {
             return Result.Fail<Address, ErrorMessage>(ErrorMessage.AddressErrors.CanNotParseHouse);
         }

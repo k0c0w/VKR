@@ -12,6 +12,9 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Reference Include="Microsoft.AspNetCore.Http.Abstractions">
+        <HintPath>..\..\..\..\..\..\Program Files\dotnet\shared\Microsoft.AspNetCore.App\9.0.4\Microsoft.AspNetCore.Http.Abstractions.dll</HintPath>
+      </Reference>
       <Reference Include="Microsoft.Extensions.Logging.Abstractions">
         <HintPath>..\..\..\..\..\..\Users\DNS\.nuget\packages\microsoft.extensions.logging.abstractions\9.0.4\lib\net8.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
       </Reference>
@@ -19,6 +22,7 @@
 
     <ItemGroup>
       <PackageReference Include="HtmlAgilityPack" Version="1.12.1" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.3.0" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5" />
       <PackageReference Include="System.Drawing.Common" Version="9.0.5" />
       <PackageReference Include="YoloSharp" Version="6.0.3" />

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Common.Dto;
 using Domain;
 using Domain.Aggregates;
@@ -14,13 +15,17 @@ using UseCases.Plans.Models;
 namespace UseCases.Plans;
 
 public class CreatePlanUseCase(
+    IAuthorizationService authService,
     IAddressParser addressParser,
     IBuildingRepository buildingRepository,
     IUnitOfWork unitOfWork,
     IItEquipmentCatalogue catalogue
     )
-    : IUseCase<CreatePlanUseCase.CreatePlanUseCaseArgs, Result<BuildingPlan, ErrorMessage>>
+    : WithAuthorizeUseCaseBase(authService, Roles), 
+        IUseCase<CreatePlanUseCase.CreatePlanUseCaseArgs, Result<BuildingPlan, ErrorMessage>>
 {
+    private static readonly ImmutableArray<UserRole> Roles = [..new []{UserRole.Moderator}];
+    
     private const string AtLeast1LevelErrorText = "Здание должно содержать хотябы 1 этаж."; 
     private const string UnknownItEquipment = "План содержит оборудование, которое не было добавлено в каталог."; 
     
@@ -28,6 +33,12 @@ public class CreatePlanUseCase(
     
     public async Task<Result<BuildingPlan, ErrorMessage>> RunAsync(CreatePlanUseCaseArgs args, CancellationToken ct)
     {
+        var authorizationResult = await AuthorizeAsync();
+        if (authorizationResult.IsFailure)
+        {
+            return Result.Fail<BuildingPlan, ErrorMessage>(authorizationResult.Error);
+        }
+        
         var plan = args.Plan;
 
         var parseAddressResult = ParseAddress(plan.Address);
