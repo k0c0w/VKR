@@ -52,6 +52,14 @@ export function isProblemDetatils(obj: any): obj is IProblemDetails {
         && obj.status !== undefined && typeof obj.status === 'number' && 100 <= obj.status && obj.status < 600;
 }
 
+export function isUnauthorizedResponse(object: FetchBaseQueryError | SerializedError): object is FetchBaseQueryError & {data: IProblemDetails & {status: 401}} {
+    return isFetchBaseQueryError(object) && isProblemDetatils(object) && object.status === 401;
+}
+
+export function isAccessDeniedResponse(object: FetchBaseQueryError | SerializedError): object is FetchBaseQueryError &  {data: IProblemDetails & {status: 403}} {
+    return isFetchBaseQueryError(object) && isProblemDetatils(object) && object.status === 403;
+}
+
 export function isValidationProblemDetails(obj: any): obj is IValidationProblemDetails {
     return isProblemDetatils(obj) 
         && obj.status === 400
@@ -59,7 +67,7 @@ export function isValidationProblemDetails(obj: any): obj is IValidationProblemD
 }
 
 export function isServerErrorResponse(
-    response: any
-): response is { status: 500; detail?: string; title: "Internal server error."; } {
-    return response !== undefined && isProblemDetatils(response) && response.status === 500;
+    response: FetchBaseQueryError | SerializedError
+): response is FetchBaseQueryError & {data: { status: 500; detail?: string; title: "Internal server error."; }} {
+    return isFetchBaseQueryError(response) && isProblemDetatils(response.data) && response.status === 500;
 }

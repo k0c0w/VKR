@@ -1,6 +1,6 @@
 import {createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"
 import { BASE_URL } from "@app/config/env";
-import { ISignInArgs } from "../models/SignIn";
+import { ISignInArgs, ISignInResult } from "../models/SignIn";
 
 const authApi = createApi({
     reducerPath: "authApi",
@@ -8,13 +8,12 @@ const authApi = createApi({
         baseUrl: `${BASE_URL}/authorization`,
     }),
     endpoints: (build) => ({
-        signIn: build.mutation<any, ISignInArgs>({
-            query: ({login, password, persist}) => ({
+        signIn: build.mutation<ISignInResult, ISignInArgs>({
+            query: ({login, password}) => ({
                 url: "/sign-in",
                 params: {
-                    login: login,
+                    email: login,
                     password: password,
-                    persist: persist,
                 },
                 method: 'POST'
             })

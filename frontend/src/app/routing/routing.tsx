@@ -4,20 +4,21 @@ import { Routes } from "./routes";
 import { PlanPage as ViewExistingPlanPage } from "@pages/viewExistingPlan";
 import AvailablePlansPage from "@pages/viewAvailablePlans";
 import { LoginPage, LogoutPage } from "@pages/authorization";
+import AuthorizationRequired from "@features/authorization/ui/AuthorizationRequired";
 
 const router = createBrowserRouter([
     {
         path: Routes.AvailablePlansRouteTemplate,
-        element: <AvailablePlansPage />,
+        element: <AuthorizationRequired children={<AvailablePlansPage />}/>,
         index: true,
     },
     {
         path: Routes.CreateNewPlanRouteTemplate,
-        element: <CreateNewPlanPage />
+        element: <AuthorizationRequired children={<CreateNewPlanPage />} requiredRoles={['Moderator']}/>
     },
     {
         path: Routes.SpecificPlanRouteTemplate,
-        element: <ViewExistingPlanPage/>
+        element: <AuthorizationRequired children={<ViewExistingPlanPage/>}/>
     },
     {
         path: Routes.SignInRouteTemplate,
@@ -25,7 +26,7 @@ const router = createBrowserRouter([
     },
     {
         path: Routes.SignOutRouteTemplate,
-        element: <LogoutPage/>
+        element: <AuthorizationRequired children={<LogoutPage/>}/>
     },
     {
         path: "*",

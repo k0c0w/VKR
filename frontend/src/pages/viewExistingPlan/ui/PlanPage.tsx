@@ -36,6 +36,7 @@ export default function PlanPage() {
                 geometry: data.basementGeometry,
                 type: "Feature",
                 properties: {
+                    name: data.name,
                     address: {
                         city: data.address.city,
                         street: data.address.street,

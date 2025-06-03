@@ -1,5 +1,16 @@
+import { SerializedError } from "@reduxjs/toolkit";
+import { FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
+import { isValidationProblemDetails, IValidationProblemDetails } from "@shared/types/ProblemDetails";
+
 export interface ISignInArgs {
     login: string;
     password: string;
-    persist: boolean;
+}
+
+export interface ISignInResult {
+    roles: string[];
+}
+
+export function isSignInArgsValidationProblem(object: FetchBaseQueryError | SerializedError): object is FetchBaseQueryError & {data: IValidationProblemDetails & {errors: {email?: string[]; password?: string[]}}} {
+    return isValidationProblemDetails(object);
 }

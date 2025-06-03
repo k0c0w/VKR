@@ -1,6 +1,6 @@
 import { Routes } from "@app/routing/routes";
 import { useAppSelector } from "@shared/hooks/reduxTypedHooks";
-import { ReactNode } from "react";
+import { ReactElement, ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
 
 function userHasRoles(userRoles: string[], requiredRoles: string[]) {
@@ -13,7 +13,7 @@ function userHasRoles(userRoles: string[], requiredRoles: string[]) {
     return true;
 }
 
-export default function AuthorizationRequired({children, requiredRoles}: {children:ReactNode; requiredRoles?:string[]}) {
+export default function AuthorizationRequired({children, requiredRoles}: {children:ReactElement<any, any>; requiredRoles?:string[]}) {
     const location = useLocation();
     const {currentUser} = useAppSelector(state => state.authSlice);
 
@@ -23,5 +23,5 @@ export default function AuthorizationRequired({children, requiredRoles}: {childr
         return <Navigate to={Routes.AvailablePlansRouteTemplate} replace />
     }
 
-    return children;
+    return <>{children}</>;
 }
