@@ -48,7 +48,7 @@ public class Init : Migration
                 inventory_number TEXT NOT NULL PRIMARY KEY,
                 room_id INTEGER NOT NULL,
                 geometry JSONB NOT NULL,
-                CONSTRAINT fk_buildings_it_equipment FOREIGN KEY (room_id) REFERENCES buildings_rooms(id) ON DELETE CASCADE
+                CONSTRAINT fk_buildings_it_equipment FOREIGN KEY (room_id) REFERENCES buildings_rooms (id) ON DELETE CASCADE
             );
 
             CREATE TABLE users (

@@ -16,13 +16,13 @@ public class ItEquipmentDescription : IHaveIdentity<string>
     /// Direct url link to raw card for this equipment.
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Uri)]
-    public required string ItEquipmentCardUrl { get; init; }
+    public required string ItEquipmentCardUrl { get; set; }
     
     /// <summary>
     /// Direct url link to raw history card for this equipment.
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Uri)]
-    public required string  ItEquipmentHistoryUrl { get; init; }
+    public required string  ItEquipmentHistoryUrl { get; set; }
     
     public required long LocationAudienceCatalogueId { get; init; }
 }

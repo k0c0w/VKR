@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddScoped<DisKfuAuthorizationClient>();
-        services.AddScoped<IItEquipmentCatalogue, ItEquipmentCatalogueClient>();
+        services.AddScoped<IItEquipmentCatalogue, ItEquipmentCatalogueClient>()
+            .Decorate<IItEquipmentCatalogue, ItEquipmentCatalogueClientCacheDecorator>();
     }
 }
