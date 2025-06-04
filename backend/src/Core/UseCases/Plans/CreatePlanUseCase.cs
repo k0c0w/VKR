@@ -10,6 +10,7 @@ using Domain.ValueObjects;
 using GeoJSON.Net.Geometry;
 using ResultMonad;
 using Services;
+using Services.EKsu;
 using UseCases.Plans.Models;
 
 namespace UseCases.Plans;

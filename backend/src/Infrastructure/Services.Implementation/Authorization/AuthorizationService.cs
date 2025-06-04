@@ -5,15 +5,15 @@ using Domain.Repositories;
 using Domain.Services;
 using Microsoft.AspNetCore.Http;
 using ResultMonad;
-using Services.DisKfuAuthorization;
-using Services.Implementation.DisKfu.Authorization;
+using Services.Implementation.EKsu.Authorization;
 using Microsoft.AspNetCore.Authentication;
+using Services.EKsu.Authorization;
 
 namespace Services.Implementation.Authorization;
 
 public class AuthorizationService(
     IUserRepository userRepository,
-    DisKfuAuthorizationClient authorizationClient,
+    EKsuAuthorizationClient authorizationClient,
     IHttpContextAccessor httpContextAccessor
     )
     : IAuthorizationService

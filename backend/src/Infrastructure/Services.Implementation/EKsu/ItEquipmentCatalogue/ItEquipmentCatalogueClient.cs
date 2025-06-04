@@ -3,22 +3,22 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Domain.Entities;
 using Domain.Errors;
-using Domain.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ResultMonad;
-using Services.DisKfuAuthorization;
 using System.Threading.Channels;
 using AngleSharp.Dom;
+using Services.EKsu;
+using Services.EKsu.Authorization;
 
-namespace Services.Implementation.DisKfu.ItEquipmentCatalogue;
+namespace Services.Implementation.EKsu.ItEquipmentCatalogue;
 
 public class ItEquipmentCatalogueClient(
     IHttpContextAccessor httpContextAccessor,
     IHttpClientFactory clientFactory,
     ILogger<IItEquipmentCatalogue>? logger = default)
-    : DisKfuClientBase(clientFactory, logger ?? NullLogger<IItEquipmentCatalogue>.Instance), IItEquipmentCatalogue
+    : EKsuClientBase(clientFactory, logger ?? NullLogger<IItEquipmentCatalogue>.Instance), IItEquipmentCatalogue
 {
     public Task<Result<ItEquipmentDescription[], ErrorMessage>> GetAllItEquipmentByRoomIdsAsync(long[] roomIds, CancellationToken ct = default)
     {

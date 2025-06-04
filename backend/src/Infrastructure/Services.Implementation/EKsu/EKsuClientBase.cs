@@ -3,9 +3,9 @@ using AngleSharp;
 using AngleSharp.Dom;
 using Microsoft.Extensions.Logging;
 
-namespace Services.Implementation.DisKfu;
+namespace Services.Implementation.EKsu;
 
-public abstract class DisKfuClientBase
+public abstract class EKsuClientBase
 {
     public const string ClientName = "DisKfuClient";
     
@@ -13,7 +13,7 @@ public abstract class DisKfuClientBase
 
     protected HttpClient HttpClient { get; }
 
-    public DisKfuClientBase(IHttpClientFactory httpClientFactory, ILogger logger)
+    public EKsuClientBase(IHttpClientFactory httpClientFactory, ILogger logger)
     {
         Logger = logger;
         HttpClient = httpClientFactory.CreateClient(ClientName);

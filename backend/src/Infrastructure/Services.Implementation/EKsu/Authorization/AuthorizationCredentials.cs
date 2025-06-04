@@ -1,4 +1,4 @@
-namespace Services.DisKfuAuthorization;
+namespace Services.EKsu.Authorization;
 
 public readonly record struct AuthorizationCredentials
 {

@@ -1,14 +1,14 @@
 using System.Web;
 using Domain.Entities;
 using Domain.Errors;
-using Domain.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ResultMonad;
-using Services.DisKfuAuthorization;
+using Services.EKsu;
+using Services.EKsu.Authorization;
 using ZiggyCreatures.Caching.Fusion;
 
-namespace Services.Implementation.DisKfu.ItEquipmentCatalogue;
+namespace Services.Implementation.EKsu.ItEquipmentCatalogue;
 
 public class ItEquipmentCatalogueClientCacheDecorator(
     IItEquipmentCatalogue catalogue,

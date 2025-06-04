@@ -8,7 +8,7 @@ using Migrations;
 using Newtonsoft.Json;
 using Services;
 using Services.Implementation.Authorization;
-using Services.Implementation.DisKfu;
+using Services.Implementation.EKsu;
 using Services.Implementation.OSM;
 using Services.Implementation.PlanAnalyzer;
 using Services.Implementation.PlanAnalyzer.Ocr;
@@ -112,7 +112,7 @@ internal static class ServiceRegistry
                 client.BaseAddress = new Uri(overpassApiHost);
             });
         
-        services.AddDisKfuServices();
+        services.AddEKsuServices();
         services.AddScoped<Domain.Services.IAuthorizationService, AuthorizationService>();
     }
 

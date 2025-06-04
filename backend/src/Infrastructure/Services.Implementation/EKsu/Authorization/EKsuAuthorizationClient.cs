@@ -3,15 +3,15 @@ using Domain.Errors;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ResultMonad;
-using Services.DisKfuAuthorization;
 using OutParsing;
+using Services.EKsu.Authorization;
 
-namespace Services.Implementation.DisKfu.Authorization;
+namespace Services.Implementation.EKsu.Authorization;
 
-public class DisKfuAuthorizationClient : DisKfuClientBase
+public class EKsuAuthorizationClient : EKsuClientBase
 {
-    public DisKfuAuthorizationClient(IHttpClientFactory httpClientFactory, ILogger<DisKfuAuthorizationClient>? logger = default) 
-        : base(httpClientFactory, logger ?? NullLogger<DisKfuAuthorizationClient>.Instance)
+    public EKsuAuthorizationClient(IHttpClientFactory httpClientFactory, ILogger<EKsuAuthorizationClient>? logger = default) 
+        : base(httpClientFactory, logger ?? NullLogger<EKsuAuthorizationClient>.Instance)
     {
     }
 

@@ -8,6 +8,7 @@ using GeoJSON.Net.Geometry;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using ResultMonad;
+using Services.EKsu;
 
 namespace DataAccess.Repositories;
 

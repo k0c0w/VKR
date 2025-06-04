@@ -2,7 +2,7 @@ using Domain.Entities;
 using Domain.Errors;
 using ResultMonad;
 
-namespace Domain.Services;
+namespace Services.EKsu;
 
 public interface IItEquipmentCatalogue
 {
