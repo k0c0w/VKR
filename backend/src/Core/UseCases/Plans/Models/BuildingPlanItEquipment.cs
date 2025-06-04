@@ -5,6 +5,10 @@ namespace UseCases.Plans.Models;
 
 public sealed record BuildingPlanItEquipment
 { 
+    [Newtonsoft.Json.JsonProperty("relatedToRoomId")]
+    [System.Text.Json.Serialization.JsonPropertyName("relatedToRoomId")]
+    public string RelatedToRoomId { get; }
+    
     [Newtonsoft.Json.JsonProperty("inventoryNumber")]
     [System.Text.Json.Serialization.JsonPropertyName("inventoryNumber")]
     public string InventoryNumber { get; }

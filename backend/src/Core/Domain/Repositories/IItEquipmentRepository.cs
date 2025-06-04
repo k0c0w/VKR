@@ -7,5 +7,5 @@ namespace Domain.Repositories;
 
 public interface IItEquipmentRepository
 {
-    Task<Result<ItEquipment[], ErrorMessage>> GetItEquipmentByAddressAsync(Address address, CancellationToken ct);
+    Task<Result<ItEquipment[], ErrorMessage>> GetItEquipmentByRoomIdsAsync(long[] roomIds, CancellationToken ct);
 }

@@ -11,8 +11,6 @@ public sealed class ItEquipment : IHaveIdentity<string>
     
     public ItEquipmentDescription Description { get; }
 
-    public string InstallationLevelName => Description.Location.LevelName;
-
     public ItEquipment(ItEquipmentDescription description, ItEquipmentGeometry? geometry = default)
     {
         Geometry = geometry;

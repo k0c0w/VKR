@@ -17,10 +17,10 @@ internal class ItEquipmentRepository(
     ILogger<ItEquipmentRepository> logger)
     : EntitiesWithJsonbRepositoryBase(dataSource, logger), IItEquipmentRepository
 {
-    public async Task<Result<ItEquipment[], ErrorMessage>> GetItEquipmentByAddressAsync(Address address, CancellationToken ct)
+    public async Task<Result<ItEquipment[], ErrorMessage>> GetItEquipmentByRoomIdsAsync(long[] roomIds, CancellationToken ct)
     {
-        var getEquipmentInfoTask = catalogue.GetAllItEquipmentAtBuildingAsync(address, ct);
-        var getEquipmentGeometryTask = GetItEquipmentGeometryByAddressAsync(address, ct);
+        var getEquipmentInfoTask = catalogue.GetAllItEquipmentByRoomIdsAsync(roomIds, ct);
+        var getEquipmentGeometryTask = GetItEquipmentGeometryByRoomIdsAsync(roomIds, ct);
 
         await Task.WhenAll(getEquipmentGeometryTask, getEquipmentInfoTask);
 
@@ -53,11 +53,12 @@ internal class ItEquipmentRepository(
         return Result.Ok<ItEquipment[], ErrorMessage>(result.ToArray());
     }
 
-    private async Task<Result<IDictionary<string, ItEquipmentGeometry>, ErrorMessage>> GetItEquipmentGeometryByAddressAsync(
-        Address address,
+    private async Task<Result<IDictionary<string, ItEquipmentGeometry>, ErrorMessage>> GetItEquipmentGeometryByRoomIdsAsync(
+        long[] roomIds,
         CancellationToken ct)
     {
-        const string sql = """
+        var roomParams = roomIds.Select((_, i) => $"room{i}").ToArray();
+        var sql = $"""
             SELECT
                       bie.inventory_number as id
                     , bie.geometry as geometry
@@ -65,9 +66,10 @@ internal class ItEquipmentRepository(
               FROM buildings_it_equipment bie
               JOIN buildings_levels bl ON bl.level_id = bl.id
               JOIN buildings b ON b.id = bl.building_id
-             WHERE b.address = @address;
+             WHERE b.address = ({string.Join(',', roomParams)});
         """;
-        var param = new NpgsqlParameter("address", address.ToString());
+        var sqlParams = roomIds.Select((x, i) => new NpgsqlParameter(roomParams[i], x))
+            .ToArray();
 
         var openConResult = await GetOpenedConnectionAsync(ct);
         if (openConResult.IsFailure)
@@ -79,10 +81,10 @@ internal class ItEquipmentRepository(
         var result = new Dictionary<string, ItEquipmentGeometry>();
         try
         {
-            await using var buildingInfoCommand = new NpgsqlCommand(sql, conn);
-            buildingInfoCommand.Parameters.Add(param);
+            await using var itEquipmentGeometry = new NpgsqlCommand(sql, conn);
+            itEquipmentGeometry.Parameters.AddRange(sqlParams);
             
-            var reader = await buildingInfoCommand.ExecuteReaderAsync(ct);
+            var reader = await itEquipmentGeometry.ExecuteReaderAsync(ct);
 
             Polygon? buildingBasementPolygon = default;
             while (await reader.ReadAsync(ct))

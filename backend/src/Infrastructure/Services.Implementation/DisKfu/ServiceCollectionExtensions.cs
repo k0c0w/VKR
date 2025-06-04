@@ -3,6 +3,7 @@ using Domain.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Services.DisKfuAuthorization;
 using Services.Implementation.DisKfu.Authorization;
+using Services.Implementation.DisKfu.ItEquipmentCatalogue;
 using Services.ItEquipmentCatalogue;
 
 namespace Services.Implementation.DisKfu;

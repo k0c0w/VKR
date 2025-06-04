@@ -168,22 +168,23 @@ internal sealed class BuildingRepository(
             return Result.Fail<Building, ErrorMessage>(ErrorMessage.RepositorySpecificErrors.GetError);
         }
 
-        var itEquipmentResult = await itEquipmentCatalogue.GetItEquipmentByAddressAsync(buildingAddress, ct);
+        var rooms = allBuildingLevels.Values.SelectMany(l => l.Rooms);
+        var itEquipmentResult = await itEquipmentCatalogue.GetItEquipmentByRoomIdsAsync(rooms.Select(x => x.Id).ToArray(), ct);
         if (itEquipmentResult.IsFailure)
         {
             return Result.Fail<Building, ErrorMessage>(itEquipmentResult.Error);
         }
 
         var itEquipment = itEquipmentResult.Value
-            .GroupBy(x => x.InstallationLevelName)
+            .GroupBy(x => x.Description.LocationAudienceCatalogueId)
             .ToDictionary(k => k.Key, v => v);
 
-        foreach (var level in allBuildingLevels.Values)
+        foreach (var room in rooms)
         {
-            var levelEquipment = itEquipment.TryGetValue(level.Name, out var value) ? value.ToArray() : [];
-            foreach (var instance in levelEquipment)
+            var roomEquipment = itEquipment.TryGetValue(room.Id, out var value) ? value.ToArray() : [];
+            foreach (var instance in roomEquipment)
             {
-                level.AddEquipment(instance);
+                room.AddEquipment(instance);
             }
         }
             
@@ -251,7 +252,7 @@ internal sealed class BuildingRepository(
         {
             var id = reader.GetGuid(0);
             var name = reader.GetString(1);
-            var level = Level.CreateExistingLevel(id, buildingId, name, [], [], []);
+            var level = Level.CreateExistingLevel(id, buildingId, name, [], []);
 
             levels.Add(level);
         }
@@ -323,7 +324,7 @@ internal sealed class BuildingRepository(
             }
             else
             {
-                var id = reader.GetGuid(2);
+                var id = reader.GetInt64(2);
                 var type = (RoomType)reader.GetInt16(3);
                 var archId = reader.GetString(4);
                 var geometry = reader.GetFieldValue<Polygon>(5);
@@ -334,10 +335,10 @@ internal sealed class BuildingRepository(
                     Geometry = geometry,
                     Type = type,
                     ArchitectualId = archId,
-                    Name = name
+                    Name = name,
                 };
 
-                Room.CreateExistingRoomAtLevel(level, id, description);
+                Room.CreateExistingRoomAtLevel(level, id, description, []);
             }
         }
     }

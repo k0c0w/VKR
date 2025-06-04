@@ -25,7 +25,7 @@ public class Init : Migration
             );
 
             CREATE TABLE buildings_rooms (
-                id UUID PRIMARY KEY,
+                id INTEGER PRIMARY KEY,
                 level_id UUID NOT NULL,
                 type SMALLINT NOT NULL,
                 architectural_id TEXT NOT NULL,
@@ -46,9 +46,9 @@ public class Init : Migration
 
             CREATE TABLE buildings_it_equipment (
                 inventory_number TEXT NOT NULL PRIMARY KEY,
-                level_id UUID NOT NULL,
+                room_id INTEGER NOT NULL,
                 geometry JSONB NOT NULL,
-                CONSTRAINT fk_buildings_it_equipment FOREIGN KEY (level_id) REFERENCES buildings_levels(id) ON DELETE CASCADE
+                CONSTRAINT fk_buildings_it_equipment FOREIGN KEY (room_id) REFERENCES buildings_rooms(id) ON DELETE CASCADE
             );
 
             CREATE TABLE users (

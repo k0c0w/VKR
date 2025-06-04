@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
-using HtmlAgilityPack;
+using AngleSharp;
+using AngleSharp.Dom;
 using Microsoft.Extensions.Logging;
 
 namespace Services.Implementation.DisKfu;
@@ -18,18 +19,27 @@ public abstract class DisKfuClientBase
         HttpClient = httpClientFactory.CreateClient(ClientName);
     }
 
-    protected static async ValueTask<HtmlDocument> LoadContentAsHtmlDocumentAsync(HttpContent httpContent, CancellationToken ct = default)
+    protected static async ValueTask<IDocument> LoadContentAsHtmlDocumentAsync(HttpContent httpContent, CancellationToken ct = default)
     {
         var html = await httpContent.ReadAsStringAsync(ct); 
 
-        var doc = new HtmlDocument();
-        doc.LoadHtml(html);
-
-        return doc;
+        var context = BrowsingContext.New(Configuration.Default);
+        return await context.OpenAsync(req => req.Content(html), ct);
     }
 
     protected void LogError(Exception ex, [CallerMemberName] string? calledFromMethod = default)
     {
         Logger.LogError(ex, "Failed to fetch in '{calledFromMethod}': {message}", calledFromMethod, ex.Message);
     }
+    
+    protected static bool ContainsSessionExpiredScript(IDocument document)
+    {
+        const string sessionExpiredMarker = "alert(\"Извините, устарела сессия работы с системой. Пройдите процедуру авторизации.\");";
+
+        var scriptNodes = document.QuerySelectorAll("script");
+        return scriptNodes.Any(script => 
+            script.TextContent.Contains(sessionExpiredMarker, StringComparison.OrdinalIgnoreCase));
+    }
+
+    protected Uri ToAbsoluteUrl(string relativeUri) => new (HttpClient.BaseAddress, relativeUri);
 }

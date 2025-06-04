@@ -1,5 +1,5 @@
+using AngleSharp.Dom;
 using Domain.Errors;
-using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ResultMonad;
@@ -56,27 +56,27 @@ public class DisKfuAuthorizationClient : DisKfuClientBase
         return Result.Fail<AuthorizationCredentials, ErrorMessage>(ErrorMessage.AuthenticationErrors.Unauthorized);
     }
 
-    private static AuthorizationCredentials? ParseResponseContent(HtmlDocument response)
+    private static AuthorizationCredentials? ParseResponseContent(IDocument document)
     {
-        var scriptNodes = response.DocumentNode.SelectNodes("//script");
+        var scriptNodes = document.QuerySelectorAll("script");
 
-        if (scriptNodes == null || !scriptNodes.Any())
+        if (!scriptNodes.Any())
         {
             return default;
         }
 
         var firstScriptNode = scriptNodes.First();
-        if (string.IsNullOrEmpty(firstScriptNode.InnerText) || firstScriptNode.InnerText.StartsWith("alert('Извините, неверно введены имя или пароль');"))
+        if (string.IsNullOrEmpty(firstScriptNode.TextContent) || firstScriptNode.TextContent.StartsWith("alert('Извините, неверно введены имя или пароль');"))
         {
             return default;
         }
         
         var lastScriptNode = scriptNodes.Last();
-        if (string.IsNullOrEmpty(lastScriptNode.InnerText))
+        if (string.IsNullOrEmpty(lastScriptNode.TextContent))
         {
             return default;
         }
-        var text = lastScriptNode.InnerText.Trim();
+        var text = lastScriptNode.TextContent.Trim();
 
         OutParser.Parse(text, "document.location.href='e_university.show_notification?p1={p1}&p2={p2}&p_h={pH}&p_c_sess=1'", out string p1, out string p2, out string pH);
 
@@ -84,9 +84,9 @@ public class DisKfuAuthorizationClient : DisKfuClientBase
         {
             return new AuthorizationCredentials
             {
-                Session=p2, 
-                Hash=pH,
-                Entry=p1
+                Session = p2, 
+                Hash = pH,
+                Entry = p1
             };
         }
 

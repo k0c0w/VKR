@@ -10,11 +10,10 @@ public class Level : IHaveIdentity<Guid>
 {
     public const string FirstLevelDefaultName = "1 этаж";
     
-    private readonly Dictionary<Guid, Room> _levelRooms;
+    private readonly Dictionary<long, Room> _levelRooms;
 
     private readonly Dictionary<Guid, Wall> _levelWalls;
 
-    private readonly Dictionary<string, ItEquipment> _levelItEquipments;
     
     public Guid Id { get; }
     
@@ -26,15 +25,14 @@ public class Level : IHaveIdentity<Guid>
 
     public IReadOnlyCollection<Wall> Walls => _levelWalls.Values;
 
-    public IReadOnlyCollection<ItEquipment> ItEquipments => _levelItEquipments.Values;
     
     public Level(Guid buildingId, string name) 
-        : this(Guid.CreateVersion7(),  buildingId,  name, [], [], [])
+        : this(Guid.CreateVersion7(),  buildingId,  name, [], [])
     {
     }
     
     private Level(Guid id, Guid buildingId, string name, IEnumerable<Room> rooms,
-        IEnumerable<Wall> walls, Dictionary<string, ItEquipment> itEquipments)
+        IEnumerable<Wall> walls)
     {
         buildingId.ThrowIfEmpty(nameof(buildingId));
         id.ThrowIfEmpty(nameof(id));
@@ -45,12 +43,11 @@ public class Level : IHaveIdentity<Guid>
         Name = name;
         _levelRooms = rooms.ToDictionary(k => k.Id, v=> v);
         _levelWalls = walls.ToDictionary(k => k.Id, v => v);
-        _levelItEquipments = itEquipments;
     }
 
-    public Result<Room, ErrorMessage> CreateRoom(RoomDescription roomDescription)
+    public Result<Room, ErrorMessage> CreateRoom(long id, RoomDescription roomDescription)
     {
-        var room = new Room(this, roomDescription);
+        var room = new Room(id, this, roomDescription);
 
         if (_levelRooms.Values.Any(r => r.ArchitectualId == roomDescription.ArchitectualId))
         {
@@ -75,16 +72,6 @@ public class Level : IHaveIdentity<Guid>
         return Result.Ok<Wall, ErrorMessage>(wall);
     }
 
-    public ResultWithError<ErrorMessage> AddEquipment(ItEquipment equipment)
-    {
-        if (_levelItEquipments.TryAdd(equipment.Id, equipment))
-        {
-            return ResultWithError.Ok<ErrorMessage>();
-        }
-
-        return ResultWithError.Fail(ErrorMessage.EntityIsAlreadyExists);
-    }
-
     internal ResultWithError<ErrorMessage> AddStructure(Room room)
     {
         if (_levelRooms.TryAdd(room.Id, room))
@@ -106,9 +93,8 @@ public class Level : IHaveIdentity<Guid>
     }
     
     public static Level CreateExistingLevel(Guid id, Guid buildingId, string levelName, IEnumerable<Room> levelRooms,
-        IEnumerable<Wall> levelWalls, IEnumerable<ItEquipment> itEquipments)
+        IEnumerable<Wall> levelWalls)
     {
-        return new Level(id, buildingId, levelName, levelRooms.ToList(), levelWalls.ToList(), itEquipments
-            .ToDictionary(k => k.Id, v=>v));
+        return new Level(id, buildingId, levelName, levelRooms.ToList(), levelWalls.ToList());
     }
 }

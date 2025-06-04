@@ -1,11 +1,15 @@
+using Domain.Errors;
 using Domain.ValueObjects;
 using GeoJSON.Net.Geometry;
+using ResultMonad;
 
 namespace Domain.Aggregates;
 
-public class Room : IHaveIdentity<Guid>
+public class Room : IHaveIdentity<long>
 {
-    public Guid Id { get; }
+    private readonly Dictionary<string, ItEquipment> _itEquipments;
+
+    public long Id { get; }
     
     internal Level BelongsToLevel { get; }
 
@@ -19,26 +23,42 @@ public class Room : IHaveIdentity<Guid>
 
     public string ArchitectualId => RoomDescription.ArchitectualId;
     
+    public IReadOnlyCollection<ItEquipment> ItEquipments => _itEquipments.Values;
+    
     private RoomDescription RoomDescription { get; set; }
     
-    internal Room(Level belongsToLevel, RoomDescription roomDescription) 
-        : this(Guid.CreateVersion7(), belongsToLevel, roomDescription)
+    internal Room (long id, Level belongsToLevel, RoomDescription roomDescription)
     {
-    }
-
-    private Room (Guid id, Level belongsToLevel, RoomDescription roomDescription)
-    {
-        id.ThrowIfEmpty(nameof(id));
+        if (id == 0)
+        {
+            throw new ArgumentException("Default id value met.", nameof(id));
+        }
         ArgumentNullException.ThrowIfNull(roomDescription, nameof(roomDescription));
 
         Id = id;
         RoomDescription = roomDescription;
         BelongsToLevel = belongsToLevel;
+        _itEquipments = new Dictionary<string, ItEquipment>();
+    }
+    
+    public ResultWithError<ErrorMessage> AddEquipment(ItEquipment equipment)
+    {
+        if (_itEquipments.TryAdd(equipment.Id, equipment))
+        {
+            return ResultWithError.Ok<ErrorMessage>();
+        }
+
+        return ResultWithError.Fail(ErrorMessage.EntityIsAlreadyExists);
     }
 
-    public static void CreateExistingRoomAtLevel(Level roomLevel, Guid roomId, RoomDescription description)
+    public static void CreateExistingRoomAtLevel(Level roomLevel, long roomId, RoomDescription description, IEnumerable<ItEquipment> itEquipments)
     {
         var room = new Room(roomId, roomLevel, description);
+        foreach (var equipment in itEquipments)
+        {
+            room.AddEquipment(equipment);
+        }
+        
         roomLevel.AddStructure(room);
     }
 }

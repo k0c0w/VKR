@@ -54,7 +54,7 @@ public class CreatePlanUseCase(
             return Result.Fail<BuildingPlan, ErrorMessage>(notExistenceResult.Error);
         }
 
-        var itEquipmentLoadResult = await LoadItEquipmentForBuildingFromCatalogueAsync(address, ct);
+        var itEquipmentLoadResult = await LoadItEquipmentForBuildingFromCatalogueAsync(args.Plan, ct);
         if (itEquipmentLoadResult.IsFailure)
         {
             return Result.Fail<BuildingPlan, ErrorMessage>(itEquipmentLoadResult.Error);
@@ -82,9 +82,15 @@ public class CreatePlanUseCase(
     }
 
     private async Task<Result<IDictionary<string, ItEquipmentDescription>, ErrorMessage>> LoadItEquipmentForBuildingFromCatalogueAsync(
-        Address address, CancellationToken ct)
+        BuildingPlan buildingPlan, CancellationToken ct)
     {
-        var fetchResult = await catalogue.GetAllItEquipmentAtBuildingAsync(address, ct);
+        var ids = buildingPlan.Levels.SelectMany(l => l.Structure)
+            .Where(structure => structure is BuildingPlanRoom)
+            .Cast<BuildingPlanRoom>()
+            .Select(br => br.Id)
+            .ToArray();
+        
+        var fetchResult = await catalogue.GetAllItEquipmentByRoomIdsAsync(ids, ct);
 
         if (fetchResult.IsSuccess)
         {
@@ -92,11 +98,7 @@ public class CreatePlanUseCase(
                 .ToDictionary(k => k.Id, v => v));
         }
         
-        var error = fetchResult.Error== ErrorMessage.EntityNotfoundError 
-            ? ErrorMessage.ItEquipmentCatalogueErrors.BuildingIsNotPresentInCatalogue 
-            : ErrorMessage.ItEquipmentCatalogueErrors.CanNotFetchDataFromCatalogue;
-        
-        return Result.Fail<IDictionary<string, ItEquipmentDescription>, ErrorMessage>(error);
+        return Result.Fail<IDictionary<string, ItEquipmentDescription>, ErrorMessage>(ErrorMessage.ItEquipmentCatalogueErrors.CanNotFetchDataFromCatalogue);
     }
     
     private async Task<ResultWithError<ErrorMessage>> BuildingWithSuchAddressOrNameDoesNotExistsAsync(Address address, string name, CancellationToken ct)
@@ -164,10 +166,12 @@ public class CreatePlanUseCase(
 
     private static void AddEquipments(Level level, BuildingPlanLevel levelPlan, IDictionary<string, ItEquipmentDescription> itEquipmentCatalogue)
     {
+        var rooms = new Dictionary<string, Room>();
         foreach (var structure in levelPlan.Structure)
         {
             if (structure is BuildingPlanRoom roomPlan)
             {
+                throw new NotImplementedException();
                 var roomDescription = new RoomDescription
                 {
                     Geometry = new Polygon(roomPlan.Geometry.Coordinates),
@@ -175,20 +179,28 @@ public class CreatePlanUseCase(
                     ArchitectualId = roomPlan.ArchitectualId,
                     Name = roomPlan.Name,
                 };
-                level.CreateRoom(roomDescription);
+                var roomCreationResult = level.CreateRoom(roomPlan.Id, roomDescription);
+
+                if (roomCreationResult.IsSuccess)
+                {
+                    rooms.Add(roomCreationResult.Value!.ArchitectualId, roomCreationResult.Value!);
+                }
             }
             else if (structure is BuildingPlanWall wallPlan)
             {
                 level.CreateWall(new LineString(wallPlan.Geometry.Coordinates));
             } 
         }
-
+        
         foreach (var itEquipmentPlan in levelPlan.ItEquipments)
         {
             var itEquipmentDescription = itEquipmentCatalogue[itEquipmentPlan.InventoryNumber];
             var itEquipment = itEquipmentPlan.ToDomain(itEquipmentDescription);
 
-            level.AddEquipment(itEquipment);
+            if (rooms.TryGetValue(itEquipmentPlan.RelatedToRoomId, out var room))
+            {
+                room.AddEquipment(itEquipment);
+            }
         }
     }
     

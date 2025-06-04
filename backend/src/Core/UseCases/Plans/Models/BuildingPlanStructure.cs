@@ -49,6 +49,10 @@ public record BuildingPlanWall : BuildingPlanStructure
 
 public record BuildingPlanRoom : BuildingPlanStructure
 {
+    [JsonPropertyName("id")]
+    [JsonProperty("id")]
+    public long Id { get; init; }
+    
     [JsonPropertyName("name")]
     [JsonProperty("name")]
     public string Name { get; init; }
@@ -69,7 +73,7 @@ public record BuildingPlanRoom : BuildingPlanStructure
     
     internal BuildingPlanRoom(Room room)
     {
-        Id = room.Id.ToString();
+        Id = room.Id;
         Geometry = new GeometryDto<double[][][]>
         {
             Type = room.Geometry.Type.ToString(),

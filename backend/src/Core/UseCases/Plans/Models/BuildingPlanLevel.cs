@@ -37,7 +37,7 @@ public sealed record BuildingPlanLevel
             .Concat(level.Rooms.Select(r => new BuildingPlanRoom(r)));
 
         Name = level.Name;
-        ItEquipments = level.ItEquipments
-            .Select(e => new BuildingPlanItEquipment(e));
+        ItEquipments = level.Rooms
+            .SelectMany(r => r.ItEquipments.Select(e =>  new BuildingPlanItEquipment(e)));
     }
 }
