@@ -11,9 +11,6 @@ namespace UnitTests.Services
 {
     public class OverpassApiClientTests
     {
-        const string Host = "test.host.local";
-        const string HostUrl = $"https://{Host}";
-        
         [Fact]
         public async Task GetBuildingInformation_ShouldReturnError_WhenNetworkOrServerError()
         {
@@ -30,8 +27,7 @@ namespace UnitTests.Services
                 )
                 .Throws<HttpRequestException>();
             
-            var httpClient = new HttpClient(handlerMock.Object);
-            IMapProviderService service = new OverpassApiClient(HostUrl, httpClient);
+            IMapProviderService service = new OverpassApiClient(new OverpassApiHttpClientFactory());
             
             // Act
             var result = await service.GetBuildingInformationAsync(queryAddress, CancellationToken.None);
@@ -54,8 +50,8 @@ namespace UnitTests.Services
                     "SendAsync",
                     ItExpr.Is<HttpRequestMessage>(r =>
                         r.RequestUri != null &&
-                        r.RequestUri.Host == Host &&
-                        r.RequestUri.ToString().StartsWith($"{HostUrl}/api/interpreter") &&
+                        r.RequestUri.Host == OverpassApiHttpClientFactory.Host &&
+                        r.RequestUri.ToString().StartsWith($"{OverpassApiHttpClientFactory.HostUrl}/api/interpreter") &&
                         (r.Method == HttpMethod.Get || r.Method == HttpMethod.Post)
                     ),
                     ItExpr.IsAny<CancellationToken>()
@@ -70,8 +66,7 @@ namespace UnitTests.Services
                     )
                 })
                 .Verifiable();
-            var httpClient = new HttpClient(handlerMock.Object);
-            IMapProviderService service = new OverpassApiClient(HostUrl, httpClient);
+            IMapProviderService service = new OverpassApiClient(new OverpassApiHttpClientFactory());
 
             // Act
             var informationResult = await service.GetBuildingInformationAsync(queryAddress, CancellationToken.None);
@@ -109,8 +104,8 @@ namespace UnitTests.Services
                     "SendAsync",
                     ItExpr.Is<HttpRequestMessage>(r =>
                         r.RequestUri != null &&
-                        r.RequestUri.Host == Host &&
-                        r.RequestUri.ToString().StartsWith($"{HostUrl}/api/interpreter") &&
+                        r.RequestUri.Host == OverpassApiHttpClientFactory.Host &&
+                        r.RequestUri.ToString().StartsWith($"{OverpassApiHttpClientFactory.HostUrl}/api/interpreter") &&
                         (r.Method == HttpMethod.Get || r.Method == HttpMethod.Post)
                     ),
                     ItExpr.IsAny<CancellationToken>()
@@ -167,8 +162,7 @@ namespace UnitTests.Services
                     )
                 })
                 .Verifiable();
-            var httpClient = new HttpClient(handlerMock.Object);
-            IMapProviderService service = new OverpassApiClient(HostUrl, httpClient);
+            IMapProviderService service = new OverpassApiClient(new OverpassApiHttpClientFactory());
 
             // Act
             var informationResult = await service.GetBuildingInformationAsync(expectedAddress, CancellationToken.None);
@@ -211,8 +205,8 @@ namespace UnitTests.Services
                     "SendAsync",
                     ItExpr.Is<HttpRequestMessage>(r =>
                         r.RequestUri != null &&
-                        r.RequestUri.Host == Host &&
-                        r.RequestUri.ToString().StartsWith($"{HostUrl}/api/interpreter") &&
+                        r.RequestUri.Host == OverpassApiHttpClientFactory.Host &&
+                        r.RequestUri.ToString().StartsWith($"{OverpassApiHttpClientFactory.HostUrl}/api/interpreter") &&
                         (r.Method == HttpMethod.Get || r.Method == HttpMethod.Post)
                     ),
                     ItExpr.IsAny<CancellationToken>()
@@ -258,8 +252,7 @@ namespace UnitTests.Services
                     )
                 })
                 .Verifiable();
-            var httpClient = new HttpClient(handlerMock.Object);
-            IMapProviderService service = new OverpassApiClient(HostUrl, httpClient);
+            IMapProviderService service = new OverpassApiClient(new OverpassApiHttpClientFactory());
 
             // Act
             var informationResult = await service.GetBuildingInformationAsync(expectedAddress, CancellationToken.None);
@@ -278,6 +271,20 @@ namespace UnitTests.Services
                 ItExpr.IsAny<HttpRequestMessage>(),
                 ItExpr.IsAny<CancellationToken>()
             );
+        }
+        
+        private class OverpassApiHttpClientFactory : IHttpClientFactory
+        {
+            public const string Host = "test.host.local";
+            public const string HostUrl = $"https://{Host}";
+            
+            public HttpClient CreateClient(string name)
+            {
+                return new HttpClient()
+                {
+                    BaseAddress = new Uri(HostUrl)
+                };
+            }
         }
     }
 }

@@ -4,7 +4,6 @@ using DataAccess.Abstractions;
 using DataAccess.Repositories;
 using FluentValidation;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
-using Microsoft.Extensions.Options;
 using Migrations;
 using Newtonsoft.Json;
 using Services;
@@ -31,7 +30,6 @@ internal static class ServiceRegistry
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
         
-        builder.Services.AddHttpClient();
         builder.Services.AddLogging(cfg => cfg.AddConsole());
 
         builder.Services.AddControllers()
@@ -103,16 +101,16 @@ internal static class ServiceRegistry
     private static void AddDomainServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IAddressParser, AddressParserImpl>();
+
+        var overpassApiHost = configuration.GetRequiredSection("OverpassApi")?.Value ??
+                              throw new InvalidOperationException("Provide Overpass Api host.");
         
-        services.Configure<MapServiceConfiguration>(configuration.GetRequiredSection("OverpassApi"))
-            .AddSingleton<IMapProviderService, OverpassApiClient>(sp =>
+        services.AddSingleton<IMapProviderService, OverpassApiClient>()
+            .Decorate<IMapProviderService, MapProviderServiceCacheDecorator>()
+            .AddHttpClient(OverpassApiClient.ClientName, client =>
             {
-                var httpClient = sp.GetRequiredService<HttpClient>();
-                var overpassApiHost = sp.GetRequiredService<IOptions<MapServiceConfiguration>>().Value.OverpassApiHost;
-                    
-                return new OverpassApiClient(overpassApiHost, httpClient);
-            })
-            .Decorate<IMapProviderService, MapProviderServiceCacheDecorator>();
+                client.BaseAddress = new Uri(overpassApiHost);
+            });
         
         services.AddDisKfuServices();
         services.AddScoped<Domain.Services.IAuthorizationService, AuthorizationService>();

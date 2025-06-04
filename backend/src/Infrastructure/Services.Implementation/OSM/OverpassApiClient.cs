@@ -13,46 +13,30 @@ using Microsoft.Extensions.Logging;
 
 namespace Services.Implementation.OSM;
 
-public class OverpassApiClient : IMapProviderService
+public class OverpassApiClient(
+    IHttpClientFactory clientFactory,
+    ILogger<OverpassApiClient>? logger = null)
+    : IMapProviderService
 {
+    public const string ClientName = nameof(OverpassApiClient);
+    
     private const string InterpreterEndpoint = "/api/interpreter";
     
     private readonly SemaphoreSlim _semaphore = new (1, 1);
     
-    private string OverpassApiHost { get; }
-    
-    private HttpClient Http { get; }
-    
-    private ILogger<OverpassApiClient>? Logger { get; }
-    
-    public OverpassApiClient(
-        [StringSyntax(StringSyntaxAttribute.Uri)] string host, 
-        HttpClient client,
-        ILogger<OverpassApiClient>? logger = null)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(host, nameof(host));
-        
-        OverpassApiHost = host;
-        Http = client ?? throw new ArgumentNullException(nameof(client));
-        Logger = logger;
-    }
-    
+    private HttpClient Http { get; } = clientFactory.CreateClient(ClientName);
+    private ILogger<OverpassApiClient>? Logger { get; } = logger;
+
     public async Task<Result<BuildingBasementInformation, ErrorMessage>> GetBuildingInformationAsync(Address address,
         CancellationToken ct)
     {
-        var uriBuilder = new UriBuilder($"{OverpassApiHost}{InterpreterEndpoint}")
-        {
-            Port = -1,
-        };
-        var queryParams = HttpUtility.ParseQueryString(uriBuilder.Query);
-        queryParams["data"] = ConstructBuildingFetchQuery(address);
-        uriBuilder.Query = queryParams.ToString();
+        var overpassQuery = ConstructBuildingFetchOverpassQuery(address);
+        var endpoint = $"{InterpreterEndpoint}?data={HttpUtility.UrlEncode(overpassQuery)}";
         
         await _semaphore.WaitAsync(ct);
         try
         {
-            var response = await Http.GetAsync(uriBuilder.ToString(), ct);
-
+            var response = await Http.GetAsync(endpoint, ct);
             response.EnsureSuccessStatusCode();
 
             var contentType = response.Content.Headers.ContentType?.MediaType;
@@ -106,12 +90,12 @@ public class OverpassApiClient : IMapProviderService
         }
     }
     
-    private string ConstructBuildingFetchQuery(Address address)
+    private string ConstructBuildingFetchOverpassQuery(Address address)
     {
         using var sb = new ValueStringBuilder();
         foreach (var letter in address.StreetName)
         {
-            if (letter == 'ё' || letter == 'е')
+            if (letter is 'ё' or 'е')
             {
                 sb.Append("(е|ё)");
             }
