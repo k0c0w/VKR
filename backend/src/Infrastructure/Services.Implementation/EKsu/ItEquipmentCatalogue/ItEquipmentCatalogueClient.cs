@@ -39,9 +39,12 @@ public class ItEquipmentCatalogueClient(
         foreach (var roomId in roomIds)
         {
             var fetchResult = await FetchSingleRoomEquipmentAsync(roomId, ct);
-            if (fetchResult.IsFailure)
+            switch (fetchResult.IsFailure)
             {
-                return Result.Fail<ItEquipmentDescription[], ErrorMessage>(fetchResult.Error);
+                case true when fetchResult.Error == ErrorMessage.EntityNotfoundError:
+                    continue;
+                case true:
+                    return Result.Fail<ItEquipmentDescription[], ErrorMessage>(fetchResult.Error);
             }
 
             var parsed = ParseResponse(fetchResult.Value!, roomId);
@@ -142,7 +145,8 @@ public class ItEquipmentCatalogueClient(
                     await wholePipelineCancellationTokenSource.CancelAsync();
                     setAuthError(fetchResult.Error);
                 }
-                else
+
+                if(fetchResult.IsSuccess)
                 {
                     await writer.WriteAsync((roomId, fetchResult.Value!), wholePipelineCancellationTokenSource.Token);
                 }
@@ -195,6 +199,11 @@ public class ItEquipmentCatalogueClient(
             {
                 Logger.LogWarning("Forbidden access to {Endpoint} for room ID {RoomId}", equipmentListFormEndpoint, roomId);
                 return Result.Fail<IDocument, ErrorMessage>(ErrorMessage.AuthenticationErrors.AccessDenied);
+            }
+            
+            if (response is { IsSuccessStatusCode: false, StatusCode: HttpStatusCode.NotFound })
+            {
+                return Result.Fail<IDocument, ErrorMessage>(ErrorMessage.EntityNotfoundError);
             }
 
             if (!response.IsSuccessStatusCode && (int)response.StatusCode / 100 == 5)
