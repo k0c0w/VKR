@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="GeoJSON.Net" Version="1.4.1" />
+      <PackageReference Include="OutParser" Version="1.1.1" />
+      <PackageReference Include="ResultMonad" Version="1.0.1" />
+    </ItemGroup>
+
+</Project>

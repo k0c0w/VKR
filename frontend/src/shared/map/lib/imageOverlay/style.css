@@ -1,0 +1,117 @@
+.image-control {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  height: 30px;
+  align-items: center;
+}
+
+.image-control-button-container {
+  background: white;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.image-control-slider-container {
+  display: none;
+  background: white;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.image-control-button {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: #f4f4f4; /* Default background */
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
+}
+
+.image-control-button[data-loaded="true"] {
+  background: #1976d2; 
+}
+
+.image-control-button[data-loaded="true"] .image-icon {
+  stroke: #ffffff; 
+}
+
+.image-control-button:hover {
+  background: #e0e0e0;
+}
+
+.image-control-button:hover[data-loaded="true"] {
+  background: #145fab; 
+}
+
+.image-icon {
+  width: 16px;
+  height: 16px;
+  transition: stroke 0.3s;
+  stroke: #000000;
+}
+
+.opacity-slider-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.opacity-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+}
+
+
+.leaflet-click-through {
+  pointer-events: none !important;
+}
+
+/* Style for ComputeAction's magic wand SVG icon */
+.leaflet-toolbar-icon.leaflet-compute-icon {
+  width: 26px;
+  height: 26px;
+  line-height: 26px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f4f4;
+  cursor: pointer;
+}
+
+.leaflet-toolbar-icon.leaflet-compute-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: #0078A8;
+  stroke: #0078A8;
+}
+
+.leaflet-toolbar-icon.leaflet-compute-icon:hover {
+  background: #e0e0e0;
+}
+
+.leaflet-toolbar-icon.leaflet-compute-icon.leaflet-disabled {
+  opacity: 0.5;
+  cursor: default;
+}

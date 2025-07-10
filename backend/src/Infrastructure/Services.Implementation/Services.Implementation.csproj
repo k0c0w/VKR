@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Core\Common\Common.csproj" />
+      <ProjectReference Include="..\..\Core\Services\Services.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.AspNetCore.Authentication.Cookies">
+        <HintPath>..\..\..\..\..\..\Program Files\dotnet\shared\Microsoft.AspNetCore.App\9.0.4\Microsoft.AspNetCore.Authentication.Cookies.dll</HintPath>
+      </Reference>
+      <Reference Include="Microsoft.AspNetCore.Http.Abstractions">
+        <HintPath>..\..\..\..\..\..\Program Files\dotnet\shared\Microsoft.AspNetCore.App\9.0.4\Microsoft.AspNetCore.Http.Abstractions.dll</HintPath>
+      </Reference>
+      <Reference Include="Microsoft.Extensions.Logging.Abstractions">
+        <HintPath>..\..\..\..\..\..\Users\DNS\.nuget\packages\microsoft.extensions.logging.abstractions\9.0.4\lib\net8.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AngleSharp" Version="1.3.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.3.0" />
+      <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5" />
+      <PackageReference Include="Scrutor" Version="6.1.0" />
+      <PackageReference Include="System.Drawing.Common" Version="9.0.5" />
+      <PackageReference Include="YoloSharp" Version="6.0.3" />
+      <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.2.0" />
+
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="OutParser" Version="1.1.1" />
+    </ItemGroup>
+    <PropertyGroup>
+        <InterceptorsNamespaces>$(InterceptorsNamespaces);OutParsing</InterceptorsNamespaces>
+    </PropertyGroup>
+</Project>

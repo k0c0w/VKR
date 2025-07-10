@@ -1,0 +1,148 @@
+.level-picker-container {
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.level-picker.leaflet-bar {
+    background: #fff;
+    border: 2px solid rgb(0 0 0 / 28%);
+    border-radius: 4px;
+    width: 150px;
+}
+
+.level-picker-select {
+    background: #fff;
+    border: none;
+    border-radius: 2px;
+    color: #333;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    padding: 6px 8px;
+    width: 100%;
+    cursor: pointer;
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    max-height: 40vh;
+    overflow-y: auto;
+    display: block;
+}
+
+.level-picker-select {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="%23333" d="M6 9l-5-5h10z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+}
+
+.level-picker-select option {
+    padding: 6px 8px;
+    background: #fff;
+    color: #333;
+}
+
+.level-picker-buttons {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    background: transparent;
+}
+
+.level-picker-button {
+    background: #fff;
+    border: 2px solid rgb(0 0 0 / 28%);
+    border-radius: 2px;
+    width: 44px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    outline: none;
+}
+
+.level-picker-rubbish-bin {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="%23333" d="M6 2h4v2H6zM4 4V2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2h2v1h-1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5H2V4h2zm2 2v7h1V6H6zm3 0v7h1V6H9z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 16px 16px;
+}
+
+.level-picker-edit {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="%23333" d="M2 11.5V14h2.5l7.4-7.4-2.5-2.5L2 11.5zm9.7-8.2c.4-.4.4-1 0-1.4l-1.1-1.1c-.4-.4-1-.4-1.4 0l-1.2 1.2 2.5 2.5 1.2-1.2z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 16px 16px;
+}
+
+.level-picker-plus {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="%23333" d="M8 2a1 1 0 0 1 1 1v4h4a1 1 0 0 1 0 2H9v4a1 1 0 0 1-2 0V9H3a1 1 0 0 1 0-2h4V3a1 1 0 0 1 1-1z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 16px 16px;
+}
+
+.level-picker-button:hover:not(:disabled) {
+    background-color: #f4f4f4;
+}
+
+.level-picker-button:disabled {
+    background-color: #f4f4f4;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.level-picker-select:hover:not(:disabled),
+.level-picker-select:focus:not(:disabled) {
+    background-color: #f4f4f4;
+}
+
+.level-picker-container,
+.level-picker.leaflet-bar,
+.level-picker-select,
+.level-picker-button {
+    user-select: none;
+}
+
+.level-picker-container.leaflet-control-disabled .level-picker.leaflet-bar {
+    background: #f4f4f4;
+    cursor: not-allowed;
+}
+
+.level-picker-container.leaflet-control-disabled .level-picker-select,
+.level-picker-container.leaflet-control-disabled .level-picker-button {
+    background: #f4f4f4;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.level-picker-container.leaflet-control-disabled .level-picker-select {
+    pointer-events: none;
+}
+
+.level-picker-select:disabled {
+    background: #f4f4f4;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.level-picker-select::-webkit-scrollbar {
+    width: 8px;
+}
+
+.level-picker-select::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.level-picker-select::-webkit-scrollbar-track {
+    background: #f4f4f4;
+}

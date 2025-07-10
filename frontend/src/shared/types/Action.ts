@@ -1,0 +1,1 @@
+export type Action<T = void> = (args: T) => void;
